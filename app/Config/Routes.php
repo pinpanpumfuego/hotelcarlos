@@ -29,6 +29,12 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('perfil', 'Perfil::index');
     $routes->post('perfil/clave', 'Perfil::cambiarClave');
 
+    // Mantenimiento: todo el personal puede reportar y resolver
+    $routes->get('mantenimiento', 'Mantenimiento::index');
+    $routes->post('mantenimiento/guardar', 'Mantenimiento::guardar');
+    $routes->post('mantenimiento/iniciar/(:num)', 'Mantenimiento::iniciar/$1');
+    $routes->post('mantenimiento/resolver/(:num)', 'Mantenimiento::resolver/$1');
+
     // Tablero de limpieza: todo el personal
     $routes->get('limpieza', 'Limpieza::index');
     $routes->post('limpieza/iniciar/(:num)', 'Limpieza::iniciar/$1');

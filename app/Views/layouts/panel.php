@@ -92,6 +92,11 @@ $puedeVender = in_array($rol, ['gerencia', 'recepcion'], true);
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link <?= ($seccion ?? '') === 'mantenimiento' ? 'active' : '' ?>" href="<?= site_url('mantenimiento') ?>">
+                        <i class="bi bi-tools me-2"></i>Mantenimiento
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link <?= ($seccion ?? '') === 'unidades' ? 'active' : '' ?>" href="<?= site_url('unidades') ?>">
                         <i class="bi bi-door-open me-2"></i>Cabañas
                     </a>

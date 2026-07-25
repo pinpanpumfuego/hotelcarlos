@@ -58,7 +58,10 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       apertura con base, movimientos manuales, **los pagos en efectivo del folio entran solos
       al turno abierto** (aviso si no hay turno), cierre con arqueo (contado vs esperado,
       faltante/sobrante en historial). Un solo turno abierto a la vez.
-- [ ] Mantenimiento (incidencias por cabaña con prioridad y bloqueo de unidad)
+- [x] Mantenimiento (`Mantenimiento`, todo el personal; tabla `mantenimientos`): reporte de
+      incidencias por cabaña o zona común con prioridad, opción de **bloquear la cabaña**
+      (deja de venderse en la web al instante), flujo abierta → en proceso → resuelta con
+      registro de quién y qué se hizo. Al resolver, la cabaña bloqueada pasa a limpieza.
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 
