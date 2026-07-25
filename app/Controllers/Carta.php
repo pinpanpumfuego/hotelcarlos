@@ -240,7 +240,10 @@ class Carta extends BaseController
             return redirect()->back()->with('error', implode(' ', $insumos->errors()));
         }
 
-        return redirect()->to('insumos')->with('ok', 'Insumo actualizado. Los costes de los platos se recalculan solos.');
+        // Si cambió el coste, las preparaciones que lo usan deben recalcularse
+        (new \App\Models\PreparacionModel())->recalcularCostes();
+
+        return redirect()->to('insumos')->with('ok', 'Insumo actualizado. Los costes de preparaciones y platos se recalculan solos.');
     }
 
     public function eliminarInsumo(int $id)
@@ -254,10 +257,10 @@ class Carta extends BaseController
         return redirect()->to('insumos')->with('ok', 'Insumo eliminado.');
     }
 
-    /** Listado de insumos con su uso en recetas. */
+    /** Listado de insumos simples (las preparaciones tienen su propia pantalla). */
     public function insumos()
     {
-        $insumos = (new InsumoModel())->orderBy('nombre')->findAll();
+        $insumos = (new InsumoModel())->where('es_preparacion', 0)->orderBy('nombre')->findAll();
 
         $usos = db_connect()->table('receta_lineas')
             ->select('insumo_id, COUNT(*) AS platos')

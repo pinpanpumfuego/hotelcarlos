@@ -9,7 +9,8 @@ class InsumoModel extends Model
 {
     protected $table         = 'insumos';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['nombre', 'unidad', 'costo_unitario', 'proveedor', 'activo'];
+    protected $allowedFields = ['nombre', 'unidad', 'es_preparacion', 'rendimiento',
+        'costo_unitario', 'proveedor', 'notas', 'activo'];
     protected $useTimestamps = true;
 
     /** Unidades de medida admitidas, con su descripción para la interfaz. */
@@ -34,6 +35,18 @@ class InsumoModel extends Model
 
     public function activos(): array
     {
-        return $this->where('activo', 1)->orderBy('nombre')->findAll();
+        return $this->where('activo', 1)->orderBy('es_preparacion', 'DESC')->orderBy('nombre')->findAll();
+    }
+
+    /** Solo materia prima simple (sin preparaciones). */
+    public function simples(): array
+    {
+        return $this->where('activo', 1)->where('es_preparacion', 0)->orderBy('nombre')->findAll();
+    }
+
+    /** Solo preparaciones (subrecetas). */
+    public function preparaciones(): array
+    {
+        return $this->where('es_preparacion', 1)->orderBy('nombre')->findAll();
     }
 }

@@ -122,7 +122,16 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       4. **Divisibles**: productos marcados `divisible` se pueden pedir mitad y mitad;
          **se cobra la mitad más cara** y la línea queda como "½ A + ½ B".
       Seeder `EscandalloEjemplo` con insumos, grupos de modificadores y la receta del sancocho.
+- [x] **Subrecetas / preparaciones** (`insumos.es_preparacion` + `rendimiento`, tabla
+      `preparacion_lineas`, `PreparacionModel`, controlador `Preparaciones`, ruta `/preparaciones`):
+      una preparación (hogao, masa) es un insumo con receta propia y rendimiento; su coste por
+      unidad se **calcula** (coste de la tanda ÷ rendimiento) y se propaga en cadena a las
+      preparaciones y platos que la usan. `recalcularCostes()` itera hasta converger y se dispara
+      al cambiar un insumo o una preparación. **Ciclos bloqueados** en la interfaz (no se ofrecen
+      candidatos que dependan de la actual) y en el servidor (`generariaCiclo`).
+      Verificado: tomate $8→$12/g ⇒ hogao $4→$7/g ⇒ sancocho $10.070→$10.230.
 - [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
+- [ ] Combos / menús cerrados (producto compuesto de otros productos) — propuesto, no elegido aún
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 

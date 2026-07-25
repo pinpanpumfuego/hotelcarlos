@@ -97,6 +97,7 @@ if ($rol === 'gerencia') {
         ['carta', 'carta', 'bi-journal-text', 'Carta del restaurante'],
         ['modificadores', 'modificadores', 'bi-sliders', 'Modificadores'],
         ['insumos', 'insumos', 'bi-box-seam', 'Insumos y costes'],
+        ['preparaciones', 'preparaciones', 'bi-stack', 'Preparaciones'],
         ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios'],
         ['administracion', 'administracion', 'bi-gear', 'Administración'],
     ];

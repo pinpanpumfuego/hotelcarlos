@@ -131,6 +131,15 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->post('carta/receta/(:num)', 'Carta::guardarReceta/$1');
     $routes->post('carta/receta/eliminar/(:num)', 'Carta::eliminarReceta/$1');
 
+    // Escandallo: preparaciones (subrecetas)
+    $routes->get('preparaciones', 'Preparaciones::index');
+    $routes->post('preparaciones/crear', 'Preparaciones::crear');
+    $routes->get('preparaciones/ficha/(:num)', 'Preparaciones::ficha/$1');
+    $routes->post('preparaciones/actualizar/(:num)', 'Preparaciones::actualizar/$1');
+    $routes->post('preparaciones/componente/(:num)', 'Preparaciones::guardarComponente/$1');
+    $routes->post('preparaciones/componente/eliminar/(:num)', 'Preparaciones::eliminarComponente/$1');
+    $routes->post('preparaciones/eliminar/(:num)', 'Preparaciones::eliminar/$1');
+
     // Escandallo: insumos
     $routes->get('insumos', 'Carta::insumos');
     $routes->post('insumos/guardar', 'Carta::guardarInsumo');
