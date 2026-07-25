@@ -88,6 +88,15 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
 - [x] TPV avanzado: **propina**, **división de cuenta con pagos parciales** (tabla `comanda_pagos`:
       varias formas de pago por comanda; la comanda se cierra sola cuando lo cobrado cubre el total)
       y **recibo imprimible** en formato 80 mm (`/pos/recibo/:id`, `?auto=1` lanza la impresión).
+- [x] **Circuito TPV ↔ cocina completo.** Estados de cada línea: `nuevo` (aún no enviado) →
+      `en_cocina` (`enviado_cocina=1`) → `listo` (`entregado=1`, cocina terminó) → `servido`
+      (`servido=1`, el mesero lo llevó). Pantalla de cocina propia (`Cocina`, ruta `/cocina`,
+      vista `cocina/index.php`): se refresca sola cada 10 s, solo muestra lo **ya enviado**,
+      reloj desde el envío con color por antigüedad (verde/ámbar/rojo con parpadeo a los 20 min),
+      pitido al entrar comanda nueva, botón por plato y "Comanda completa". El TPV consulta cada
+      15 s y avisa ("Cocina terminó un plato"), pinta la línea en verde con "¡Listo para servir!"
+      y ofrece el botón "Marcar como servido"; insignia de platos listos en la cabecera.
+      **Fallo corregido:** antes cocina veía los platos antes de que el mesero pulsara "Enviar".
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 

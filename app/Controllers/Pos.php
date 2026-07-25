@@ -84,6 +84,7 @@ class Pos extends BaseController
             'sinMesa'    => $sinMesa,
             'alojados'   => $this->alojados(),
             'turnoCaja'  => (new CajaTurnoModel())->abierto() !== null,
+            'listos'     => $this->lineas->listosParaServir(),
         ]);
     }
 
@@ -218,6 +219,22 @@ class Pos extends BaseController
         $this->comandas->recalcularTotal((int) $comanda['id']);
 
         return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle((int) $comanda['id'])]);
+    }
+
+    /** El mesero confirma que llevó el plato a la mesa. */
+    public function servir(int $lineaId)
+    {
+        $linea = $this->lineas->find($lineaId);
+        if ($linea === null) {
+            return $this->response->setStatusCode(404)->setJSON(['ok' => false, 'error' => 'Línea no encontrada.']);
+        }
+        if ((int) $linea['entregado'] !== 1) {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Cocina aún no ha marcado ese plato como listo.']);
+        }
+
+        $this->lineas->update($lineaId, ['servido' => 1]);
+
+        return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle((int) $linea['comanda_id'])]);
     }
 
     /** Marca las líneas nuevas como enviadas a cocina. */
@@ -549,7 +566,20 @@ class Pos extends BaseController
             $l['cantidad']        = (int) $l['cantidad'];
             $l['precio_unitario'] = (float) $l['precio_unitario'];
             $l['enviado_cocina']  = (int) $l['enviado_cocina'];
+            $l['entregado']       = (int) $l['entregado'];
+            $l['servido']         = (int) $l['servido'];
             $l['subtotal']        = $l['precio_unitario'] * $l['cantidad'];
+
+            // Estado visible para el mesero
+            if ($l['servido'] === 1) {
+                $l['estado'] = 'servido';
+            } elseif ($l['entregado'] === 1) {
+                $l['estado'] = 'listo';       // cocina lo terminó, falta llevarlo a la mesa
+            } elseif ($l['enviado_cocina'] === 1) {
+                $l['estado'] = 'en_cocina';
+            } else {
+                $l['estado'] = 'nuevo';       // aún no se ha enviado
+            }
         }
         unset($l);
 
@@ -565,7 +595,8 @@ class Pos extends BaseController
         $comanda['pendiente']  = max(0, round($comanda['a_pagar'] - $comanda['pagado'], 2));
         $comanda['pagos']      = $pagos;
         $comanda['lineas']     = $lineas;
-        $comanda['pendientes'] = count(array_filter($lineas, static fn ($l) => $l['enviado_cocina'] === 0));
+        $comanda['pendientes'] = count(array_filter($lineas, static fn ($l) => $l['estado'] === 'nuevo'));
+        $comanda['listos']     = count(array_filter($lineas, static fn ($l) => $l['estado'] === 'listo'));
 
         // Etiqueta del cliente para la interfaz
         if ($comanda['reserva_id'] !== null) {

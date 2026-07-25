@@ -140,7 +140,22 @@
             background: var(--panel-claro); border: 1px solid var(--borde); border-radius: 8px;
             min-width: 34px; text-align: center; padding: 3px 6px; font-weight: 700;
         }
-        .linea.enviada .cant { background: var(--verde); border-color: var(--verde); color: #fff; }
+        /* Estados del plato: nuevo → en cocina → listo → servido */
+        .linea.en_cocina .cant { background: var(--ambar); border-color: var(--ambar); color: #fff; }
+        .linea.listo .cant { background: var(--verde); border-color: var(--verde); color: #fff; }
+        .linea.servido .cant { background: var(--panel-claro); color: var(--texto-suave); }
+        .linea.servido .nom { color: var(--texto-suave); }
+        .estado-plato { font-size: .78rem; display: block; }
+        .estado-plato.en_cocina { color: var(--ambar); }
+        .estado-plato.listo { color: var(--verde); font-weight: 700; }
+        .estado-plato.servido { color: var(--texto-suave); }
+        .aviso-listos {
+            margin: 6px 10px; padding: 10px 12px; border-radius: 10px;
+            background: rgba(47,125,82,.12); border: 1px solid var(--verde);
+            color: var(--verde); font-weight: 600; font-size: .9rem;
+            display: none; align-items: center; gap: 8px;
+        }
+        .aviso-listos.ver { display: flex; }
         .linea .desc { flex: 1; min-width: 0; }
         .linea .nom { font-weight: 600; }
         .linea .nota { color: var(--ambar); font-size: .8rem; }
@@ -269,7 +284,9 @@
         </span>
         <button class="btn-cab" id="btn-tema" title="Cambiar entre modo día y noche"><i class="bi bi-moon"></i></button>
         <button class="btn-cab" id="btn-suelta"><i class="bi bi-bag"></i> Para llevar</button>
-        <a class="btn-cab" href="<?= site_url('tpv/cocina') ?>" style="text-decoration:none"><i class="bi bi-fire"></i></a>
+        <a class="btn-cab" href="<?= site_url('cocina') ?>" style="text-decoration:none" title="Pantalla de cocina">
+            <i class="bi bi-fire"></i><span class="insignia" id="ins-listos" style="display:none">0</span>
+        </a>
         <a class="btn-cab" href="<?= site_url('panel') ?>" style="text-decoration:none"><i class="bi bi-box-arrow-right"></i></a>
     </div>
 </header>
@@ -297,13 +314,21 @@
                     <i class="bi bi-pencil" style="margin-left:auto; opacity:.6"></i>
                 </button>
             </div>
+            <div class="aviso-listos" id="aviso-listos">
+                <i class="bi bi-bell-fill"></i><span id="texto-listos"></span>
+            </div>
             <div class="lineas" id="tk-lineas"></div>
 
-            <div class="acciones-linea">
+            <div class="acciones-linea" id="acciones-linea">
                 <button id="acc-menos" disabled><i class="bi bi-dash-lg"></i>Quitar</button>
                 <button id="acc-mas" disabled><i class="bi bi-plus-lg"></i>Añadir</button>
                 <button id="acc-cant" disabled><i class="bi bi-123"></i>Cantidad</button>
                 <button id="acc-nota" disabled><i class="bi bi-chat-left-text"></i>Nota</button>
+            </div>
+            <div style="padding:6px 10px; display:none" id="zona-servir">
+                <button class="btn verde" style="width:100%" id="acc-servir">
+                    <i class="bi bi-check2-all"></i> Marcar como servido
+                </button>
             </div>
 
             <div class="totales">
@@ -497,6 +522,9 @@
         if (!datos) return;
         Object.assign(estado, datos);
         $('#aviso-caja').style.display = estado.turnoCaja ? 'none' : 'inline';
+        const ins = $('#ins-listos');
+        ins.style.display = estado.listos > 0 ? 'inline' : 'none';
+        ins.textContent = estado.listos;
         pintarMesas();
         if (categoriaActiva === null && estado.categorias.length) {
             categoriaActiva = estado.categorias[0].id;
@@ -639,20 +667,40 @@
         if (!comanda.lineas.length) {
             cont.innerHTML = '<p class="vacio">Toca un producto de la carta para empezar.</p>';
         }
+        const textoEstado = {
+            nuevo: '', en_cocina: 'En cocina', listo: '¡Listo para servir!', servido: 'Servido',
+        };
+
         comanda.lineas.forEach((l) => {
             const b = document.createElement('button');
-            b.className = 'linea' + (l.enviado_cocina ? ' enviada' : '') + (lineaSel === l.id ? ' sel' : '');
+            b.className = 'linea ' + l.estado + (lineaSel === l.id ? ' sel' : '');
             b.innerHTML = '<span class="cant">' + l.cantidad + '</span>'
                 + '<span class="desc"><span class="nom">' + escaparHtml(l.nombre_producto) + '</span>'
                 + (l.notas ? '<span class="nota"><i class="bi bi-chat-left-text"></i> ' + escaparHtml(l.notas) + '</span>' : '')
+                + (textoEstado[l.estado] ? '<span class="estado-plato ' + l.estado + '">' + textoEstado[l.estado] + '</span>' : '')
                 + '</span>'
                 + '<span class="imp">' + pesos(l.subtotal) + '</span>';
             b.onclick = () => { lineaSel = (lineaSel === l.id ? null : l.id); pintarComanda(); };
             cont.appendChild(b);
         });
 
+        // Aviso de platos que cocina ya terminó
+        const avisoListos = $('#aviso-listos');
+        avisoListos.classList.toggle('ver', comanda.listos > 0);
+        if (comanda.listos > 0) {
+            $('#texto-listos').textContent = comanda.listos === 1
+                ? '1 plato listo en cocina · toca la línea verde y pulsa Servido'
+                : comanda.listos + ' platos listos en cocina · márcalos como servidos al llevarlos';
+        }
+
         const hayLinea = lineaSel !== null;
+        const sel = lineaActual();
         ['#acc-menos', '#acc-mas', '#acc-cant', '#acc-nota'].forEach((s) => { $(s).disabled = !hayLinea; });
+
+        // Si la línea seleccionada está lista, se ofrece marcarla como servida
+        const mostrarServir = sel && sel.estado === 'listo';
+        $('#zona-servir').style.display = mostrarServir ? 'block' : 'none';
+        $('#acciones-linea').style.display = mostrarServir ? 'none' : 'grid';
 
         $('#fila-descuento').style.display = comanda.descuento > 0 ? 'flex' : 'none';
         $('#tk-descuento').textContent = '−' + pesos(comanda.descuento);
@@ -771,6 +819,11 @@
         if (!l) return;
         abrirTexto('Nota para cocina', l.nombre_producto, l.notas || '',
             (t) => actualizarLinea({ notas: t }));
+    };
+    $('#acc-servir').onclick = async () => {
+        if (!lineaSel) return;
+        const datos = await api('/linea/' + lineaSel + '/servir', { method: 'POST', body: '{}' });
+        if (datos) { comanda = datos.comanda; lineaSel = null; pintarComanda(); avisar('Plato marcado como servido.'); }
     };
 
     // ── Acciones de la comanda ───────────────────────────────────
@@ -1058,6 +1111,24 @@
 
     // Refresca el mapa de mesas mientras no haya comanda abierta
     setInterval(() => { if (!comanda) cargarEstado(); }, 30000);
+
+    // Con una comanda abierta, consulta a cocina para avisar de los platos listos
+    let listosPrevios = 0;
+    setInterval(async () => {
+        if (!comanda) return;
+        const datos = await api('/comanda/' + comanda.id);
+        if (!datos || !datos.comanda) return;
+
+        const nuevos = datos.comanda.listos;
+        // Conserva la línea seleccionada al refrescar
+        comanda = datos.comanda;
+        pintarComanda();
+
+        if (nuevos > listosPrevios) {
+            avisar('Cocina terminó ' + (nuevos - listosPrevios === 1 ? 'un plato' : (nuevos - listosPrevios) + ' platos') + ' de esta mesa.');
+        }
+        listosPrevios = nuevos;
+    }, 15000);
 
     cargarEstado();
 }());

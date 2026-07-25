@@ -74,6 +74,14 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->get('unidades/nueva', 'Unidades::nueva');
     $routes->post('unidades/guardar', 'Unidades::guardar');
 
+    // Pantalla de cocina (KDS)
+    $routes->get('cocina', 'Cocina::index');
+    $routes->group('cocina', ['filter' => 'tokenjson'], static function ($routes) {
+        $routes->get('datos', 'Cocina::datos');
+        $routes->post('listo/(:num)', 'Cocina::listo/$1');
+        $routes->post('comanda/(:num)/lista', 'Cocina::comandaLista/$1');
+    });
+
     // TPV táctil a pantalla completa (API JSON)
     $routes->get('pos', 'Pos::index');
     $routes->get('pos/recibo/(:num)', 'Pos::recibo/$1');
@@ -90,6 +98,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
         $routes->post('comanda/(:num)/anular', 'Pos::anular/$1');
         $routes->post('comanda/(:num)/mover', 'Pos::mover/$1');
         $routes->post('linea/(:num)', 'Pos::linea/$1');
+        $routes->post('linea/(:num)/servir', 'Pos::servir/$1');
     });
 
     // Restaurante (gestión clásica)
