@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar sesión · Hotel Carlos</title>
+    <title>Iniciar sesión · <?= esc(config('Hotel')->nombre) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -26,8 +26,8 @@
 <body>
     <div class="card tarjeta-login shadow-lg border-0 m-3">
         <div class="card-body p-4 p-md-5">
-            <div class="logo-hotel mb-3"><i class="bi bi-building"></i></div>
-            <h1 class="h4 text-center mb-1">Hotel Carlos</h1>
+            <div class="logo-hotel mb-3"><i class="bi bi-tree"></i></div>
+            <h1 class="h4 text-center mb-1"><?= esc(config('Hotel')->nombre) ?></h1>
             <p class="text-muted text-center mb-4">Sistema de gestión hotelera</p>
 
             <?php if (session()->getFlashdata('error')): ?>

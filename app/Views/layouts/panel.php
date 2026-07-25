@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($titulo ?? 'Panel') ?> · Hotel Carlos</title>
+    <title><?= esc($titulo ?? 'Panel') ?> · <?= esc(config('Hotel')->nombre) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -26,7 +26,7 @@ $puedeVender = in_array($rol, ['gerencia', 'recepcion'], true);
     <div class="row">
         <nav class="col-12 col-md-3 col-lg-2 sidebar p-3">
             <a class="navbar-brand d-block mb-4 text-decoration-none" href="<?= site_url('panel') ?>">
-                <i class="bi bi-building"></i> Hotel Carlos
+                <i class="bi bi-tree"></i> <?= esc(config('Hotel')->nombre) ?>
             </a>
             <ul class="nav nav-pills flex-column gap-1">
                 <li class="nav-item">
