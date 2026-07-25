@@ -23,8 +23,10 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
 - [x] Esqueleto CI4, base de datos, migración núcleo (tipos_unidad, unidades, huespedes, reservas)
 - [x] Panel de control con estado de unidades
 - [x] CRUD de tipos de alojamiento y unidades
-- [ ] CRUD de huéspedes
-- [ ] Reservas: creación, calendario de disponibilidad, check-in/out
+- [x] CRUD de huéspedes (con búsqueda por nombre/documento)
+- [x] Reservas: creación con control anti-sobreventa (`ReservaModel::unidadDisponible`),
+      total automático (noches × tarifa), check-in/out que actualiza el estado de la unidad, cancelación
+- [ ] Calendario visual de disponibilidad (vista cinta)
 - [ ] Autenticación y roles (gerencia, recepción, limpieza...)
 - [ ] Folio del huésped y caja
 

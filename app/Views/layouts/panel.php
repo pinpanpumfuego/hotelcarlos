@@ -39,10 +39,14 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <span class="nav-link disabled"><i class="bi bi-people me-2"></i>Huéspedes <small>(próximamente)</small></span>
+                    <a class="nav-link <?= ($seccion ?? '') === 'huespedes' ? 'active' : '' ?>" href="<?= site_url('huespedes') ?>">
+                        <i class="bi bi-people me-2"></i>Huéspedes
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <span class="nav-link disabled"><i class="bi bi-calendar-check me-2"></i>Reservas <small>(próximamente)</small></span>
+                    <a class="nav-link <?= ($seccion ?? '') === 'reservas' ? 'active' : '' ?>" href="<?= site_url('reservas') ?>">
+                        <i class="bi bi-calendar-check me-2"></i>Reservas
+                    </a>
                 </li>
             </ul>
         </nav>
