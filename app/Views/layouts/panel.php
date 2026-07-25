@@ -108,6 +108,11 @@ $puedeVender = in_array($rol, ['gerencia', 'recepcion'], true);
                             <i class="bi bi-person-gear me-2"></i>Usuarios
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($seccion ?? '') === 'administracion' ? 'active' : '' ?>" href="<?= site_url('administracion') ?>">
+                            <i class="bi bi-gear me-2"></i>Administración
+                        </a>
+                    </li>
                 <?php endif ?>
             </ul>
             <div class="mt-4 pt-3 border-top border-light border-opacity-10">

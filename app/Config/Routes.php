@@ -74,6 +74,12 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->get('reportes', 'Reportes::index');
     $routes->get('reportes/csv', 'Reportes::csv');
 
+    $routes->get('administracion', 'Administracion::index');
+    $routes->post('administracion/hotel', 'Administracion::guardarHotel');
+    $routes->post('administracion/correo', 'Administracion::guardarCorreo');
+    $routes->post('administracion/correo/probar', 'Administracion::probarCorreo');
+    $routes->post('administracion/wompi', 'Administracion::guardarWompi');
+
     $routes->post('unidades/eliminar/(:num)', 'Unidades::eliminar/$1');
 
     $routes->get('tipos', 'Tipos::index');
