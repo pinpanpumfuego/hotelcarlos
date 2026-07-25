@@ -138,6 +138,14 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       en el calendario con acción directa. Eliminados `welcome_message.php` y el controlador `Home`
       (código muerto de la instalación de CI4).
       Verificado: 27 rutas del panel y 5 públicas responden 200, y 10 pantallas sin desbordamiento a 375 px.
+- [x] **Rediseño visual del panel**: sistema de diseño con variables (paleta de marca, tres niveles
+      de sombra, radios y escala tipográfica), **Fraunces en los títulos** igual que la web pública e
+      Inter en el texto. Menú lateral con degradado, marca dorada en la sección activa, animación al
+      pasar el ratón e **insignia de registros por revisar**. Barra superior translúcida con avatar
+      de iniciales. Tablas, botones, formularios, avisos y paginación con estilo propio.
+      Panel de control rehecho: saludo según la hora, KPIs con tipografía editorial, **gráfica de
+      ocupación de 14 días** (Chart.js con degradado y tooltip en %), lista de cabañas legible de un
+      vistazo y estados vacíos ilustrados. Verificado en 11 pantallas a 1280 px y en móvil.
 - [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
 - [ ] Combos / menús cerrados (producto compuesto de otros productos) — propuesto, no elegido aún
 - [x] **Registro en línea del huésped / autocheck-in** (tablas `registros`, `registro_acompanantes`,

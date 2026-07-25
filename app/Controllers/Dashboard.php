@@ -46,6 +46,29 @@ class Dashboard extends BaseController
         $totalUnidades = count($unidades);
         $ocupadas      = $porEstado['ocupada'] ?? 0;
 
+        // Ocupación de los últimos 14 días, para la gráfica del panel
+        $desde   = date('Y-m-d', strtotime('-13 days'));
+        $activas = $reservaModel
+            ->whereIn('estado', ['confirmada', 'checkin', 'checkout'])
+            ->where('fecha_entrada <=', $hoy)
+            ->where('fecha_salida >', $desde)
+            ->findAll();
+
+        $ocupacionDias = [];
+        for ($d = new \DateTime($desde); $d->format('Y-m-d') <= $hoy; $d->modify('+1 day')) {
+            $ocupacionDias[$d->format('Y-m-d')] = 0;
+        }
+        foreach ($activas as $r) {
+            $ini = max($r['fecha_entrada'], $desde);
+            for ($d = new \DateTime($ini); $d->format('Y-m-d') < $r['fecha_salida']; $d->modify('+1 day')) {
+                $clave = $d->format('Y-m-d');
+                if (! isset($ocupacionDias[$clave])) {
+                    break;
+                }
+                $ocupacionDias[$clave]++;
+            }
+        }
+
         return view('dashboard/index', [
             'titulo'        => 'Panel de control',
             'seccion'       => 'panel',
@@ -60,6 +83,8 @@ class Dashboard extends BaseController
             'pendientes'    => $pendientes,
             'proximas'      => $proximas,
             'ingresosMes'   => $ingresosMes,
+            'ocupacionDias' => $ocupacionDias,
+            'registrosPorRevisar' => (new \App\Models\RegistroModel())->pendientesDeRevision(),
         ]);
     }
 }
