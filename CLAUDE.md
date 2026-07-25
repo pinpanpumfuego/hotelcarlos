@@ -44,9 +44,19 @@ las copias de seguridad y el acceso remoto. Un **servicio de sincronización con
 y una bandeja de excepciones resuelve cruces. Implicación para todo el código nuevo:
 códigos únicos, timestamps, operaciones idempotentes, nunca asumir conexión permanente.
 
-## Fases siguientes (según propuesta)
+## Fase 2 (venta digital) — en curso
 
-2. Venta digital: web pública, motor de reservas, pagos Wompi, autocheck-in
+- [x] Web pública "escaparate" (`Web` controller, vistas `web/*`, layout `layouts/web.php`):
+      inicio, alojamientos (tarifas leídas de la BD) y contacto, con botón de reserva por WhatsApp.
+      La raíz `/` es la web pública; el panel vive en `/panel`. Marca y contactos centralizados
+      en `app/Config/Hotel.php` (nombre actual: San Antonio de los Lagos, datos provisionales).
+- [ ] Desplegar en dinahosting (hosting compartido "Multihosting", dominio sanantoniodeloslagos.com,
+      contratado 2026-07-25). Método: clave SSH generada en el PC local, pública pegada en el panel
+      de dinahosting; nunca pedir contraseñas por chat.
+- [ ] Motor de reservas online con pago (Wompi) — sustituirá el botón de WhatsApp
+- [ ] Autocheck-in y portal del huésped
+
+## Fases siguientes (según propuesta)
 3. Operación interna: housekeeping, mantenimiento, lavandería
 4. Alimentos y bebidas: POS restaurante, KDS, inventarios
 5. Automatización: cerraduras, facturación electrónica, TRA, channel manager, CRM
