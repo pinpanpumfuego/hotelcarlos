@@ -38,6 +38,9 @@ class Cocina extends BaseController
         $zona       = isset(self::ZONAS[$zona]) ? $zona : 'cocina';
         $pendientes = $this->lineas->pendientesDeZona($zona);
 
+        // Modificadores elegidos: cocina necesita verlos para preparar bien el plato
+        $modificadores = (new \App\Models\LineaModificadorModel())->deLineas(array_column($pendientes, 'id'));
+
         $comandas = [];
         foreach ($pendientes as $l) {
             $clave = $l['comanda_id'];
@@ -52,11 +55,12 @@ class Cocina extends BaseController
                 ];
             }
             $comandas[$clave]['lineas'][] = [
-                'id'       => (int) $l['id'],
-                'cantidad' => (int) $l['cantidad'],
-                'nombre'   => $l['nombre_producto'],
-                'destino'  => $l['destino'],
-                'notas'    => $l['notas'],
+                'id'            => (int) $l['id'],
+                'cantidad'      => (int) $l['cantidad'],
+                'nombre'        => $l['nombre_producto'],
+                'destino'       => $l['destino'],
+                'notas'         => $l['notas'],
+                'modificadores' => array_column($modificadores[(int) $l['id']] ?? [], 'nombre'),
             ];
         }
 

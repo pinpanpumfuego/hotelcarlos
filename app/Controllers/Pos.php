@@ -10,7 +10,10 @@ use App\Models\ComandaLineaModel;
 use App\Models\ComandaModel;
 use App\Models\ComandaPagoModel;
 use App\Models\FolioModel;
+use App\Models\LineaModificadorModel;
 use App\Models\MesaModel;
+use App\Models\ModificadorGrupoModel;
+use App\Models\ModificadorModel;
 use App\Models\ReservaModel;
 
 /**
@@ -54,12 +57,36 @@ class Pos extends BaseController
                 'productos' => [],
             ];
         }
+        // Grupos de modificadores asignados a cada producto
+        $asignaciones = db_connect()->table('producto_modificador_grupos')->get()->getResultArray();
+        $gruposPorProducto = [];
+        foreach ($asignaciones as $a) {
+            $gruposPorProducto[(int) $a['producto_id']][] = (int) $a['grupo_id'];
+        }
+        $todosGrupos = (new ModificadorGrupoModel())->conOpciones();
+
         foreach ($productos as $p) {
             if (isset($porCategoria[$p['categoria_id']])) {
+                $ids = $gruposPorProducto[(int) $p['id']] ?? [];
+
                 $porCategoria[$p['categoria_id']]['productos'][] = [
-                    'id'     => (int) $p['id'],
-                    'nombre' => $p['nombre'],
-                    'precio' => (float) $p['precio'],
+                    'id'        => (int) $p['id'],
+                    'nombre'    => $p['nombre'],
+                    'precio'    => (float) $p['precio'],
+                    'divisible' => (int) ($p['divisible'] ?? 0) === 1,
+                    'picante'   => (int) ($p['picante'] ?? 0),
+                    'dietas'    => array_values(array_filter(
+                        array_keys(CartaProductoModel::DIETAS),
+                        static fn ($d) => ! empty($p[$d])
+                    )),
+                    'alergenos' => array_map(
+                        static fn ($a) => CartaProductoModel::ALERGENOS[$a],
+                        CartaProductoModel::alergenosDe($p['alergenos'] ?? null)
+                    ),
+                    'grupos'    => array_values(array_filter(
+                        $todosGrupos,
+                        static fn ($g) => in_array((int) $g['id'], $ids, true)
+                    )),
                 ];
             }
         }
@@ -142,7 +169,11 @@ class Pos extends BaseController
         return $this->response->setJSON(['ok' => true, 'comanda' => $comanda]);
     }
 
-    /** Añade un producto (o suma cantidad si ya está pendiente sin nota). */
+    /**
+     * Añade un producto a la comanda.
+     * Admite modificadores elegidos y, en productos divisibles, una segunda
+     * mitad: el precio de la mitad y mitad es el de la más cara.
+     */
     public function anadir(int $id)
     {
         $comanda = $this->comandas->find($id);
@@ -150,32 +181,89 @@ class Pos extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda no está abierta.']);
         }
 
-        $datos    = $this->request->getJSON(true) ?? [];
-        $producto = (new CartaProductoModel())->find((int) ($datos['producto_id'] ?? 0));
+        $datos     = $this->request->getJSON(true) ?? [];
+        $productos = new CartaProductoModel();
+        $producto  = $productos->find((int) ($datos['producto_id'] ?? 0));
         if ($producto === null) {
             return $this->response->setStatusCode(404)->setJSON(['ok' => false, 'error' => 'Producto no encontrado.']);
         }
 
         $cantidad = max(1, (int) ($datos['cantidad'] ?? 1));
+        $nombre   = $producto['nombre'];
+        $precio   = (float) $producto['precio'];
+        $composicion = null;
 
-        $existente = $this->lineas
-            ->where('comanda_id', $id)
-            ->where('producto_id', $producto['id'])
-            ->where('enviado_cocina', 0)
-            ->where('notas IS NULL')
-            ->first();
+        // ── Mitad y mitad ──
+        $mitadId = (int) ($datos['mitad_id'] ?? 0);
+        if ($mitadId > 0) {
+            $otra = $productos->find($mitadId);
+            if ($otra === null || empty($producto['divisible']) || empty($otra['divisible'])) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'ok' => false, 'error' => 'Solo se pueden combinar dos productos marcados como divisibles.',
+                ]);
+            }
+            // Se cobra la mitad más cara: criterio habitual en restauración
+            $precio      = max((float) $producto['precio'], (float) $otra['precio']);
+            $nombre      = '½ ' . $producto['nombre'] . ' + ½ ' . $otra['nombre'];
+            $composicion = $producto['nombre'] . ' | ' . $otra['nombre'];
+        }
+
+        // ── Modificadores elegidos ──
+        $elegidos = [];
+        $idsMod   = array_map('intval', (array) ($datos['modificadores'] ?? []));
+        if ($idsMod !== []) {
+            $opciones = (new ModificadorModel())->whereIn('id', $idsMod)->findAll();
+            foreach ($opciones as $o) {
+                $elegidos[] = [
+                    'modificador_id' => (int) $o['id'],
+                    'nombre'         => $o['nombre'],
+                    'precio_extra'   => (float) $o['precio_extra'],
+                ];
+                $precio += (float) $o['precio_extra'];
+            }
+        }
+
+        $notas = trim((string) ($datos['notas'] ?? '')) ?: null;
+
+        // Solo se agrupa con una línea existente si es exactamente igual
+        $puedeAgrupar = $elegidos === [] && $notas === null && $mitadId === 0;
+        $existente    = null;
+        if ($puedeAgrupar) {
+            $existente = $this->lineas
+                ->where('comanda_id', $id)
+                ->where('producto_id', $producto['id'])
+                ->where('enviado_cocina', 0)
+                ->where('notas IS NULL')
+                ->where('composicion IS NULL')
+                ->first();
+
+            // Y siempre que no tenga modificadores
+            if ($existente !== null
+                && (new LineaModificadorModel())->where('linea_id', $existente['id'])->countAllResults() > 0) {
+                $existente = null;
+            }
+        }
 
         if ($existente !== null) {
             $this->lineas->update($existente['id'], ['cantidad' => $existente['cantidad'] + $cantidad]);
         } else {
-            $this->lineas->insert([
+            $lineaId = $this->lineas->insert([
                 'comanda_id'      => $id,
                 'producto_id'     => $producto['id'],
-                'nombre_producto' => $producto['nombre'],
+                'nombre_producto' => $nombre,
+                'composicion'     => $composicion,
                 'destino'         => $producto['destino'] ?? 'cocina',
-                'precio_unitario' => $producto['precio'],
+                'precio_unitario' => $precio,
                 'cantidad'        => $cantidad,
+                'notas'           => $notas,
             ]);
+
+            if ($elegidos !== []) {
+                $modelo = new LineaModificadorModel();
+                foreach ($elegidos as $e) {
+                    $modelo->insert($e + ['linea_id' => $lineaId]);
+                }
+            }
         }
 
         $this->comandas->recalcularTotal($id);
@@ -602,8 +690,11 @@ class Pos extends BaseController
             return null;
         }
 
-        $lineas = $this->lineas->deComanda($id);
+        $lineas    = $this->lineas->deComanda($id);
+        $modifs    = (new LineaModificadorModel())->deLineas(array_column($lineas, 'id'));
+
         foreach ($lineas as &$l) {
+            $l['modificadores'] = $modifs[(int) $l['id']] ?? [];
             $l['id']              = (int) $l['id'];
             $l['cantidad']        = (int) $l['cantidad'];
             $l['precio_unitario'] = (float) $l['precio_unitario'];

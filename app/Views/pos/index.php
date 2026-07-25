@@ -244,6 +244,27 @@
         .opcion-cliente:active { background: var(--borde); }
         .opcion-cliente .cab { font-weight: 700; }
         .opcion-cliente .quien { color: var(--texto-suave); font-size: .85rem; }
+
+        /* Personalización del producto */
+        .grupo-mod { margin-bottom: 14px; }
+        .grupo-mod h3 { font-size: .95rem; margin: 0 0 6px; }
+        .grupo-mod .obliga { color: var(--ambar); font-size: .8rem; font-weight: 600; }
+        .opciones-mod { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .op-mod {
+            background: var(--panel-claro); border: 2px solid var(--borde); border-radius: 10px;
+            padding: 12px; min-height: 56px; text-align: left; font-size: .9rem;
+            display: flex; justify-content: space-between; align-items: center; gap: 6px;
+        }
+        .op-mod.sel { border-color: var(--verde); background: rgba(47,125,82,.12); }
+        .op-mod .extra { color: var(--verde); font-weight: 700; font-size: .82rem; }
+        .marcas-ficha { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .marca-ficha {
+            font-size: .78rem; border-radius: 999px; padding: 2px 10px;
+            background: var(--panel-claro); border: 1px solid var(--borde);
+        }
+        .marca-ficha.dieta { color: var(--verde); border-color: var(--verde); }
+        .marca-ficha.alergeno { color: var(--rojo); border-color: var(--rojo); }
+        .linea .mods { display: block; color: var(--texto-suave); font-size: .8rem; }
         .cambio { background: rgba(47,125,82,.10); border: 1px solid var(--verde); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
         .cambio .valor { font-size: 1.8rem; font-weight: 700; color: var(--verde); }
 
@@ -415,6 +436,25 @@
         <div class="acciones" style="padding:14px 0 0;">
             <button class="btn" data-cerrar>Cancelar</button>
             <button class="btn verde" id="cob-confirmar">Confirmar cobro</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Modal personalizar producto ═══ -->
+<div class="capa" id="modal-producto">
+    <div class="modal-pos" style="max-width: 560px;">
+        <h2 id="prod-nombre"></h2>
+        <p class="ayuda" id="prod-ficha"></p>
+        <div id="prod-grupos"></div>
+        <div id="prod-mitades" style="display:none">
+            <p class="ayuda" style="margin-bottom:6px"><strong>¿Mitad y mitad?</strong> Elige el otro sabor (se cobra el más caro).</p>
+            <div id="prod-lista-mitades"></div>
+        </div>
+        <label class="ayuda" style="margin:12px 0 4px; display:block">Nota para preparación (opcional)</label>
+        <input type="text" class="campo" id="prod-nota" placeholder="Ej.: poco sal, para compartir" autocomplete="off">
+        <div class="acciones" style="padding:6px 0 0;">
+            <button class="btn" data-cerrar>Cancelar</button>
+            <button class="btn verde" id="prod-aceptar">Añadir <span id="prod-precio"></span></button>
         </div>
     </div>
 </div>
@@ -628,9 +668,16 @@
             const b = document.createElement('button');
             b.className = 'producto';
             b.style.borderLeft = '5px solid ' + cat.color;
-            b.innerHTML = '<span class="pnombre">' + escaparHtml(p.nombre) + '</span>'
+            const marcas = []
+                .concat((p.dietas || []).map(() => ''))
+                .filter(Boolean);
+            b.innerHTML = '<span class="pnombre">' + escaparHtml(p.nombre)
+                + (p.alergenos && p.alergenos.length ? ' <i class="bi bi-exclamation-triangle" style="color:var(--rojo)" title="' + escaparHtml(p.alergenos.join(', ')) + '"></i>' : '')
+                + (p.picante > 0 ? ' ' + '🌶'.repeat(p.picante) : '')
+                + (p.divisible ? ' <i class="bi bi-pie-chart" title="Se puede pedir por mitades"></i>' : '')
+                + '</span>'
                 + '<span class="pprecio">' + pesos(p.precio) + '</span>';
-            b.onclick = () => anadirProducto(p.id);
+            b.onclick = () => tocarProducto(p);
             cont.appendChild(b);
         });
         if (!cat.productos.length) {
@@ -680,8 +727,13 @@
         comanda.lineas.forEach((l) => {
             const b = document.createElement('button');
             b.className = 'linea ' + l.estado + (lineaSel === l.id ? ' sel' : '');
+            const mods = (l.modificadores || []).map((m) =>
+                m.nombre + (m.precio_extra > 0 ? ' (+' + pesos(m.precio_extra) + ')' : '')
+            ).join(' · ');
+
             b.innerHTML = '<span class="cant">' + l.cantidad + '</span>'
                 + '<span class="desc"><span class="nom">' + escaparHtml(l.nombre_producto) + '</span>'
+                + (mods ? '<span class="mods">' + escaparHtml(mods) + '</span>' : '')
                 + (l.notas ? '<span class="nota"><i class="bi bi-chat-left-text"></i> ' + escaparHtml(l.notas) + '</span>' : '')
                 + (textoEstado[l.estado] ? '<span class="estado-plato ' + l.estado + '">' + textoEstado[l.estado] + '</span>' : '')
                 + '</span>'
@@ -734,13 +786,152 @@
         $('#btn-recibo').disabled = comanda.lineas.length === 0;
     }
 
-    async function anadirProducto(productoId) {
+    async function anadirProducto(productoId, extra) {
         if (!comanda) return;
+        const cuerpo = Object.assign({ producto_id: productoId }, extra || {});
         const datos = await api('/comanda/' + comanda.id + '/anadir', {
-            method: 'POST', body: JSON.stringify({ producto_id: productoId }),
+            method: 'POST', body: JSON.stringify(cuerpo),
         });
         if (datos) { comanda = datos.comanda; pintarComanda(); }
     }
+
+    // ── Personalización al añadir un producto ────────────────────
+    const DIETAS = { apto_vegano: 'Vegano', apto_vegetariano: 'Vegetariano', sin_gluten: 'Sin gluten', sin_lactosa: 'Sin lactosa' };
+    let prodActual = null;
+    let seleccion = {};       // grupo_id → [ids de opciones]
+    let mitadElegida = null;
+
+    /** Devuelve todos los productos divisibles de la carta. */
+    function divisibles(exceptoId) {
+        const lista = [];
+        estado.categorias.forEach((c) => c.productos.forEach((p) => {
+            if (p.divisible && p.id !== exceptoId) lista.push(p);
+        }));
+        return lista;
+    }
+
+    function tocarProducto(producto) {
+        const necesitaModal = (producto.grupos && producto.grupos.length) || producto.divisible;
+        if (!necesitaModal) { anadirProducto(producto.id); return; }
+
+        prodActual = producto;
+        seleccion = {};
+        mitadElegida = null;
+        $('#prod-nombre').textContent = producto.nombre;
+        $('#prod-nota').value = '';
+
+        // Marcas de la ficha técnica: dietas, picante y alérgenos
+        let ficha = '';
+        (producto.dietas || []).forEach((d) => {
+            ficha += '<span class="marca-ficha dieta">' + escaparHtml(DIETAS[d] || d) + '</span>';
+        });
+        if (producto.picante > 0) ficha += '<span class="marca-ficha">' + '🌶'.repeat(producto.picante) + '</span>';
+        (producto.alergenos || []).forEach((a) => {
+            ficha += '<span class="marca-ficha alergeno"><i class="bi bi-exclamation-triangle"></i> ' + escaparHtml(a) + '</span>';
+        });
+        $('#prod-ficha').innerHTML = ficha ? '<span class="marcas-ficha">' + ficha + '</span>' : '';
+
+        // Grupos de modificadores
+        const cont = $('#prod-grupos');
+        cont.innerHTML = '';
+        (producto.grupos || []).forEach((g) => {
+            const div = document.createElement('div');
+            div.className = 'grupo-mod';
+            div.innerHTML = '<h3>' + escaparHtml(g.nombre)
+                + (parseInt(g.obligatorio, 10) ? ' <span class="obliga">· obligatorio</span>' : '')
+                + (g.tipo === 'unico' ? '' : ' <span class="ayuda">· varios</span>') + '</h3>';
+
+            const rej = document.createElement('div');
+            rej.className = 'opciones-mod';
+            g.opciones.forEach((o) => {
+                const b = document.createElement('button');
+                b.className = 'op-mod';
+                const extra = parseFloat(o.precio_extra) || 0;
+                b.innerHTML = '<span>' + escaparHtml(o.nombre) + '</span>'
+                    + (extra > 0 ? '<span class="extra">+' + pesos(extra) + '</span>' : '');
+                b.onclick = () => {
+                    const gid = g.id;
+                    seleccion[gid] = seleccion[gid] || [];
+                    const idx = seleccion[gid].indexOf(o.id);
+                    if (g.tipo === 'unico') {
+                        seleccion[gid] = idx === -1 ? [o.id] : [];
+                        rej.querySelectorAll('.op-mod').forEach((x) => x.classList.remove('sel'));
+                        if (idx === -1) b.classList.add('sel');
+                    } else {
+                        if (idx === -1) { seleccion[gid].push(o.id); b.classList.add('sel'); }
+                        else { seleccion[gid].splice(idx, 1); b.classList.remove('sel'); }
+                    }
+                    actualizarPrecioModal();
+                };
+                rej.appendChild(b);
+            });
+            div.appendChild(rej);
+            cont.appendChild(div);
+        });
+
+        // Mitades, si el producto es divisible
+        const otras = producto.divisible ? divisibles(producto.id) : [];
+        $('#prod-mitades').style.display = otras.length ? 'block' : 'none';
+        const listaMit = $('#prod-lista-mitades');
+        listaMit.innerHTML = '';
+        otras.forEach((o) => {
+            const b = document.createElement('button');
+            b.className = 'op-mod';
+            b.innerHTML = '<span>½ ' + escaparHtml(o.nombre) + '</span><span class="extra">' + pesos(o.precio) + '</span>';
+            b.onclick = () => {
+                const yaEra = mitadElegida === o.id;
+                listaMit.querySelectorAll('.op-mod').forEach((x) => x.classList.remove('sel'));
+                mitadElegida = yaEra ? null : o.id;
+                if (!yaEra) b.classList.add('sel');
+                actualizarPrecioModal();
+            };
+            listaMit.appendChild(b);
+        });
+
+        actualizarPrecioModal();
+        $('#modal-producto').classList.add('abierta');
+    }
+
+    function actualizarPrecioModal() {
+        let precio = prodActual.precio;
+
+        // Mitad y mitad: se cobra la más cara
+        if (mitadElegida) {
+            const otra = divisibles(-1).find((p) => p.id === mitadElegida);
+            if (otra) precio = Math.max(precio, otra.precio);
+        }
+        // Extras de los modificadores
+        Object.keys(seleccion).forEach((gid) => {
+            const grupo = prodActual.grupos.find((g) => String(g.id) === String(gid));
+            if (!grupo) return;
+            seleccion[gid].forEach((oid) => {
+                const op = grupo.opciones.find((o) => String(o.id) === String(oid));
+                if (op) precio += parseFloat(op.precio_extra) || 0;
+            });
+        });
+
+        $('#prod-precio').textContent = pesos(precio);
+    }
+
+    $('#prod-aceptar').onclick = () => {
+        // Comprueba los grupos obligatorios antes de añadir
+        const faltan = (prodActual.grupos || []).filter((g) =>
+            parseInt(g.obligatorio, 10) && !(seleccion[g.id] || []).length
+        );
+        if (faltan.length) {
+            avisar('Falta elegir: ' + faltan.map((g) => g.nombre).join(', '), true);
+            return;
+        }
+
+        const ids = [];
+        Object.keys(seleccion).forEach((gid) => ids.push(...seleccion[gid]));
+
+        const extra = { modificadores: ids, notas: $('#prod-nota').value.trim() };
+        if (mitadElegida) extra.mitad_id = mitadElegida;
+
+        $('#modal-producto').classList.remove('abierta');
+        anadirProducto(prodActual.id, extra);
+    };
 
     async function actualizarLinea(cambios) {
         if (!lineaSel) return;

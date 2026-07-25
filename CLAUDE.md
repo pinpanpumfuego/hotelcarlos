@@ -108,6 +108,21 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       directamente desde el TPV** (botón "Preparada y servida" → marca entregado + servido de una
       vez), sin depender de que alguien atienda la pantalla de barra. Los platos de **cocina**
       siguen exigiendo que cocina los marque listos: es el control de que el plato existe.
+- [x] **Gestión detallada de platos** (4 bloques, todos en la ficha `carta/ficha/:id`):
+      1. **Ficha técnica**: dietas (vegano/vegetariano/sin gluten/sin lactosa), nivel de picante
+         y alérgenos declarables. Visibles en la carta del panel, en el TPV (iconos + aviso al
+         personalizar), en la comanda de cocina y en la **carta pública** (`/restaurante`).
+      2. **Modificadores** (`modificador_grupos`, `modificadores`, `producto_modificador_grupos`,
+         `comanda_linea_modificadores`): grupos tipo "elegir uno/varios", obligatorios opcionales,
+         con precio extra. Al tocar un producto con grupos, el TPV abre el paso de personalización;
+         el precio se recalcula y cocina recibe los modificadores elegidos.
+      3. **Escandallo** (`insumos`, `receta_lineas`): coste por unidad de cada insumo, receta por
+         plato y cálculo de coste, margen y **food cost** (verde <30 %, ámbar 30-35 %, rojo >35 %).
+         Al cambiar el coste de un insumo se recalculan todos los platos.
+      4. **Divisibles**: productos marcados `divisible` se pueden pedir mitad y mitad;
+         **se cobra la mitad más cara** y la línea queda como "½ A + ½ B".
+      Seeder `EscandalloEjemplo` con insumos, grupos de modificadores y la receta del sancocho.
+- [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 

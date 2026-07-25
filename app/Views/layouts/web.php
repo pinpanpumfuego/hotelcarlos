@@ -120,6 +120,7 @@
             <ul class="navbar-nav ms-auto align-items-md-center gap-md-3">
                 <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'inicio' ? 'active' : '' ?>" href="<?= site_url('/') ?>">Inicio</a></li>
                 <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'alojamientos' ? 'active' : '' ?>" href="<?= site_url('alojamientos') ?>">Alojamientos</a></li>
+                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'carta' ? 'active' : '' ?>" href="<?= site_url('restaurante') ?>">Restaurante</a></li>
                 <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'contacto' ? 'active' : '' ?>" href="<?= site_url('contacto') ?>">Contacto</a></li>
                 <li class="nav-item ms-md-2">
                     <a class="btn btn-reserva btn-sm px-3 py-2" href="<?= site_url('reservar') ?>">

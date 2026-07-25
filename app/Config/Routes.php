@@ -7,6 +7,7 @@ use CodeIgniter\Router\RouteCollection;
 // ── Web pública (sin autenticación) ─────────────────────────────────
 $routes->get('/', 'Web::inicio');
 $routes->get('alojamientos', 'Web::alojamientos');
+$routes->get('restaurante', 'Web::carta');
 $routes->get('contacto', 'Web::contacto');
 
 // Motor de reservas online
