@@ -44,6 +44,7 @@ class Cocina extends BaseController
                 'id'       => (int) $l['id'],
                 'cantidad' => (int) $l['cantidad'],
                 'nombre'   => $l['nombre_producto'],
+                'destino'  => $l['destino'],
                 'notas'    => $l['notas'],
             ];
         }

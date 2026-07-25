@@ -140,8 +140,9 @@
             background: var(--panel-claro); border: 1px solid var(--borde); border-radius: 8px;
             min-width: 34px; text-align: center; padding: 3px 6px; font-weight: 700;
         }
-        /* Estados del plato: nuevo → en cocina → listo → servido */
-        .linea.en_cocina .cant { background: var(--ambar); border-color: var(--ambar); color: #fff; }
+        /* Estados del plato: nuevo → en cocina/barra → listo → servido */
+        .linea.en_cocina .cant, .linea.en_barra .cant { background: var(--ambar); border-color: var(--ambar); color: #fff; }
+        .estado-plato.en_barra { color: var(--azul); }
         .linea.listo .cant { background: var(--verde); border-color: var(--verde); color: #fff; }
         .linea.servido .cant { background: var(--panel-claro); color: var(--texto-suave); }
         .linea.servido .nom { color: var(--texto-suave); }
@@ -348,7 +349,8 @@
 
             <div class="acciones">
                 <button class="btn ambar ancho" id="btn-cocina">
-                    <i class="bi bi-fire"></i> Enviar a cocina <span class="insignia" id="ins-pendientes">0</span>
+                    <i class="bi bi-fire"></i> <span id="texto-cocina">Enviar a cocina</span>
+                    <span class="insignia" id="ins-pendientes">0</span>
                 </button>
                 <button class="btn" id="btn-descuento"><i class="bi bi-tag"></i> Descuento</button>
                 <button class="btn" id="btn-propina"><i class="bi bi-coin"></i> Propina</button>
@@ -668,7 +670,8 @@
             cont.innerHTML = '<p class="vacio">Toca un producto de la carta para empezar.</p>';
         }
         const textoEstado = {
-            nuevo: '', en_cocina: 'En cocina', listo: '¡Listo para servir!', servido: 'Servido',
+            nuevo: '', en_cocina: 'En cocina', en_barra: 'En barra',
+            listo: '¡Listo para servir!', servido: 'Servido',
         };
 
         comanda.lineas.forEach((l) => {
@@ -715,6 +718,9 @@
 
         $('#ins-pendientes').textContent = comanda.pendientes;
         $('#btn-cocina').disabled = comanda.pendientes === 0;
+        // Si lo nuevo no necesita preparación, el botón lo dice claramente
+        $('#texto-cocina').textContent = comanda.pendientes > 0 && comanda.a_preparar === 0
+            ? 'Marcar entregado' : 'Enviar a cocina';
         $('#btn-cobrar').disabled = comanda.pendiente <= 0;
         $('#btn-recibo').disabled = comanda.lineas.length === 0;
     }

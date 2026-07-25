@@ -126,6 +126,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     // Carta del restaurante
     $routes->get('carta', 'Carta::index');
     $routes->post('carta/categoria/guardar', 'Carta::guardarCategoria');
+    $routes->post('carta/categoria/actualizar/(:num)', 'Carta::actualizarCategoria/$1');
     $routes->post('carta/categoria/eliminar/(:num)', 'Carta::eliminarCategoria/$1');
     $routes->post('carta/producto/guardar', 'Carta::guardarProducto');
     $routes->post('carta/producto/actualizar/(:num)', 'Carta::actualizarProducto/$1');

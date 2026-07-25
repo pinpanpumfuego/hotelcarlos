@@ -65,6 +65,11 @@
         }
         .plato .nombre { flex: 1; font-weight: 600; }
         .plato .nota { display: block; color: var(--rojo); font-size: .85rem; font-weight: 500; }
+        .plato.barra { background: #f0f6f9; }
+        .etiqueta-destino {
+            display: inline-block; margin-left: 8px; font-size: .75rem; font-weight: 600;
+            color: #1f6b8c; background: #dceaf2; border-radius: 999px; padding: 1px 9px;
+        }
         .plato .marca { color: var(--verde); font-size: 1.4rem; }
         .todo {
             width: 100%; background: var(--verde); color: #fff; border: none;
@@ -140,9 +145,11 @@
                 + '<div class="reloj">' + c.minutos + ' min</div></div>';
 
             c.lineas.forEach((l) => {
-                html += '<button class="plato" data-linea="' + l.id + '">'
+                const esBarra = l.destino === 'barra';
+                html += '<button class="plato' + (esBarra ? ' barra' : '') + '" data-linea="' + l.id + '">'
                     + '<span class="cant">' + l.cantidad + '</span>'
                     + '<span class="nombre">' + escapar(l.nombre)
+                    + (esBarra ? '<span class="etiqueta-destino"><i class="bi bi-cup-straw"></i> Barra</span>' : '')
                     + (l.notas ? '<span class="nota"><i class="bi bi-exclamation-triangle"></i> ' + escapar(l.notas) + '</span>' : '')
                     + '</span><span class="marca"><i class="bi bi-check-circle"></i></span></button>';
             });

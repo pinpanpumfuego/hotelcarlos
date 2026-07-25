@@ -8,7 +8,13 @@ class CartaProductoModel extends Model
 {
     protected $table         = 'carta_productos';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['categoria_id', 'nombre', 'descripcion', 'precio', 'disponible'];
+    protected $allowedFields = ['categoria_id', 'nombre', 'descripcion', 'precio', 'destino', 'disponible'];
+
+    public const DESTINOS = [
+        'cocina'  => 'Cocina',
+        'barra'   => 'Barra',
+        'directo' => 'Entrega directa',
+    ];
     protected $useTimestamps = true;
 
     protected $validationRules = [

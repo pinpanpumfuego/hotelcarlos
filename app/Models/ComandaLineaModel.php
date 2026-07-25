@@ -8,7 +8,7 @@ class ComandaLineaModel extends Model
 {
     protected $table         = 'comanda_lineas';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['comanda_id', 'producto_id', 'nombre_producto', 'precio_unitario',
+    protected $allowedFields = ['comanda_id', 'producto_id', 'nombre_producto', 'destino', 'precio_unitario',
         'cantidad', 'entregado', 'servido', 'listo_en', 'enviado_cocina', 'notas'];
     protected $useTimestamps = true;
 
@@ -34,6 +34,7 @@ class ComandaLineaModel extends Model
             ->where('comandas.estado', 'abierta')
             ->where('comanda_lineas.enviado_cocina', 1)
             ->where('comanda_lineas.entregado', 0)
+            ->whereIn('comanda_lineas.destino', ['cocina', 'barra'])
             ->orderBy('comanda_lineas.updated_at')
             ->orderBy('comanda_lineas.id')
             ->findAll();

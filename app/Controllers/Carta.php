@@ -19,11 +19,22 @@ class Carta extends BaseController
 
     public function index()
     {
+        $categorias = $this->categorias->ordenadas();
+        $productos  = $this->productos->conCategoria();
+
+        // Cuántos productos tiene cada categoría, para la vista
+        $conteo = [];
+        foreach ($productos as $p) {
+            $conteo[$p['categoria_id']] = ($conteo[$p['categoria_id']] ?? 0) + 1;
+        }
+
         return view('carta/index', [
             'titulo'     => 'Carta del restaurante',
             'seccion'    => 'carta',
-            'categorias' => $this->categorias->ordenadas(),
-            'productos'  => $this->productos->conCategoria(),
+            'categorias' => $categorias,
+            'productos'  => $productos,
+            'conteo'     => $conteo,
+            'destinos'   => CartaProductoModel::DESTINOS,
         ]);
     }
 
@@ -32,6 +43,7 @@ class Carta extends BaseController
         $datos = [
             'nombre' => trim((string) $this->request->getPost('nombre')),
             'orden'  => (int) $this->request->getPost('orden'),
+            'color'  => $this->colorValido((string) $this->request->getPost('color')),
         ];
 
         if (! $this->categorias->insert($datos)) {
@@ -39,6 +51,31 @@ class Carta extends BaseController
         }
 
         return redirect()->to('carta')->with('ok', 'Categoría creada.');
+    }
+
+    public function actualizarCategoria(int $id)
+    {
+        if ($this->categorias->find($id) === null) {
+            return redirect()->to('carta')->with('error', 'La categoría no existe.');
+        }
+
+        $datos = [
+            'nombre' => trim((string) $this->request->getPost('nombre')),
+            'orden'  => (int) $this->request->getPost('orden'),
+            'color'  => $this->colorValido((string) $this->request->getPost('color')),
+        ];
+
+        if (! $this->categorias->update($id, $datos)) {
+            return redirect()->to('carta')->with('error', implode(' ', $this->categorias->errors()));
+        }
+
+        return redirect()->to('carta')->with('ok', 'Categoría actualizada.');
+    }
+
+    /** Acepta solo colores hexadecimales; si no, usa el verde de la marca. */
+    private function colorValido(string $color): string
+    {
+        return preg_match('/^#[0-9a-fA-F]{6}$/', $color) ? $color : '#4f8a68';
     }
 
     public function eliminarCategoria(int $id)
@@ -59,6 +96,8 @@ class Carta extends BaseController
             'nombre'       => trim((string) $this->request->getPost('nombre')),
             'descripcion'  => trim((string) $this->request->getPost('descripcion')) ?: null,
             'precio'       => (float) $this->request->getPost('precio'),
+            'destino'      => array_key_exists($this->request->getPost('destino'), CartaProductoModel::DESTINOS)
+                ? $this->request->getPost('destino') : 'cocina',
             'disponible'   => 1,
         ];
 
@@ -80,6 +119,8 @@ class Carta extends BaseController
             'nombre'       => trim((string) $this->request->getPost('nombre')),
             'descripcion'  => trim((string) $this->request->getPost('descripcion')) ?: null,
             'precio'       => (float) $this->request->getPost('precio'),
+            'destino'      => array_key_exists($this->request->getPost('destino'), CartaProductoModel::DESTINOS)
+                ? $this->request->getPost('destino') : 'cocina',
             'disponible'   => $this->request->getPost('disponible') ? 1 : 0,
         ];
 

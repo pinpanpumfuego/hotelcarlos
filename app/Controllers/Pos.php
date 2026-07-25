@@ -172,6 +172,7 @@ class Pos extends BaseController
                 'comanda_id'      => $id,
                 'producto_id'     => $producto['id'],
                 'nombre_producto' => $producto['nombre'],
+                'destino'         => $producto['destino'] ?? 'cocina',
                 'precio_unitario' => $producto['precio'],
                 'cantidad'        => $cantidad,
             ]);
@@ -245,19 +246,43 @@ class Pos extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda no está abierta.']);
         }
 
-        $pendientes = $this->lineas->where('comanda_id', $id)->where('enviado_cocina', 0)->countAllResults();
-        if ($pendientes === 0) {
-            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'No hay platos nuevos que enviar.']);
+        $nuevas = $this->lineas->where('comanda_id', $id)->where('enviado_cocina', 0)->findAll();
+        if ($nuevas === []) {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'No hay nada nuevo que enviar.']);
         }
 
-        $this->lineas->builder()
-            ->where('comanda_id', $id)
-            ->where('enviado_cocina', 0)
-            ->update(['enviado_cocina' => 1, 'updated_at' => date('Y-m-d H:i:s')]);
+        $ahora     = date('Y-m-d H:i:s');
+        $aPreparar = 0;
+        $directos  = 0;
+
+        foreach ($nuevas as $linea) {
+            if ($linea['destino'] === 'directo') {
+                // No pasa por preparación: se entrega tal cual y queda servido
+                $this->lineas->update($linea['id'], [
+                    'enviado_cocina' => 1,
+                    'entregado'      => 1,
+                    'servido'        => 1,
+                    'listo_en'       => $ahora,
+                ]);
+                $directos++;
+            } else {
+                $this->lineas->update($linea['id'], ['enviado_cocina' => 1]);
+                $aPreparar++;
+            }
+        }
+
+        $partes = [];
+        if ($aPreparar > 0) {
+            $partes[] = $aPreparar . ($aPreparar === 1 ? ' plato enviado' : ' platos enviados') . ' a preparación.';
+        }
+        if ($directos > 0) {
+            $partes[] = $directos . ($directos === 1 ? ' producto de entrega directa' : ' productos de entrega directa')
+                . ' (no pasan por cocina).';
+        }
 
         return $this->response->setJSON([
             'ok'      => true,
-            'mensaje' => $pendientes . ($pendientes === 1 ? ' plato enviado' : ' platos enviados') . ' a cocina.',
+            'mensaje' => implode(' ', $partes),
             'comanda' => $this->comandaDetalle($id),
         ]);
     }
@@ -574,9 +599,9 @@ class Pos extends BaseController
             if ($l['servido'] === 1) {
                 $l['estado'] = 'servido';
             } elseif ($l['entregado'] === 1) {
-                $l['estado'] = 'listo';       // cocina lo terminó, falta llevarlo a la mesa
+                $l['estado'] = 'listo';       // preparación terminada, falta llevarlo a la mesa
             } elseif ($l['enviado_cocina'] === 1) {
-                $l['estado'] = 'en_cocina';
+                $l['estado'] = $l['destino'] === 'barra' ? 'en_barra' : 'en_cocina';
             } else {
                 $l['estado'] = 'nuevo';       // aún no se ha enviado
             }
@@ -597,6 +622,11 @@ class Pos extends BaseController
         $comanda['lineas']     = $lineas;
         $comanda['pendientes'] = count(array_filter($lineas, static fn ($l) => $l['estado'] === 'nuevo'));
         $comanda['listos']     = count(array_filter($lineas, static fn ($l) => $l['estado'] === 'listo'));
+        // De lo nuevo, cuánto necesita preparación (el resto se entrega tal cual)
+        $comanda['a_preparar'] = count(array_filter(
+            $lineas,
+            static fn ($l) => $l['estado'] === 'nuevo' && $l['destino'] !== 'directo'
+        ));
 
         // Etiqueta del cliente para la interfaz
         if ($comanda['reserva_id'] !== null) {

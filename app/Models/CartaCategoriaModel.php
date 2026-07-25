@@ -8,7 +8,7 @@ class CartaCategoriaModel extends Model
 {
     protected $table         = 'carta_categorias';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['nombre', 'orden'];
+    protected $allowedFields = ['nombre', 'orden', 'color'];
     protected $useTimestamps = true;
 
     protected $validationRules = [

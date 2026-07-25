@@ -97,6 +97,12 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       15 s y avisa ("Cocina terminó un plato"), pinta la línea en verde con "¡Listo para servir!"
       y ofrece el botón "Marcar como servido"; insignia de platos listos en la cabecera.
       **Fallo corregido:** antes cocina veía los platos antes de que el mesero pulsara "Enviar".
+- [x] **Destino por producto** (`carta_productos.destino`, copiado a `comanda_lineas.destino`):
+      `cocina` (va a la pantalla de cocina), `barra` (va también pero etiquetado en azul) y
+      `directo` (cerveza, agua: **no pasa por preparación**; al enviar queda entregado y servido
+      automáticamente). Si lo nuevo es todo directo, el botón del TPV cambia a "Marcar entregado".
+      Gestión de carta ampliada: destino por producto, categorías editables con color y orden,
+      y contador de productos por categoría.
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 
