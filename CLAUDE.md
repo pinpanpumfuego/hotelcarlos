@@ -34,6 +34,16 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
 - [ ] Folio del huésped y caja
 - [ ] Página "Mi perfil" para que cada usuario cambie su propia contraseña
 
+## Decisión de arquitectura: local-first + nube
+
+El PMS operativo corre en un **servidor local del hotel** (LAN, sin depender de internet:
+recepción/limpieza/restaurante siguen funcionando si se corta la conexión). La **nube** aloja
+la web pública + motor de reservas online (sigue vendiendo aunque el hotel esté offline),
+las copias de seguridad y el acceso remoto. Un **servicio de sincronización con colas**
+(reintentos + idempotencia) intercambia cambios; las reservas online entran como "pendientes"
+y una bandeja de excepciones resuelve cruces. Implicación para todo el código nuevo:
+códigos únicos, timestamps, operaciones idempotentes, nunca asumir conexión permanente.
+
 ## Fases siguientes (según propuesta)
 
 2. Venta digital: web pública, motor de reservas, pagos Wompi, autocheck-in
