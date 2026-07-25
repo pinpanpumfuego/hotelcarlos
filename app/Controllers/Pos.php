@@ -222,18 +222,35 @@ class Pos extends BaseController
         return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle((int) $comanda['id'])]);
     }
 
-    /** El mesero confirma que llevó el plato a la mesa. */
+    /**
+     * El mesero confirma que llevó el producto a la mesa.
+     * Las bebidas de barra las puede preparar y servir el propio cajero,
+     * sin esperar a que alguien las marque en la pantalla de barra.
+     */
     public function servir(int $lineaId)
     {
         $linea = $this->lineas->find($lineaId);
         if ($linea === null) {
             return $this->response->setStatusCode(404)->setJSON(['ok' => false, 'error' => 'Línea no encontrada.']);
         }
-        if ((int) $linea['entregado'] !== 1) {
-            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Cocina aún no ha marcado ese plato como listo.']);
+
+        $listo = (int) $linea['entregado'] === 1;
+
+        // La cocina sí tiene que marcarlo: es el control de que el plato existe
+        if (! $listo && $linea['destino'] === 'cocina') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok' => false, 'error' => 'Cocina aún no ha marcado ese plato como listo.',
+            ]);
         }
 
-        $this->lineas->update($lineaId, ['servido' => 1]);
+        $cambios = ['servido' => 1];
+        if (! $listo) {
+            // Barra o entrega directa: el cajero lo prepara y sirve en el momento
+            $cambios['entregado'] = 1;
+            $cambios['listo_en']  = date('Y-m-d H:i:s');
+        }
+
+        $this->lineas->update($lineaId, $cambios);
 
         return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle((int) $linea['comanda_id'])]);
     }

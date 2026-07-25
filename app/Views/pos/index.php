@@ -288,6 +288,9 @@
         <a class="btn-cab" href="<?= site_url('cocina') ?>" style="text-decoration:none" title="Pantalla de cocina">
             <i class="bi bi-fire"></i><span class="insignia" id="ins-listos" style="display:none">0</span>
         </a>
+        <a class="btn-cab" href="<?= site_url('barra') ?>" style="text-decoration:none" title="Pantalla de barra">
+            <i class="bi bi-cup-straw"></i>
+        </a>
         <a class="btn-cab" href="<?= site_url('panel') ?>" style="text-decoration:none"><i class="bi bi-box-arrow-right"></i></a>
     </div>
 </header>
@@ -700,10 +703,16 @@
         const sel = lineaActual();
         ['#acc-menos', '#acc-mas', '#acc-cant', '#acc-nota'].forEach((s) => { $(s).disabled = !hayLinea; });
 
-        // Si la línea seleccionada está lista, se ofrece marcarla como servida
-        const mostrarServir = sel && sel.estado === 'listo';
+        // Se puede servir lo que ya está listo y, además, las bebidas de barra
+        // (el cajero las prepara y sirve él mismo, sin esperar a la pantalla de barra)
+        const mostrarServir = sel && (sel.estado === 'listo' || sel.estado === 'en_barra');
         $('#zona-servir').style.display = mostrarServir ? 'block' : 'none';
         $('#acciones-linea').style.display = mostrarServir ? 'none' : 'grid';
+        if (mostrarServir) {
+            $('#acc-servir').innerHTML = sel.estado === 'en_barra'
+                ? '<i class="bi bi-cup-straw"></i> Preparada y servida'
+                : '<i class="bi bi-check2-all"></i> Marcar como servido';
+        }
 
         $('#fila-descuento').style.display = comanda.descuento > 0 ? 'flex' : 'none';
         $('#tk-descuento').textContent = '−' + pesos(comanda.descuento);

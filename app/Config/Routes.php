@@ -74,12 +74,13 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->get('unidades/nueva', 'Unidades::nueva');
     $routes->post('unidades/guardar', 'Unidades::guardar');
 
-    // Pantalla de cocina (KDS)
+    // Pantallas de preparación (KDS): cocina y barra
     $routes->get('cocina', 'Cocina::index');
+    $routes->get('barra', 'Cocina::barra');
     $routes->group('cocina', ['filter' => 'tokenjson'], static function ($routes) {
-        $routes->get('datos', 'Cocina::datos');
+        $routes->get('datos/(:segment)', 'Cocina::datos/$1');
         $routes->post('listo/(:num)', 'Cocina::listo/$1');
-        $routes->post('comanda/(:num)/lista', 'Cocina::comandaLista/$1');
+        $routes->post('comanda/(:num)/lista/(:segment)', 'Cocina::comandaLista/$1/$2');
     });
 
     // TPV táctil a pantalla completa (API JSON)

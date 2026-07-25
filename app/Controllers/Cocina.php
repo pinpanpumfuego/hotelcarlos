@@ -4,10 +4,18 @@ namespace App\Controllers;
 
 use App\Models\ComandaLineaModel;
 
-/** Pantalla de cocina (KDS): lo enviado por los meseros y aún no preparado. */
+/**
+ * Pantallas de preparación (KDS): cocina y barra.
+ * Ambas comparten la misma vista y solo cambian de zona.
+ */
 class Cocina extends BaseController
 {
     private ComandaLineaModel $lineas;
+
+    private const ZONAS = [
+        'cocina' => ['titulo' => 'Cocina', 'icono' => 'bi-fire', 'ruta' => 'cocina'],
+        'barra'  => ['titulo' => 'Barra', 'icono' => 'bi-cup-straw', 'ruta' => 'barra'],
+    ];
 
     public function __construct()
     {
@@ -16,16 +24,19 @@ class Cocina extends BaseController
 
     public function index()
     {
-        return view('cocina/index', [
-            'pendientes' => $this->lineas->pendientesCocina(),
-            'hotel'      => config('Hotel'),
-        ]);
+        return $this->pantalla('cocina');
+    }
+
+    public function barra()
+    {
+        return $this->pantalla('barra');
     }
 
     /** Datos en JSON para refrescar la pantalla sin recargarla. */
-    public function datos()
+    public function datos(string $zona = 'cocina')
     {
-        $pendientes = $this->lineas->pendientesCocina();
+        $zona       = isset(self::ZONAS[$zona]) ? $zona : 'cocina';
+        $pendientes = $this->lineas->pendientesDeZona($zona);
 
         $comandas = [];
         foreach ($pendientes as $l) {
@@ -52,7 +63,7 @@ class Cocina extends BaseController
         return $this->response->setJSON(['ok' => true, 'comandas' => array_values($comandas)]);
     }
 
-    /** Cocina marca un plato como listo para servir. */
+    /** Marca un producto como listo para servir. */
     public function listo(int $lineaId)
     {
         $linea = $this->lineas->find($lineaId);
@@ -68,15 +79,31 @@ class Cocina extends BaseController
         return $this->response->setJSON(['ok' => true]);
     }
 
-    /** Toda la comanda lista de una vez. */
-    public function comandaLista(int $comandaId)
+    /** Toda la comanda de esa zona lista de una vez. */
+    public function comandaLista(int $comandaId, string $zona = 'cocina')
     {
+        $zona = isset(self::ZONAS[$zona]) ? $zona : 'cocina';
+
         $this->lineas->builder()
             ->where('comanda_id', $comandaId)
+            ->where('destino', $zona)
             ->where('enviado_cocina', 1)
             ->where('entregado', 0)
             ->update(['entregado' => 1, 'listo_en' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
 
         return $this->response->setJSON(['ok' => true]);
+    }
+
+    private function pantalla(string $zona)
+    {
+        $otra = $zona === 'cocina' ? 'barra' : 'cocina';
+
+        return view('cocina/index', [
+            'hotel'      => config('Hotel'),
+            'zona'       => $zona,
+            'config'     => self::ZONAS[$zona],
+            'otraZona'   => self::ZONAS[$otra],
+            'pendientes' => $this->lineas->pendientesDeZona($zona),
+        ]);
     }
 }

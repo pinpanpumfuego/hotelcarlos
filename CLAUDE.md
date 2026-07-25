@@ -103,6 +103,11 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       automáticamente). Si lo nuevo es todo directo, el botón del TPV cambia a "Marcar entregado".
       Gestión de carta ampliada: destino por producto, categorías editables con color y orden,
       y contador de productos por categoría.
+- [x] **Pantalla de barra propia** (`/barra`, misma vista que cocina con `zona`): cocina y barra
+      ven solo lo suyo y se enlazan entre sí. **El cajero puede servir las bebidas de barra
+      directamente desde el TPV** (botón "Preparada y servida" → marca entregado + servido de una
+      vez), sin depender de que alguien atienda la pantalla de barra. Los platos de **cocina**
+      siguen exigiendo que cocina los marque listos: es el control de que el plato existe.
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 

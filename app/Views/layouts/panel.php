@@ -81,6 +81,7 @@ if ($puedeVender) {
         ['caja', 'caja', 'bi-cash-coin', 'Caja'],
         ['pos', 'pos', 'bi-tablet-landscape', 'TPV táctil'],
         ['cocina', 'cocina', 'bi-fire', 'Cocina'],
+        ['barra', 'barra', 'bi-cup-straw', 'Barra'],
         ['tpv', 'tpv', 'bi-cup-hot', 'Restaurante'],
     ];
 }

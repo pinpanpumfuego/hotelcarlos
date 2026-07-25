@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cocina · <?= esc($hotel->nombre) ?></title>
+    <title><?= esc($config['titulo']) ?> · <?= esc($hotel->nombre) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         /* Pantalla de cocina: alto contraste, legible a distancia y con las manos ocupadas */
@@ -82,10 +82,13 @@
 <body>
 
 <header class="cabecera">
-    <h1><i class="bi bi-fire"></i> Cocina</h1>
+    <h1><i class="bi <?= esc($config['icono']) ?>"></i> <?= esc($config['titulo']) ?></h1>
     <span class="sub" id="resumen">—</span>
     <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
         <span class="sub" id="actualizado"></span>
+        <a class="btn-cab" href="<?= site_url($otraZona['ruta']) ?>">
+            <i class="bi <?= esc($otraZona['icono']) ?>"></i> <?= esc($otraZona['titulo']) ?>
+        </a>
         <a class="btn-cab" href="<?= site_url('pos') ?>"><i class="bi bi-tablet-landscape"></i> TPV</a>
         <a class="btn-cab" href="<?= site_url('panel') ?>"><i class="bi bi-box-arrow-right"></i></a>
     </div>
@@ -97,6 +100,7 @@
 (function () {
     'use strict';
     const BASE = <?= json_encode(rtrim(site_url('cocina'), '/')) ?>;
+    const ZONA = <?= json_encode($zona) ?>;
     let token = <?= json_encode(csrf_hash()) ?>;
     let ultimoConteo = 0;
 
@@ -155,7 +159,7 @@
             });
 
             html += '<button class="todo" data-comanda="' + c.comanda_id + '">'
-                + '<i class="bi bi-check2-all"></i> Comanda completa</button>';
+                + '<i class="bi bi-check2-all"></i> Todo listo</button>';
 
             div.innerHTML = html;
             tablero.appendChild(div);
@@ -165,12 +169,16 @@
             b.onclick = async () => { b.disabled = true; await api('/listo/' + b.dataset.linea, { method: 'POST' }); cargar(); };
         });
         tablero.querySelectorAll('[data-comanda]').forEach((b) => {
-            b.onclick = async () => { b.disabled = true; await api('/comanda/' + b.dataset.comanda + '/lista', { method: 'POST' }); cargar(); };
+            b.onclick = async () => {
+                b.disabled = true;
+                await api('/comanda/' + b.dataset.comanda + '/lista/' + ZONA, { method: 'POST' });
+                cargar();
+            };
         });
     }
 
     async function cargar() {
-        const datos = await api('/datos');
+        const datos = await api('/datos/' + ZONA);
         if (!datos || !datos.ok) return;
 
         // Aviso sonoro discreto cuando entra una comanda nueva
