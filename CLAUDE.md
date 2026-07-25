@@ -74,6 +74,17 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       **caja** del turno), tarjeta/transferencia/wompi, o **cargar a la cabaña** (cargo al
       **folio**, se paga en el check-out); anulación con motivo; pantalla de **cocina** con
       líneas pendientes, antigüedad por color y marcar "listo". Seeder `CartaEjemplo`.
+- [x] **TPV táctil a pantalla completa** (`Pos` + `app/Views/pos/index.php`, ruta `/pos`):
+      interfaz oscura sin sidebar, botones ≥60px, mapa de **mesas** por zonas (tabla `mesas`)
+      con color según estado, tiempo abierto e importe; carta por categorías con color;
+      ticket lateral con línea seleccionable y acciones (−, +, cantidad por teclado numérico,
+      nota a cocina); **enviar a cocina** separado del cobro (líneas ya enviadas no se borran);
+      descuento; anulación con motivo obligatorio; **pantalla de cobro** con formas de pago,
+      importes rápidos de efectivo y **cálculo de cambio**; comandas "para llevar" y ligadas a
+      huésped alojado. Todo por API JSON (`/pos/api/*`) sin recargar; el filtro `tokenjson`
+      devuelve el CSRF renovado en la cabecera `X-CSRF-TOKEN`.
+      **Ojo al ampliar tablas:** añadir siempre los campos nuevos a `$allowedFields` del modelo
+      (CI4 los descarta en silencio si no están) — ya pasó con descuento/mesa_id/recibido.
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 

@@ -8,7 +8,11 @@ class ComandaModel extends Model
 {
     protected $table         = 'comandas';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['numero', 'mesa', 'reserva_id', 'estado', 'total', 'forma_pago', 'usuario_id', 'cerrada_en', 'notas'];
+    protected $allowedFields = [
+        'numero', 'mesa', 'mesa_id', 'comensales', 'reserva_id', 'estado', 'total',
+        'descuento', 'motivo_descuento', 'forma_pago', 'recibido', 'cambio',
+        'usuario_id', 'cerrada_en', 'notas',
+    ];
     protected $useTimestamps = true;
 
     public const FORMAS_PAGO = [

@@ -74,7 +74,22 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->get('unidades/nueva', 'Unidades::nueva');
     $routes->post('unidades/guardar', 'Unidades::guardar');
 
-    // Restaurante (TPV)
+    // TPV táctil a pantalla completa (API JSON)
+    $routes->get('pos', 'Pos::index');
+    $routes->group('pos/api', ['filter' => 'tokenjson'], static function ($routes) {
+        $routes->get('estado', 'Pos::estado');
+        $routes->post('abrir', 'Pos::abrir');
+        $routes->get('comanda/(:num)', 'Pos::comanda/$1');
+        $routes->post('comanda/(:num)/anadir', 'Pos::anadir/$1');
+        $routes->post('comanda/(:num)/cocina', 'Pos::enviarCocina/$1');
+        $routes->post('comanda/(:num)/descuento', 'Pos::descuento/$1');
+        $routes->post('comanda/(:num)/cobrar', 'Pos::cobrar/$1');
+        $routes->post('comanda/(:num)/anular', 'Pos::anular/$1');
+        $routes->post('comanda/(:num)/mover', 'Pos::mover/$1');
+        $routes->post('linea/(:num)', 'Pos::linea/$1');
+    });
+
+    // Restaurante (gestión clásica)
     $routes->get('tpv', 'Tpv::index');
     $routes->post('tpv/abrir', 'Tpv::abrir');
     $routes->get('tpv/cocina', 'Tpv::cocina');

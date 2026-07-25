@@ -79,6 +79,7 @@ if ($puedeVender) {
         ['reservas', 'reservas', 'bi-calendar-check', 'Reservas'],
         ['huespedes', 'huespedes', 'bi-people', 'Huéspedes'],
         ['caja', 'caja', 'bi-cash-coin', 'Caja'],
+        ['pos', 'pos', 'bi-tablet-landscape', 'TPV táctil'],
         ['tpv', 'tpv', 'bi-cup-hot', 'Restaurante'],
     ];
 }
