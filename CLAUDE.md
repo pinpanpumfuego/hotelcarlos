@@ -39,6 +39,10 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       ingresos cobrados del mes y estado de cabañas en vivo.
 - [x] Rediseño visual del panel: verde bosque de la marca, Inter, sidebar con grupos por rol,
       KPIs con iconos, enlace a la web pública.
+- [x] Tablero de limpieza (`Limpieza` controller, tabla `limpiezas`): tarjetas por cabaña con
+      acción según estado (empezar/terminar con novedades/enviar a limpieza), historial con
+      duración y quién limpió. El rol limpieza entra directo a /limpieza al hacer login y
+      no ve dinero ni reservas pendientes en el dashboard.
 - [ ] Página "Mi perfil" para que cada usuario cambie su propia contraseña
 - [ ] Caja por turnos y arqueo (siguiente pieza financiera tras el folio)
 

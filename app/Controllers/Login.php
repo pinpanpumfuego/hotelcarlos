@@ -47,7 +47,9 @@ class Login extends BaseController
             'usuario_rol'    => $usuario['rol'],
         ]);
 
-        $destino = session()->get('url_destino') ?? site_url('panel');
+        // El equipo de limpieza entra directo a su tablero de trabajo
+        $porDefecto = $usuario['rol'] === 'limpieza' ? site_url('limpieza') : site_url('panel');
+        $destino    = session()->get('url_destino') ?? $porDefecto;
         session()->remove('url_destino');
 
         return redirect()->to($destino)->with('ok', 'Bienvenido, ' . $usuario['nombre'] . '.');

@@ -25,6 +25,12 @@ $routes->post('logout', 'Login::salir');
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('panel', 'Dashboard::index');
 
+    // Tablero de limpieza: todo el personal
+    $routes->get('limpieza', 'Limpieza::index');
+    $routes->post('limpieza/iniciar/(:num)', 'Limpieza::iniciar/$1');
+    $routes->post('limpieza/finalizar/(:num)', 'Limpieza::finalizar/$1');
+    $routes->post('limpieza/reportar/(:num)', 'Limpieza::reportar/$1');
+
     // Unidades: ver y actualizar estado, todo el personal (limpieza incluida)
     $routes->get('unidades', 'Unidades::index');
     $routes->get('unidades/editar/(:num)', 'Unidades::editar/$1');

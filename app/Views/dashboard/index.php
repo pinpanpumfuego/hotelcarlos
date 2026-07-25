@@ -3,6 +3,7 @@
 
 <?php
 $coloresUnidad = ['disponible' => 'success', 'ocupada' => 'danger', 'limpieza' => 'warning', 'bloqueada' => 'secondary'];
+$puedeVerDinero = in_array(session()->get('usuario_rol'), ['gerencia', 'recepcion'], true);
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -51,12 +52,21 @@ $coloresUnidad = ['disponible' => 'success', 'ocupada' => 'danger', 'limpieza' =
     <div class="col-6 col-lg-3">
         <div class="card kpi border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="kpi-icono bg-info-subtle text-info-emphasis"><i class="bi bi-cash-stack"></i></div>
-                <div>
-                    <div class="text-muted small">Cobrado este mes</div>
-                    <div class="fs-4 fw-bold">$<?= number_format($ingresosMes, 0, ',', '.') ?></div>
-                    <div class="small text-muted">COP</div>
-                </div>
+                <?php if ($puedeVerDinero): ?>
+                    <div class="kpi-icono bg-info-subtle text-info-emphasis"><i class="bi bi-cash-stack"></i></div>
+                    <div>
+                        <div class="text-muted small">Cobrado este mes</div>
+                        <div class="fs-4 fw-bold">$<?= number_format($ingresosMes, 0, ',', '.') ?></div>
+                        <div class="small text-muted">COP</div>
+                    </div>
+                <?php else: ?>
+                    <div class="kpi-icono bg-warning-subtle text-warning-emphasis"><i class="bi bi-bucket"></i></div>
+                    <div>
+                        <div class="text-muted small">Por limpiar</div>
+                        <div class="fs-3 fw-bold"><?= esc($noVendibles) ?></div>
+                        <div class="small text-muted">cabañas</div>
+                    </div>
+                <?php endif ?>
             </div>
         </div>
     </div>
@@ -120,6 +130,7 @@ $coloresUnidad = ['disponible' => 'success', 'ocupada' => 'danger', 'limpieza' =
 
 <div class="row g-4">
     <!-- ── Reservas por confirmar ── -->
+    <?php if ($puedeVerDinero): ?>
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-hourglass-split me-2 text-warning"></i>Reservas web por confirmar</div>
@@ -146,6 +157,8 @@ $coloresUnidad = ['disponible' => 'success', 'ocupada' => 'danger', 'limpieza' =
             </div>
         </div>
     </div>
+
+    <?php endif ?>
 
     <!-- ── Estado de cabañas ── -->
     <div class="col-lg-6">
