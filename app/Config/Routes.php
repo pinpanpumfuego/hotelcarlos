@@ -187,6 +187,16 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->post('administracion/correo', 'Administracion::guardarCorreo');
     $routes->post('administracion/correo/probar', 'Administracion::probarCorreo');
     $routes->post('administracion/wompi', 'Administracion::guardarWompi');
+    $routes->post('administracion/siigo', 'Administracion::guardarSiigo');
+    $routes->post('administracion/siigo/probar', 'Administracion::probarSiigo');
+
+    // Facturación electrónica
+    $routes->get('facturas', 'Facturas::index');
+    $routes->get('facturas/ver/(:num)', 'Facturas::ver/$1');
+    $routes->get('facturas/reserva/(:num)', 'Facturas::desdeReserva/$1');
+    $routes->get('facturas/comanda/(:num)', 'Facturas::desdeComanda/$1');
+    $routes->post('facturas/emitir', 'Facturas::emitir');
+    $routes->post('facturas/reenviar/(:num)', 'Facturas::reenviar/$1');
 
     $routes->post('unidades/eliminar/(:num)', 'Unidades::eliminar/$1');
 

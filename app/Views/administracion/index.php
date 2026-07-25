@@ -106,6 +106,162 @@
         </div>
     </div>
 
+    <!-- ═══ Facturación electrónica (Siigo) ═══ -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-receipt-cutoff me-2 text-success"></i>Facturación electrónica · Siigo
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">
+                    Siigo es proveedor tecnológico autorizado por la DIAN: el sistema le envía la factura
+                    y Siigo la timbra y la reporta. Genera tus credenciales en Siigo Nube, en
+                    <strong>Configuración › Alianzas e integraciones › Credenciales de integración</strong>,
+                    y pégalas aquí. Se guardan cifradas.
+                </p>
+
+                <form method="post" action="<?= site_url('administracion/siigo') ?>">
+                    <?= csrf_field() ?>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                Usuario API
+                                <?php if ($siigo['usuario_guardado']): ?>
+                                    <span class="badge text-bg-success ms-1">Guardado</span>
+                                <?php endif ?>
+                            </label>
+                            <input type="text" name="usuario" class="form-control" autocomplete="off"
+                                   placeholder="<?= $siigo['usuario_guardado'] ? 'En blanco = conservar' : 'correo@empresa.com' ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                Access Key
+                                <?php if ($siigo['clave_guardada']): ?>
+                                    <span class="badge text-bg-success ms-1">Guardada</span>
+                                <?php endif ?>
+                            </label>
+                            <input type="password" name="access_key" class="form-control" autocomplete="new-password"
+                                   placeholder="<?= $siigo['clave_guardada'] ? 'En blanco = conservar' : '' ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                Partner-Id
+                                <?php if ($siigo['partner_guardado']): ?>
+                                    <span class="badge text-bg-success ms-1">Guardado</span>
+                                <?php endif ?>
+                            </label>
+                            <input type="password" name="partner_id" class="form-control" autocomplete="new-password"
+                                   placeholder="<?= $siigo['partner_guardado'] ? 'En blanco = conservar' : '' ?>">
+                        </div>
+                    </div>
+
+                    <h3 class="h6 text-muted">Parámetros de la factura</h3>
+                    <p class="text-muted small">
+                        Estos identificadores salen de tu propia cuenta de Siigo. Pulsa
+                        <strong>Probar conexión</strong> abajo y te los mostraré para que los copies.
+                    </p>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Tipo de documento <span class="text-danger">*</span></label>
+                            <input type="text" name="documento_id" class="form-control" value="<?= esc($siigo['documento_id']) ?>"
+                                   placeholder="Ej.: 24446">
+                            <div class="form-text">Tu resolución de facturación.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Vendedor <span class="text-danger">*</span></label>
+                            <input type="text" name="vendedor_id" class="form-control" value="<?= esc($siigo['vendedor_id']) ?>">
+                            <div class="form-text">Usuario de Siigo que firma.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Forma de pago <span class="text-danger">*</span></label>
+                            <input type="text" name="pago_id" class="form-control" value="<?= esc($siigo['pago_id']) ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Impuesto</label>
+                            <input type="text" name="impuesto_id" class="form-control" value="<?= esc($siigo['impuesto_id']) ?>">
+                            <div class="form-text">Déjalo vacío si no aplicas IVA.</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Código: alojamiento</label>
+                            <input type="text" name="codigo_alojamiento" class="form-control" value="<?= esc($siigo['codigo_alojamiento']) ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Código: restaurante</label>
+                            <input type="text" name="codigo_restaurante" class="form-control" value="<?= esc($siigo['codigo_restaurante']) ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Código: otros</label>
+                            <input type="text" name="codigo_otros" class="form-control" value="<?= esc($siigo['codigo_otros']) ?>">
+                        </div>
+                        <div class="col-md-3 d-flex flex-column justify-content-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="enviar_dian" value="1" id="sDian" <?= $siigo['enviar_dian'] ? 'checked' : '' ?>>
+                                <label class="form-check-label small" for="sDian">Timbrar ante la DIAN</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="enviar_correo" value="1" id="sMail" <?= $siigo['enviar_correo'] ? 'checked' : '' ?>>
+                                <label class="form-check-label small" for="sMail">Enviar al cliente por correo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-text mb-3">
+                        Los códigos deben existir como productos en tu catálogo de Siigo.
+                    </div>
+
+                    <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar facturación</button>
+                </form>
+
+                <hr>
+                <form method="post" action="<?= site_url('administracion/siigo/probar') ?>">
+                    <?= csrf_field() ?>
+                    <button class="btn btn-outline-primary"><i class="bi bi-plug me-1"></i>Probar conexión y ver mis catálogos</button>
+                </form>
+
+                <?php if (! empty($catalogos)): ?>
+                    <div class="row g-3 mt-2">
+                        <?php
+                        $bloques = [
+                            'documentos' => ['Tipos de documento', 'documento_id'],
+                            'vendedores' => ['Vendedores', 'vendedor_id'],
+                            'pagos'      => ['Formas de pago', 'pago_id'],
+                            'impuestos'  => ['Impuestos', 'impuesto_id'],
+                        ];
+                        ?>
+                        <?php foreach ($bloques as $clave => [$titulo, $campo]): ?>
+                            <div class="col-md-6 col-xl-3">
+                                <div class="card h-100">
+                                    <div class="card-header bg-white small fw-semibold"><?= $titulo ?></div>
+                                    <div class="card-body p-2" style="max-height:220px; overflow-y:auto">
+                                        <?php if (empty($catalogos[$clave])): ?>
+                                            <p class="text-muted small mb-0">Sin datos.</p>
+                                        <?php endif ?>
+                                        <?php foreach ((array) ($catalogos[$clave] ?? []) as $item): ?>
+                                            <div class="small border-bottom py-1">
+                                                <code><?= esc($item['id'] ?? '') ?></code>
+                                                · <?= esc($item['name'] ?? $item['username'] ?? $item['description'] ?? '') ?>
+                                                <?php if (isset($item['percentage'])): ?>
+                                                    <span class="text-muted">(<?= esc($item['percentage']) ?>%)</span>
+                                                <?php endif ?>
+                                            </div>
+                                        <?php endforeach ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach ?>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0">
+                        Copia el número de la izquierda en el campo correspondiente de arriba y guarda.
+                    </p>
+                <?php endif ?>
+            </div>
+        </div>
+    </div>
+
     <!-- ═══ Correos enviados ═══ -->
     <div class="col-12">
         <div class="card border-0 shadow-sm">

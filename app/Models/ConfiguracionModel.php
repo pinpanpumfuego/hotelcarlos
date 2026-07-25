@@ -16,7 +16,10 @@ class ConfiguracionModel extends Model
     protected $allowedFields = ['clave', 'valor'];
     protected $useTimestamps = true;
 
-    public const CIFRADAS = ['correo_clave', 'wompi_llave_privada', 'wompi_secreto_integridad'];
+    public const CIFRADAS = [
+        'correo_clave', 'wompi_llave_privada', 'wompi_secreto_integridad',
+        'siigo_usuario', 'siigo_access_key', 'siigo_partner_id', 'siigo_token',
+    ];
 
     public function obtener(string $clave, ?string $porDefecto = null): ?string
     {

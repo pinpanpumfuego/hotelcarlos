@@ -40,6 +40,11 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
                 <button class="btn btn-secondary"><i class="bi bi-box-arrow-right me-1"></i>Check-out</button>
             </form>
         <?php endif ?>
+        <?php if (in_array($reserva['estado'], ['checkin', 'checkout'], true)): ?>
+            <a href="<?= site_url('facturas/reserva/' . $reserva['id']) ?>" class="btn btn-outline-success">
+                <i class="bi bi-receipt-cutoff me-1"></i>Facturar
+            </a>
+        <?php endif ?>
     </div>
 </div>
 

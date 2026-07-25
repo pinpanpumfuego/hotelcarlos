@@ -107,6 +107,12 @@
                             <span class="badge text-bg-<?= $c['estado'] === 'cobrada' ? 'success' : 'danger' ?>">
                                 <?= $c['estado'] === 'cobrada' ? 'Cobrada' : 'Anulada' ?>
                             </span>
+                            <?php if ($c['estado'] === 'cobrada'): ?>
+                                <a href="<?= site_url('facturas/comanda/' . $c['id']) ?>"
+                                   class="btn btn-sm btn-outline-success ms-1" title="Emitir factura electrónica">
+                                    <i class="bi bi-receipt-cutoff"></i>
+                                </a>
+                            <?php endif ?>
                         </td>
                     </tr>
                 <?php endforeach ?>

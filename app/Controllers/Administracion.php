@@ -46,6 +46,23 @@ class Administracion extends BaseController
             'correosLog'   => (new \App\Models\CorreoLogModel())->ultimos(20),
             'tiposCorreo'  => \App\Models\CorreoLogModel::TIPOS,
 
+            // Facturación electrónica con Siigo
+            'siigo' => [
+                'usuario_guardado'    => $this->config->existe('siigo_usuario'),
+                'clave_guardada'      => $this->config->existe('siigo_access_key'),
+                'partner_guardado'    => $this->config->existe('siigo_partner_id'),
+                'documento_id'        => $this->config->obtener('siigo_documento_id', ''),
+                'vendedor_id'         => $this->config->obtener('siigo_vendedor_id', ''),
+                'pago_id'             => $this->config->obtener('siigo_pago_id', ''),
+                'impuesto_id'         => $this->config->obtener('siigo_impuesto_id', ''),
+                'codigo_alojamiento'  => $this->config->obtener('siigo_codigo_alojamiento', 'ALOJ'),
+                'codigo_restaurante'  => $this->config->obtener('siigo_codigo_restaurante', 'REST'),
+                'codigo_otros'        => $this->config->obtener('siigo_codigo_otros', 'OTROS'),
+                'enviar_dian'         => $this->config->obtener('siigo_enviar_dian', '1') === '1',
+                'enviar_correo'       => $this->config->obtener('siigo_enviar_correo', '1') === '1',
+            ],
+            'catalogos' => session()->getFlashdata('catalogos'),
+
             // Wompi
             'wompi' => [
                 'ambiente'            => $this->config->obtener('wompi_ambiente', 'pruebas'),
@@ -122,6 +139,63 @@ class Administracion extends BaseController
         log_message('error', 'Fallo de correo de prueba: {debug}', ['debug' => $email->printDebugger(['headers'])]);
 
         return redirect()->to('administracion')->with('error', 'No se pudo enviar. Revisa servidor, puerto, usuario y contraseña. El detalle técnico quedó en el registro de errores.');
+    }
+
+    /** Credenciales y parámetros de facturación electrónica. */
+    public function guardarSiigo()
+    {
+        $pares = [
+            'siigo_documento_id'       => trim((string) $this->request->getPost('documento_id')),
+            'siigo_vendedor_id'        => trim((string) $this->request->getPost('vendedor_id')),
+            'siigo_pago_id'            => trim((string) $this->request->getPost('pago_id')),
+            'siigo_impuesto_id'        => trim((string) $this->request->getPost('impuesto_id')),
+            'siigo_codigo_alojamiento' => trim((string) $this->request->getPost('codigo_alojamiento')) ?: 'ALOJ',
+            'siigo_codigo_restaurante' => trim((string) $this->request->getPost('codigo_restaurante')) ?: 'REST',
+            'siigo_codigo_otros'       => trim((string) $this->request->getPost('codigo_otros')) ?: 'OTROS',
+            'siigo_enviar_dian'        => $this->request->getPost('enviar_dian') ? '1' : '0',
+            'siigo_enviar_correo'      => $this->request->getPost('enviar_correo') ? '1' : '0',
+        ];
+
+        // Las credenciales solo se tocan si se escriben: en blanco = conservar
+        foreach (['usuario' => 'siigo_usuario', 'access_key' => 'siigo_access_key', 'partner_id' => 'siigo_partner_id'] as $campo => $clave) {
+            $valor = (string) $this->request->getPost($campo);
+            if ($valor !== '') {
+                $pares[$clave] = trim($valor);
+                $pares['siigo_token'] = '';           // credencial nueva: se descarta el token viejo
+                $pares['siigo_token_caduca'] = '0';
+            }
+        }
+
+        $this->config->guardarPares($pares);
+
+        return redirect()->to('administracion')->with('ok', 'Configuración de facturación guardada.');
+    }
+
+    /** Comprueba la conexión con Siigo y trae los catálogos para elegir. */
+    public function probarSiigo()
+    {
+        $siigo = new \App\Libraries\Siigo();
+
+        if (! $siigo->configurado()) {
+            return redirect()->to('administracion')->with('error', 'Faltan las credenciales de Siigo.');
+        }
+
+        $prueba = $siigo->probar();
+        if (! $prueba['ok']) {
+            return redirect()->to('administracion')->with('error', 'No se pudo conectar con Siigo: ' . $prueba['error']);
+        }
+
+        // Con la conexión viva, se traen los catálogos que hay que configurar
+        $catalogos = [
+            'documentos' => $prueba['datos'],
+            'pagos'      => ($siigo->tiposPago()['datos'] ?? []),
+            'vendedores' => ($siigo->vendedores()['datos']['results'] ?? $siigo->vendedores()['datos'] ?? []),
+            'impuestos'  => ($siigo->impuestos()['datos'] ?? []),
+        ];
+
+        return redirect()->to('administracion')
+            ->with('ok', 'Conexión con Siigo correcta. Abajo puedes elegir los parámetros de facturación.')
+            ->with('catalogos', $catalogos);
     }
 
     public function guardarWompi()

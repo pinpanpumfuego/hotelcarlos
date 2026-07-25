@@ -249,6 +249,7 @@ $grupos['Operación'] = [
 if ($rol === 'gerencia') {
     $grupos['Gerencia'] = [
         ['reportes', 'reportes', 'bi-graph-up', 'Reportes', 0],
+        ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0],
         ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento', 0],
         ['carta', 'carta', 'bi-journal-text', 'Carta del restaurante', 0],
         ['modificadores', 'modificadores', 'bi-sliders', 'Modificadores', 0],

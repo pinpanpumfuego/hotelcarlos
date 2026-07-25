@@ -155,6 +155,19 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       incapacidad, permiso, licencia, falta) con aprobación; una vez aprobadas **bloquean esos días
       en el cuadrante**. Documentos laborales con el mismo almacenamiento seguro que los del huésped.
       **Fuera de alcance a propósito: nómina** — la liquidación va en el software contable.
+- [x] **Facturación electrónica con Siigo** (`App\Libraries\Siigo`, controlador `Facturas`,
+      tablas `facturas` y `factura_lineas`). Proveedor: **Siigo**, autorizado por la DIAN.
+      **API verificada en la documentación oficial:** auth `POST https://api.siigo.com/auth`
+      con `{username, access_key}` + cabecera `Partner-Id` → `access_token` válido 86400 s
+      (se cachea en `configuracion` y se renueva con 5 min de margen; reintento único ante 401);
+      facturas en `POST /v1/invoices`; correo en `POST /v1/invoices/{id}/mail`;
+      catálogos en `/v1/document-types?type=FV`, `/v1/payment-types`, `/v1/users`, `/v1/taxes`.
+      Credenciales cifradas en Administración, con **prueba de conexión que lista los catálogos**
+      de la cuenta para copiar los identificadores. La factura sale del **folio** de una reserva
+      o de una **comanda**, con pantalla de revisión previa (la emisión es siempre manual: tiene
+      efectos fiscales). Se guarda copia local con número, **CUFE** y enlace público.
+      **Pendiente de probar contra una cuenta real:** el cuerpo exacto de `/v1/invoices` está
+      implementado según la estructura documentada, pero no se ha podido validar contra Siigo.
 - [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
 - [ ] Combos / menús cerrados (producto compuesto de otros productos) — propuesto, no elegido aún
 - [x] **Registro en línea del huésped / autocheck-in** (tablas `registros`, `registro_acompanantes`,
