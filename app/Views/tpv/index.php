@@ -3,7 +3,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h1 class="h3 mb-0">Restaurante</h1>
-    <a href="<?= site_url('tpv/cocina') ?>" class="btn btn-outline-primary">
+    <a href="<?= site_url('cocina') ?>" class="btn btn-outline-primary">
         <i class="bi bi-fire me-1"></i>Pantalla de cocina
     </a>
 </div>

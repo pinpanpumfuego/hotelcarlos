@@ -163,7 +163,7 @@ class Tpv extends BaseController
 
         $this->lineas->update($lineaId, ['entregado' => $linea['entregado'] ? 0 : 1]);
 
-        $destino = $this->request->getPost('volver') === 'cocina' ? 'tpv/cocina' : 'tpv/comanda/' . $linea['comanda_id'];
+        $destino = $this->request->getPost('volver') === 'cocina' ? 'cocina' : 'tpv/comanda/' . $linea['comanda_id'];
 
         return redirect()->to($destino);
     }
@@ -244,14 +244,10 @@ class Tpv extends BaseController
         return redirect()->to('tpv')->with('ok', 'Comanda ' . $comanda['numero'] . ' anulada.');
     }
 
-    /** Pantalla de cocina: lo que falta por preparar y entregar. */
+    /** La cocina tiene ahora su propia pantalla, pensada para verse a distancia. */
     public function cocina()
     {
-        return view('tpv/cocina', [
-            'titulo'     => 'Cocina',
-            'seccion'    => 'tpv',
-            'pendientes' => $this->lineas->pendientesCocina(),
-        ]);
+        return redirect()->to('cocina');
     }
 
     private function comandaConDetalles(int $id): ?array
