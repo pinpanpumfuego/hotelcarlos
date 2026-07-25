@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\FolioModel;
 use App\Models\HuespedModel;
 use App\Models\ReservaModel;
 use App\Models\UnidadModel;
@@ -118,6 +119,105 @@ class Reservas extends BaseController
         return redirect()->to('reservas')->with('ok', 'Reserva actualizada. Total recalculado: $' . number_format($datos['total'], 0, ',', '.') . ' COP.');
     }
 
+    /** Ficha completa de la reserva con su folio. */
+    public function ver(int $id)
+    {
+        $reserva = $this->reservas
+            ->select('reservas.*, huespedes.nombre AS h_nombre, huespedes.apellidos AS h_apellidos,
+                      huespedes.tipo_documento, huespedes.num_documento, huespedes.telefono AS h_telefono,
+                      huespedes.email AS h_email, unidades.nombre AS unidad_nombre,
+                      tipos_unidad.nombre AS tipo_nombre, tipos_unidad.capacidad')
+            ->join('huespedes', 'huespedes.id = reservas.huesped_id')
+            ->join('unidades', 'unidades.id = reservas.unidad_id')
+            ->join('tipos_unidad', 'tipos_unidad.id = unidades.tipo_id')
+            ->where('reservas.id', $id)
+            ->first();
+
+        if ($reserva === null) {
+            return redirect()->to('reservas')->with('error', 'La reserva no existe.');
+        }
+
+        $folio = new FolioModel();
+        if (! in_array($reserva['estado'], ['cancelada'], true)) {
+            $folio->asegurarCargoAlojamiento($reserva);
+        }
+
+        return view('reservas/ver', [
+            'titulo'      => 'Reserva ' . $reserva['codigo'],
+            'seccion'     => 'reservas',
+            'reserva'     => $reserva,
+            'movimientos' => $folio->movimientosDeReserva($id),
+            'saldo'       => $folio->saldo($id),
+            'metodos'     => FolioModel::METODOS,
+        ]);
+    }
+
+    /** Recepción valida una reserva web: pendiente → confirmada. */
+    public function confirmar(int $id)
+    {
+        $reserva = $this->reservas->find($id);
+        if ($reserva === null || $reserva['estado'] !== 'pendiente') {
+            return redirect()->back()->with('error', 'Solo se puede confirmar una reserva pendiente.');
+        }
+
+        $this->reservas->update($id, ['estado' => 'confirmada']);
+
+        return redirect()->to('reservas/ver/' . $id)->with('ok', 'Reserva confirmada.');
+    }
+
+    /** Añade un cargo al folio (consumos, daños, servicios...). */
+    public function cargoFolio(int $id)
+    {
+        $reserva = $this->reservas->find($id);
+        if ($reserva === null || in_array($reserva['estado'], ['cancelada', 'checkout'], true)) {
+            return redirect()->back()->with('error', 'No se pueden añadir cargos a esta reserva.');
+        }
+
+        $concepto = trim((string) $this->request->getPost('concepto'));
+        $valor    = (float) $this->request->getPost('valor');
+
+        if ($concepto === '' || $valor <= 0) {
+            return redirect()->to('reservas/ver/' . $id)->with('error', 'Indica un concepto y un valor mayor que cero.');
+        }
+
+        (new FolioModel())->insert([
+            'reserva_id' => $id,
+            'tipo'       => 'cargo',
+            'concepto'   => $concepto,
+            'valor'      => $valor,
+            'usuario_id' => session()->get('usuario_id'),
+        ]);
+
+        return redirect()->to('reservas/ver/' . $id)->with('ok', 'Cargo añadido al folio.');
+    }
+
+    /** Registra un pago en el folio. */
+    public function pagoFolio(int $id)
+    {
+        $reserva = $this->reservas->find($id);
+        if ($reserva === null || $reserva['estado'] === 'cancelada') {
+            return redirect()->back()->with('error', 'No se pueden registrar pagos en esta reserva.');
+        }
+
+        $valor  = (float) $this->request->getPost('valor');
+        $metodo = (string) $this->request->getPost('metodo');
+
+        if ($valor <= 0 || ! array_key_exists($metodo, FolioModel::METODOS)) {
+            return redirect()->to('reservas/ver/' . $id)->with('error', 'Indica un valor mayor que cero y un método de pago.');
+        }
+
+        (new FolioModel())->insert([
+            'reserva_id' => $id,
+            'tipo'       => 'pago',
+            'concepto'   => 'Pago (' . FolioModel::METODOS[$metodo] . ')',
+            'valor'      => $valor,
+            'metodo'     => $metodo,
+            'usuario_id' => session()->get('usuario_id'),
+        ]);
+
+        return redirect()->to('reservas/ver/' . $id)->with('ok', 'Pago registrado.');
+    }
+
     /** El huésped llega: la reserva pasa a "checkin" y la unidad a "ocupada". */
     public function checkin(int $id)
     {
@@ -132,12 +232,21 @@ class Reservas extends BaseController
         return redirect()->to('reservas')->with('ok', 'Check-in realizado: la unidad queda ocupada.');
     }
 
-    /** El huésped se va: la reserva pasa a "checkout" y la unidad a "limpieza". */
+    /** El huésped se va: exige folio en cero; la unidad pasa a "limpieza". */
     public function checkout(int $id)
     {
         $reserva = $this->reservas->find($id);
         if ($reserva === null || $reserva['estado'] !== 'checkin') {
             return redirect()->to('reservas')->with('error', 'Solo se puede hacer check-out de una reserva con check-in.');
+        }
+
+        $folio = new FolioModel();
+        $folio->asegurarCargoAlojamiento($reserva);
+        $saldo = $folio->saldo($id);
+
+        if (abs($saldo) > 0.01) {
+            return redirect()->to('reservas/ver/' . $id)
+                ->with('error', 'No se puede hacer check-out: el folio tiene un saldo pendiente de $' . number_format($saldo, 0, ',', '.') . ' COP. Registra el pago primero.');
         }
 
         $this->reservas->update($id, ['estado' => 'checkout']);

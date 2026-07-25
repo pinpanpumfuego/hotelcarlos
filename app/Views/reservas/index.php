@@ -30,7 +30,7 @@
                 <?php endif ?>
                 <?php foreach ($reservas as $r): ?>
                     <tr>
-                        <td class="fw-semibold"><?= esc($r['codigo']) ?></td>
+                        <td><a href="<?= site_url('reservas/ver/' . $r['id']) ?>" class="fw-semibold text-decoration-none"><?= esc($r['codigo']) ?></a></td>
                         <td><?= esc($r['huesped_apellidos']) ?>, <?= esc($r['huesped_nombre']) ?></td>
                         <td><?= esc($r['unidad_nombre']) ?></td>
                         <td><?= esc(date('d/m/Y', strtotime($r['fecha_entrada']))) ?></td>
@@ -42,6 +42,15 @@
                             <span class="badge text-bg-<?= $colores[$r['estado']] ?? 'secondary' ?>"><?= esc(ucfirst($r['estado'])) ?></span>
                         </td>
                         <td class="text-end text-nowrap">
+                            <a href="<?= site_url('reservas/ver/' . $r['id']) ?>" class="btn btn-sm btn-outline-secondary" title="Ver ficha y folio">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <?php if ($r['estado'] === 'pendiente'): ?>
+                                <form action="<?= site_url('reservas/confirmar/' . $r['id']) ?>" method="post" class="d-inline">
+                                    <?= csrf_field() ?>
+                                    <button class="btn btn-sm btn-primary" title="Confirmar reserva"><i class="bi bi-check2-circle"></i></button>
+                                </form>
+                            <?php endif ?>
                             <?php if (in_array($r['estado'], ['pendiente', 'confirmada'], true)): ?>
                                 <form action="<?= site_url('reservas/checkin/' . $r['id']) ?>" method="post" class="d-inline">
                                     <?= csrf_field() ?>

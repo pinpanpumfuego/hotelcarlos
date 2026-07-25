@@ -31,8 +31,16 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       cabeceras seguras, roles gerencia/recepcion/limpieza aplicados en rutas y menú,
       CRUD de usuarios (solo gerencia). Admin inicial: seeder `UsuarioAdmin`
       (admin@hotelcarlos.local / Admin2026! — cambiar en producción)
-- [ ] Folio del huésped y caja
+- [x] Folio del huésped (`folio_movimientos`, `FolioModel`): cargo de alojamiento automático,
+      cargos manuales, pagos por método (efectivo/tarjeta/transferencia/wompi), saldo en vivo;
+      el check-out se bloquea si el saldo no es cero. Ficha de reserva completa en `reservas/ver/:id`.
+- [x] Flujo de estados completo: pendiente → confirmar (recepción) → check-in → check-out;
+      dashboard operativo con ocupación, llegadas/salidas de hoy, reservas web por confirmar,
+      ingresos cobrados del mes y estado de cabañas en vivo.
+- [x] Rediseño visual del panel: verde bosque de la marca, Inter, sidebar con grupos por rol,
+      KPIs con iconos, enlace a la web pública.
 - [ ] Página "Mi perfil" para que cada usuario cambie su propia contraseña
+- [ ] Caja por turnos y arqueo (siguiente pieza financiera tras el folio)
 
 ## Decisión de arquitectura: local-first + nube
 

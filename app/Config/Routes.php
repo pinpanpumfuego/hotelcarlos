@@ -43,6 +43,10 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->post('huespedes/eliminar/(:num)', 'Huespedes::eliminar/$1');
 
     $routes->get('reservas', 'Reservas::index');
+    $routes->get('reservas/ver/(:num)', 'Reservas::ver/$1');
+    $routes->post('reservas/confirmar/(:num)', 'Reservas::confirmar/$1');
+    $routes->post('reservas/folio/cargo/(:num)', 'Reservas::cargoFolio/$1');
+    $routes->post('reservas/folio/pago/(:num)', 'Reservas::pagoFolio/$1');
     $routes->get('reservas/nueva', 'Reservas::nueva');
     $routes->post('reservas/guardar', 'Reservas::guardar');
     $routes->get('reservas/editar/(:num)', 'Reservas::editar/$1');
