@@ -17,6 +17,15 @@ $routes->post('reservar/datos', 'Reservar::datos');
 $routes->post('reservar/confirmar', 'Reservar::confirmar');
 $routes->get('reservar/exito/(:segment)', 'Reservar::exito/$1');
 
+// ── Registro en línea del huésped (enlace con token, sin cuenta) ────
+$routes->get('registro/(:segment)', 'Registro::index/$1');
+$routes->post('registro/(:segment)/datos', 'Registro::guardarDatos/$1');
+$routes->post('registro/(:segment)/acompanante', 'Registro::guardarAcompanante/$1');
+$routes->post('registro/(:segment)/acompanante/eliminar/(:num)', 'Registro::eliminarAcompanante/$1/$2');
+$routes->post('registro/(:segment)/documento', 'Registro::subirDocumento/$1');
+$routes->post('registro/(:segment)/documento/eliminar/(:num)', 'Registro::eliminarDocumento/$1/$2');
+$routes->post('registro/(:segment)/enviar', 'Registro::enviar/$1');
+
 // ── Acceso ──────────────────────────────────────────────────────────
 $routes->get('login', 'Login::index');
 $routes->post('login/entrar', 'Login::entrar');
@@ -58,6 +67,16 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->get('huespedes/editar/(:num)', 'Huespedes::editar/$1');
     $routes->post('huespedes/actualizar/(:num)', 'Huespedes::actualizar/$1');
     $routes->post('huespedes/eliminar/(:num)', 'Huespedes::eliminar/$1');
+
+    // Revisión de los registros de llegada
+    $routes->get('registros', 'Registros::index');
+    $routes->get('registros/ver/(:num)', 'Registros::ver/$1');
+    $routes->get('registros/documento/(:num)', 'Registros::documento/$1');
+    $routes->get('registros/firma/(:num)', 'Registros::firma/$1');
+    $routes->post('registros/aprobar/(:num)', 'Registros::aprobar/$1');
+    $routes->post('registros/rechazar/(:num)', 'Registros::rechazar/$1');
+    $routes->post('registros/reporte/(:num)', 'Registros::marcarReporte/$1');
+    $routes->post('registros/generar/(:num)', 'Registros::generar/$1');
 
     $routes->get('reservas', 'Reservas::index');
     $routes->get('reservas/ver/(:num)', 'Reservas::ver/$1');

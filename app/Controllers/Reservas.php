@@ -159,6 +159,7 @@ class Reservas extends BaseController
             'movimientos' => $folio->movimientosDeReserva($id),
             'saldo'       => $folio->saldo($id),
             'metodos'     => FolioModel::METODOS,
+            'registro'    => (new \App\Models\RegistroModel())->where('reserva_id', $id)->first(),
         ]);
     }
 

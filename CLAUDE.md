@@ -132,6 +132,18 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       Verificado: tomate $8→$12/g ⇒ hogao $4→$7/g ⇒ sancocho $10.070→$10.230.
 - [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
 - [ ] Combos / menús cerrados (producto compuesto de otros productos) — propuesto, no elegido aún
+- [x] **Registro en línea del huésped / autocheck-in** (tablas `registros`, `registro_acompanantes`,
+      `registro_documentos`; controladores `Registro` público y `Registros` de revisión):
+      enlace con token de 48 caracteres que **caduca un día después de la salida**; formulario móvil
+      por pasos (datos TRA, acompañantes, documento, avisos legales, **firma con el dedo** en canvas);
+      cola de revisión en recepción con aprobación o devolución con motivo (el huésped reusa el enlace).
+      **Cumplimiento:** autorización de tratamiento de datos (Ley 1581/2012 y Decreto 1377/2013) con
+      versión guardada, aviso ESCNNA (Leyes 679/2001 y 1336/2009), detección automática de **menores**
+      (por fecha de nacimiento) y de **extranjeros** (por nacionalidad) con avisos a recepción, y
+      marcas de control para los reportes **TRA** y **SIRE** (el sistema no transmite: ayuda a llevar
+      el control). **Seguridad de documentos:** se guardan en `writable/uploads/documentos` (fuera de
+      public/, acceso web directo 403), solo se sirven por controlador a personal con sesión, con
+      `no-store` y registro en el log de cada consulta. Verificado el ciclo completo en móvil.
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 

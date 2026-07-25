@@ -62,6 +62,41 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
             </div>
         </div>
 
+        <!-- Registro en línea del huésped -->
+        <?php if (! in_array($reserva['estado'], ['cancelada', 'checkout'], true)): ?>
+            <?php
+            $colorReg = ['pendiente' => 'secondary', 'enviado' => 'warning', 'aprobado' => 'success', 'rechazado' => 'danger'];
+            ?>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white fw-semibold"><i class="bi bi-person-vcard me-2"></i>Registro de llegada</div>
+                <div class="card-body">
+                    <?php if ($registro === null): ?>
+                        <p class="text-muted small">
+                            Genera un enlace para que el huésped complete su registro desde el móvil antes de llegar:
+                            datos, acompañantes, documento y firma.
+                        </p>
+                        <form action="<?= site_url('registros/generar/' . $reserva['id']) ?>" method="post">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-primary"><i class="bi bi-link-45deg me-1"></i>Generar enlace de registro</button>
+                        </form>
+                    <?php else: ?>
+                        <p class="mb-2">
+                            Estado:
+                            <span class="badge text-bg-<?= $colorReg[$registro['estado']] ?>">
+                                <?= esc(\App\Models\RegistroModel::ESTADOS[$registro['estado']]) ?>
+                            </span>
+                        </p>
+                        <a href="<?= site_url('registros/ver/' . $registro['id']) ?>" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>Ver el registro
+                        </a>
+                        <a href="<?= site_url('registro/' . $registro['token']) ?>" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir como el huésped
+                        </a>
+                    <?php endif ?>
+                </div>
+            </div>
+        <?php endif ?>
+
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-house-heart me-2"></i>Estancia</div>
             <div class="card-body">

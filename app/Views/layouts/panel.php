@@ -78,6 +78,7 @@ if ($puedeVender) {
         ['calendario', 'calendario', 'bi-calendar3', 'Calendario'],
         ['reservas', 'reservas', 'bi-calendar-check', 'Reservas'],
         ['huespedes', 'huespedes', 'bi-people', 'Huéspedes'],
+        ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada'],
         ['caja', 'caja', 'bi-cash-coin', 'Caja'],
         ['pos', 'pos', 'bi-tablet-landscape', 'TPV táctil'],
         ['cocina', 'cocina', 'bi-fire', 'Cocina'],
