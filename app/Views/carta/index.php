@@ -105,14 +105,17 @@ $colorDestino = ['cocina' => 'warning', 'barra' => 'info', 'directo' => 'seconda
                             <th>Producto</th>
                             <th class="d-none d-md-table-cell">Categoría</th>
                             <th>Destino</th>
+                            <th>Ficha</th>
                             <th class="text-end">Precio</th>
+                            <th class="text-end d-none d-lg-table-cell">Coste</th>
+                            <th class="text-end d-none d-lg-table-cell">Food cost</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($productos)): ?>
-                            <tr><td colspan="6" class="text-center text-muted py-5">
+                            <tr><td colspan="9" class="text-center text-muted py-5">
                                 <i class="bi bi-journal-x fs-3 d-block mb-2 opacity-50"></i>
                                 La carta está vacía.
                             </td></tr>
@@ -132,7 +135,38 @@ $colorDestino = ['cocina' => 'warning', 'barra' => 'info', 'directo' => 'seconda
                                         <i class="bi <?= $iconoDestino[$d] ?>"></i> <?= esc($destinos[$d]) ?>
                                     </span>
                                 </td>
+                                <td class="text-nowrap">
+                                    <?php foreach ($dietas as $campo => $info): ?>
+                                        <?php if (! empty($p[$campo])): ?>
+                                            <i class="bi <?= $info['icono'] ?> text-success" title="<?= esc($info['etiqueta']) ?>"></i>
+                                        <?php endif ?>
+                                    <?php endforeach ?>
+                                    <?php if ((int) ($p['picante'] ?? 0) > 0): ?>
+                                        <span title="<?= esc($picante[(int) $p['picante']]) ?>"><?= str_repeat('🌶', (int) $p['picante']) ?></span>
+                                    <?php endif ?>
+                                    <?php if (! empty($p['alergenos_lista'])): ?>
+                                        <span class="badge text-bg-danger-subtle text-danger-emphasis border border-danger-subtle"
+                                              title="<?= esc(implode(', ', array_map(static fn ($a) => $alergenos[$a], $p['alergenos_lista']))) ?>">
+                                            <i class="bi bi-exclamation-triangle"></i> <?= count($p['alergenos_lista']) ?>
+                                        </span>
+                                    <?php endif ?>
+                                    <?php if (! empty($p['divisible'])): ?>
+                                        <span class="badge text-bg-light border" title="Se vende por mitades"><i class="bi bi-pie-chart"></i></span>
+                                    <?php endif ?>
+                                </td>
                                 <td class="text-end">$<?= number_format((float) $p['precio'], 0, ',', '.') ?></td>
+                                <td class="text-end d-none d-lg-table-cell text-muted">
+                                    <?= $p['coste'] !== null ? '$' . number_format($p['coste'], 0, ',', '.') : '—' ?>
+                                </td>
+                                <td class="text-end d-none d-lg-table-cell">
+                                    <?php if ($p['foodcost'] !== null): ?>
+                                        <span class="fw-semibold text-<?= $p['foodcost'] > 35 ? 'danger' : ($p['foodcost'] > 30 ? 'warning' : 'success') ?>">
+                                            <?= $p['foodcost'] ?>%
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif ?>
+                                </td>
                                 <td>
                                     <span class="badge text-bg-<?= $p['disponible'] ? 'success' : 'secondary' ?>">
                                         <?= $p['disponible'] ? 'Disponible' : 'Agotado' ?>
@@ -145,8 +179,11 @@ $colorDestino = ['cocina' => 'warning', 'barra' => 'info', 'directo' => 'seconda
                                             <i class="bi <?= $p['disponible'] ? 'bi-eye-slash' : 'bi-eye' ?>"></i>
                                         </button>
                                     </form>
+                                    <a href="<?= site_url('carta/ficha/' . $p['id']) ?>" class="btn btn-sm btn-primary" title="Ficha completa: alérgenos, modificadores y escandallo">
+                                        <i class="bi bi-clipboard-data"></i>
+                                    </a>
                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse"
-                                            data-bs-target="#editar<?= $p['id'] ?>" title="Editar">
+                                            data-bs-target="#editar<?= $p['id'] ?>" title="Edición rápida">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <form method="post" action="<?= site_url('carta/producto/eliminar/' . $p['id']) ?>" class="d-inline"
@@ -157,7 +194,7 @@ $colorDestino = ['cocina' => 'warning', 'barra' => 'info', 'directo' => 'seconda
                                 </td>
                             </tr>
                             <tr class="collapse" id="editar<?= $p['id'] ?>">
-                                <td colspan="6" class="bg-light">
+                                <td colspan="9" class="bg-light">
                                     <form method="post" action="<?= site_url('carta/producto/actualizar/' . $p['id']) ?>" class="row g-2 align-items-end">
                                         <?= csrf_field() ?>
                                         <div class="col-md-3">

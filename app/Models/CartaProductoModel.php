@@ -8,13 +8,57 @@ class CartaProductoModel extends Model
 {
     protected $table         = 'carta_productos';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['categoria_id', 'nombre', 'descripcion', 'precio', 'destino', 'disponible'];
+    protected $allowedFields = [
+        'categoria_id', 'nombre', 'descripcion', 'precio', 'destino', 'disponible',
+        'apto_vegano', 'apto_vegetariano', 'sin_gluten', 'sin_lactosa', 'picante',
+        'alergenos', 'divisible',
+    ];
 
     public const DESTINOS = [
         'cocina'  => 'Cocina',
         'barra'   => 'Barra',
         'directo' => 'Entrega directa',
     ];
+
+    /** Marcas dietéticas: clave => [etiqueta, icono]. */
+    public const DIETAS = [
+        'apto_vegano'      => ['etiqueta' => 'Vegano', 'icono' => 'bi-flower1'],
+        'apto_vegetariano' => ['etiqueta' => 'Vegetariano', 'icono' => 'bi-tree'],
+        'sin_gluten'       => ['etiqueta' => 'Sin gluten', 'icono' => 'bi-slash-circle'],
+        'sin_lactosa'      => ['etiqueta' => 'Sin lactosa', 'icono' => 'bi-cup'],
+    ];
+
+    /** Alérgenos de declaración habitual. */
+    public const ALERGENOS = [
+        'gluten'       => 'Gluten',
+        'crustaceos'   => 'Crustáceos',
+        'huevo'        => 'Huevo',
+        'pescado'      => 'Pescado',
+        'mani'         => 'Maní / cacahuete',
+        'soja'         => 'Soja',
+        'lacteos'      => 'Lácteos',
+        'frutos_secos' => 'Frutos secos',
+        'apio'         => 'Apio',
+        'mostaza'      => 'Mostaza',
+        'sesamo'       => 'Sésamo',
+        'sulfitos'     => 'Sulfitos',
+        'moluscos'     => 'Moluscos',
+    ];
+
+    public const PICANTE = [0 => 'No picante', 1 => 'Suave', 2 => 'Medio', 3 => 'Muy picante'];
+
+    /** Lista de alérgenos de un producto como array de claves. */
+    public static function alergenosDe(?string $valor): array
+    {
+        if ($valor === null || trim($valor) === '') {
+            return [];
+        }
+
+        return array_values(array_intersect(
+            array_map('trim', explode(',', $valor)),
+            array_keys(self::ALERGENOS)
+        ));
+    }
     protected $useTimestamps = true;
 
     protected $validationRules = [

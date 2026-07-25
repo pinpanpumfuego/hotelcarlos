@@ -126,6 +126,24 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
 
     // Carta del restaurante
     $routes->get('carta', 'Carta::index');
+    $routes->get('carta/ficha/(:num)', 'Carta::ficha/$1');
+    $routes->post('carta/receta/(:num)', 'Carta::guardarReceta/$1');
+    $routes->post('carta/receta/eliminar/(:num)', 'Carta::eliminarReceta/$1');
+
+    // Escandallo: insumos
+    $routes->get('insumos', 'Carta::insumos');
+    $routes->post('insumos/guardar', 'Carta::guardarInsumo');
+    $routes->post('insumos/actualizar/(:num)', 'Carta::actualizarInsumo/$1');
+    $routes->post('insumos/eliminar/(:num)', 'Carta::eliminarInsumo/$1');
+
+    // Modificadores
+    $routes->get('modificadores', 'Carta::modificadores');
+    $routes->post('modificadores/grupo/guardar', 'Carta::guardarGrupo');
+    $routes->post('modificadores/grupo/actualizar/(:num)', 'Carta::actualizarGrupo/$1');
+    $routes->post('modificadores/grupo/eliminar/(:num)', 'Carta::eliminarGrupo/$1');
+    $routes->post('modificadores/opcion/guardar', 'Carta::guardarModificador');
+    $routes->post('modificadores/opcion/eliminar/(:num)', 'Carta::eliminarModificador/$1');
+
     $routes->post('carta/categoria/guardar', 'Carta::guardarCategoria');
     $routes->post('carta/categoria/actualizar/(:num)', 'Carta::actualizarCategoria/$1');
     $routes->post('carta/categoria/eliminar/(:num)', 'Carta::eliminarCategoria/$1');
