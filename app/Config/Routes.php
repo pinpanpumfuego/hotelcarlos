@@ -85,6 +85,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
         $routes->post('comanda/(:num)/cocina', 'Pos::enviarCocina/$1');
         $routes->post('comanda/(:num)/descuento', 'Pos::descuento/$1');
         $routes->post('comanda/(:num)/propina', 'Pos::propina/$1');
+        $routes->post('comanda/(:num)/cliente', 'Pos::cliente/$1');
         $routes->post('comanda/(:num)/cobrar', 'Pos::cobrar/$1');
         $routes->post('comanda/(:num)/anular', 'Pos::anular/$1');
         $routes->post('comanda/(:num)/mover', 'Pos::mover/$1');

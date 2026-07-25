@@ -121,6 +121,14 @@
         .ticket-cab { padding: 12px 14px; border-bottom: 1px solid var(--borde); }
         .ticket-cab .numero { font-weight: 700; font-size: 1.05rem; }
         .ticket-cab .donde { color: var(--texto-suave); font-size: .85rem; }
+        .chip-cliente {
+            width: 100%; margin-top: 10px; display: flex; align-items: center; gap: 8px;
+            background: var(--panel-claro); border: 1px dashed var(--borde); border-radius: 10px;
+            padding: 10px 12px; min-height: 48px; text-align: left; font-size: .9rem;
+        }
+        .chip-cliente.asignado { border-style: solid; border-color: var(--verde); background: rgba(47,125,82,.08); }
+        .chip-cliente.asignado #ico-cliente { color: var(--verde); }
+        .chip-cliente span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .lineas { flex: 1; overflow-y: auto; padding: 6px; }
         .linea {
             width: 100%; text-align: left; background: transparent; border-radius: 10px;
@@ -205,6 +213,21 @@
             width: 100%; background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px;
             padding: 14px; color: var(--texto); font-size: 1rem; margin-bottom: 12px;
         }
+        .pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+        .pest {
+            background: var(--panel-claro); border: 2px solid var(--borde); border-radius: 12px;
+            min-height: 56px; font-weight: 600; display: flex; align-items: center;
+            justify-content: center; gap: 6px; padding: 8px; font-size: .92rem;
+        }
+        .pest.activa { border-color: var(--verde); background: rgba(47,125,82,.10); }
+        .opcion-cliente {
+            width: 100%; background: var(--panel-claro); border: 1px solid var(--borde);
+            border-radius: 10px; padding: 12px 14px; min-height: 56px; margin-bottom: 8px;
+            text-align: left; display: flex; align-items: center; gap: 10px;
+        }
+        .opcion-cliente:active { background: var(--borde); }
+        .opcion-cliente .cab { font-weight: 700; }
+        .opcion-cliente .quien { color: var(--texto-suave); font-size: .85rem; }
         .cambio { background: rgba(47,125,82,.10); border: 1px solid var(--verde); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
         .cambio .valor { font-size: 1.8rem; font-weight: 700; color: var(--verde); }
 
@@ -268,6 +291,11 @@
             <div class="ticket-cab">
                 <div class="numero" id="tk-numero">—</div>
                 <div class="donde" id="tk-donde"></div>
+                <button class="chip-cliente" id="btn-cliente">
+                    <i class="bi bi-person" id="ico-cliente"></i>
+                    <span id="tk-cliente">Sin cliente asignado</span>
+                    <i class="bi bi-pencil" style="margin-left:auto; opacity:.6"></i>
+                </button>
             </div>
             <div class="lineas" id="tk-lineas"></div>
 
@@ -357,6 +385,38 @@
         <div class="acciones" style="padding:14px 0 0;">
             <button class="btn" data-cerrar>Cancelar</button>
             <button class="btn verde" id="cob-confirmar">Confirmar cobro</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Modal cliente ═══ -->
+<div class="capa" id="modal-cliente">
+    <div class="modal-pos">
+        <h2>¿Quién es el cliente?</h2>
+        <p class="ayuda">Asigna un huésped para poder cargar el consumo a su cabaña, o registra un cliente ocasional.</p>
+
+        <div class="pestanas">
+            <button class="pest activa" data-pest="huesped"><i class="bi bi-house-heart"></i> Huésped alojado</button>
+            <button class="pest" data-pest="ocasional"><i class="bi bi-person"></i> Cliente ocasional</button>
+        </div>
+
+        <div id="panel-huesped">
+            <input type="search" class="campo" id="cli-buscar" placeholder="Buscar por cabaña o nombre" autocomplete="off">
+            <div id="cli-lista"></div>
+        </div>
+
+        <div id="panel-ocasional" style="display:none">
+            <input type="text" class="campo" id="cli-nombre" placeholder="Nombre del cliente *" autocomplete="off">
+            <input type="text" class="campo" id="cli-documento" placeholder="Documento (opcional)" autocomplete="off">
+            <input type="tel" class="campo" id="cli-telefono" placeholder="Teléfono (opcional)" autocomplete="off">
+            <button class="btn verde" style="width:100%" id="cli-guardar-ocasional">
+                <i class="bi bi-check-lg"></i> Asignar cliente
+            </button>
+        </div>
+
+        <div class="acciones" style="padding:14px 0 0;">
+            <button class="btn" data-cerrar>Cancelar</button>
+            <button class="btn rojo" id="cli-quitar"><i class="bi bi-person-dash"></i> Quitar cliente</button>
         </div>
     </div>
 </div>
@@ -458,7 +518,7 @@
                 b.className = 'mesa ocupada';
                 const quien = c.unidad_nombre
                     ? c.unidad_nombre + ' · ' + c.h_nombre
-                    : (c.numero || 'Para llevar');
+                    : (c.cliente_nombre || c.mesa || 'Para llevar');
                 b.innerHTML = '<div><div class="nombre">' + escaparHtml(quien) + '</div>'
                     + '<div class="dato">' + escaparHtml(c.numero) + '</div></div>'
                     + '<div class="total">' + pesos(c.total) + '</div>';
@@ -565,9 +625,14 @@
         $('#cab-titulo').textContent = comanda.mesa || 'Comanda';
         $('#cab-sub').textContent = comanda.numero;
         $('#tk-numero').textContent = comanda.numero;
-        $('#tk-donde').textContent = comanda.reserva_id
-            ? (comanda.unidad_nombre + ' · ' + comanda.h_nombre + ' ' + comanda.h_apellidos)
-            : (comanda.mesa || 'Para llevar');
+        $('#tk-donde').textContent = comanda.mesa || 'Para llevar';
+
+        // Chip de cliente: huésped alojado, ocasional o sin asignar
+        $('#tk-cliente').textContent = comanda.cliente_texto;
+        const chip = $('#btn-cliente');
+        chip.classList.toggle('asignado', comanda.cliente_tipo !== 'ninguno');
+        $('#ico-cliente').className = 'bi ' + (comanda.cliente_tipo === 'huesped' ? 'bi-house-heart'
+            : (comanda.cliente_tipo === 'ocasional' ? 'bi-person-check' : 'bi-person-plus'));
 
         const cont = $('#tk-lineas');
         cont.innerHTML = '';
@@ -730,6 +795,84 @@
             if (datos) { comanda = datos.comanda; pintarComanda(); }
         });
     };
+
+    // ── Cliente de la comanda ────────────────────────────────────
+    function pintarListaHuespedes(filtro) {
+        const cont = $('#cli-lista');
+        cont.innerHTML = '';
+        const texto = (filtro || '').toLowerCase();
+        const lista = estado.alojados.filter((a) =>
+            !texto || (a.unidad_nombre + ' ' + a.nombre + ' ' + a.apellidos).toLowerCase().includes(texto)
+        );
+
+        if (!lista.length) {
+            cont.innerHTML = '<p class="ayuda" style="text-align:center; padding:18px 0">'
+                + (estado.alojados.length ? 'Ningún huésped coincide.' : 'No hay huéspedes alojados ahora mismo.')
+                + '</p>';
+            return;
+        }
+
+        lista.forEach((a) => {
+            const b = document.createElement('button');
+            b.className = 'opcion-cliente';
+            b.innerHTML = '<i class="bi bi-house-heart" style="color:var(--verde)"></i>'
+                + '<span><span class="cab">' + escaparHtml(a.unidad_nombre) + '</span><br>'
+                + '<span class="quien">' + escaparHtml(a.nombre + ' ' + a.apellidos + ' · ' + a.codigo) + '</span></span>';
+            b.onclick = () => asignarCliente({ tipo: 'huesped', reserva_id: a.id });
+            cont.appendChild(b);
+        });
+    }
+
+    async function asignarCliente(cuerpo) {
+        const datos = await api('/comanda/' + comanda.id + '/cliente', {
+            method: 'POST', body: JSON.stringify(cuerpo),
+        });
+        if (!datos) return;
+        comanda = datos.comanda;
+        if (datos.alojados) estado.alojados = datos.alojados;
+        $('#modal-cliente').classList.remove('abierta');
+        pintarComanda();
+        avisar(comanda.cliente_tipo === 'ninguno' ? 'Cliente quitado de la comanda.' : 'Cliente asignado: ' + comanda.cliente_texto);
+    }
+
+    function mostrarPestanaCliente(cual) {
+        document.querySelectorAll('#modal-cliente .pest').forEach((p) => {
+            p.classList.toggle('activa', p.dataset.pest === cual);
+        });
+        $('#panel-huesped').style.display = cual === 'huesped' ? 'block' : 'none';
+        $('#panel-ocasional').style.display = cual === 'ocasional' ? 'block' : 'none';
+    }
+
+    document.querySelectorAll('#modal-cliente .pest').forEach((p) => {
+        p.onclick = () => mostrarPestanaCliente(p.dataset.pest);
+    });
+
+    $('#btn-cliente').onclick = () => {
+        if (!comanda) return;
+        $('#cli-buscar').value = '';
+        $('#cli-nombre').value = comanda.cliente_nombre || '';
+        $('#cli-documento').value = comanda.cliente_documento || '';
+        $('#cli-telefono').value = comanda.cliente_telefono || '';
+        pintarListaHuespedes('');
+        // Si ya es ocasional, abre directamente esa pestaña
+        mostrarPestanaCliente(comanda.cliente_tipo === 'ocasional' ? 'ocasional' : 'huesped');
+        $('#modal-cliente').classList.add('abierta');
+    };
+
+    $('#cli-buscar').oninput = (e) => pintarListaHuespedes(e.target.value);
+
+    $('#cli-guardar-ocasional').onclick = () => {
+        const nombre = $('#cli-nombre').value.trim();
+        if (!nombre) { avisar('Escribe el nombre del cliente.', true); return; }
+        asignarCliente({
+            tipo: 'ocasional',
+            nombre: nombre,
+            documento: $('#cli-documento').value.trim(),
+            telefono: $('#cli-telefono').value.trim(),
+        });
+    };
+
+    $('#cli-quitar').onclick = () => asignarCliente({ tipo: 'ninguno' });
 
     $('#btn-propina').onclick = () => {
         abrirTeclado('Propina en pesos', 'Se suma al total de la cuenta.', comanda.propina, async (valor) => {

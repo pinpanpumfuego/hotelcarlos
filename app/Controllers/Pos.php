@@ -67,7 +67,8 @@ class Pos extends BaseController
         // Comandas abiertas sin mesa (para llevar, room service)
         $sinMesa = $this->comandas
             ->select('comandas.id, comandas.numero, comandas.total, comandas.created_at,
-                      comandas.reserva_id, unidades.nombre AS unidad_nombre,
+                      comandas.reserva_id, comandas.mesa, comandas.cliente_nombre,
+                      unidades.nombre AS unidad_nombre,
                       huespedes.nombre AS h_nombre, huespedes.apellidos AS h_apellidos')
             ->join('reservas', 'reservas.id = comandas.reserva_id', 'left')
             ->join('huespedes', 'huespedes.id = reservas.huesped_id', 'left')
@@ -266,6 +267,71 @@ class Pos extends BaseController
         ]);
 
         return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle($id)]);
+    }
+
+    /**
+     * Asigna el cliente de la comanda: un huésped alojado (permite cargar a
+     * la cabaña) o un cliente ocasional identificado por su nombre.
+     */
+    public function cliente(int $id)
+    {
+        $comanda = $this->comandas->find($id);
+        if ($comanda === null || $comanda['estado'] !== 'abierta') {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda no está abierta.']);
+        }
+
+        $datos = $this->request->getJSON(true) ?? [];
+        $tipo  = (string) ($datos['tipo'] ?? '');
+
+        if ($tipo === 'huesped') {
+            $reservaId = (int) ($datos['reserva_id'] ?? 0);
+            $reserva   = (new ReservaModel())->find($reservaId);
+            if ($reserva === null || $reserva['estado'] !== 'checkin') {
+                return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Ese huésped no está alojado ahora mismo.']);
+            }
+
+            // Si ya se cobró algo a la cabaña anterior, no se puede cambiar sin más
+            if ($comanda['reserva_id'] !== null && (int) $comanda['reserva_id'] !== $reservaId
+                && (new ComandaPagoModel())->where('comanda_id', $id)->where('forma_pago', 'habitacion')->countAllResults() > 0) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'ok' => false, 'error' => 'Ya hay un cargo hecho a la cabaña anterior: anula la comanda y créala de nuevo.',
+                ]);
+            }
+
+            $this->comandas->update($id, [
+                'reserva_id'        => $reservaId,
+                'cliente_nombre'    => null,
+                'cliente_documento' => null,
+                'cliente_telefono'  => null,
+            ]);
+        } elseif ($tipo === 'ocasional') {
+            $nombre = trim((string) ($datos['nombre'] ?? ''));
+            if ($nombre === '') {
+                return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Escribe el nombre del cliente.']);
+            }
+
+            $this->comandas->update($id, [
+                'reserva_id'        => null,
+                'cliente_nombre'    => $nombre,
+                'cliente_documento' => trim((string) ($datos['documento'] ?? '')) ?: null,
+                'cliente_telefono'  => trim((string) ($datos['telefono'] ?? '')) ?: null,
+            ]);
+        } elseif ($tipo === 'ninguno') {
+            $this->comandas->update($id, [
+                'reserva_id'        => null,
+                'cliente_nombre'    => null,
+                'cliente_documento' => null,
+                'cliente_telefono'  => null,
+            ]);
+        } else {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Tipo de cliente no válido.']);
+        }
+
+        return $this->response->setJSON([
+            'ok'       => true,
+            'comanda'  => $this->comandaDetalle($id),
+            'alojados' => $this->alojados(),
+        ]);
     }
 
     /** Fija la propina de la comanda. */
@@ -500,6 +566,19 @@ class Pos extends BaseController
         $comanda['pagos']      = $pagos;
         $comanda['lineas']     = $lineas;
         $comanda['pendientes'] = count(array_filter($lineas, static fn ($l) => $l['enviado_cocina'] === 0));
+
+        // Etiqueta del cliente para la interfaz
+        if ($comanda['reserva_id'] !== null) {
+            $comanda['cliente_tipo']  = 'huesped';
+            $comanda['cliente_texto'] = $comanda['h_nombre'] . ' ' . $comanda['h_apellidos']
+                . ' · ' . $comanda['unidad_nombre'];
+        } elseif (! empty($comanda['cliente_nombre'])) {
+            $comanda['cliente_tipo']  = 'ocasional';
+            $comanda['cliente_texto'] = $comanda['cliente_nombre'];
+        } else {
+            $comanda['cliente_tipo']  = 'ninguno';
+            $comanda['cliente_texto'] = 'Sin cliente asignado';
+        }
 
         return $comanda;
     }

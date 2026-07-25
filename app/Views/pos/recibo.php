@@ -46,6 +46,11 @@
         <td class="der"><?= esc($comanda['reserva_id'] ? $comanda['unidad_nombre'] : ($comanda['mesa'] ?? 'Para llevar')) ?></td></tr>
     <?php if ($comanda['reserva_id']): ?>
         <tr><td>Huésped</td><td class="der"><?= esc($comanda['h_nombre'] . ' ' . $comanda['h_apellidos']) ?></td></tr>
+    <?php elseif (! empty($comanda['cliente_nombre'])): ?>
+        <tr><td>Cliente</td><td class="der"><?= esc($comanda['cliente_nombre']) ?></td></tr>
+        <?php if (! empty($comanda['cliente_documento'])): ?>
+            <tr><td>Documento</td><td class="der"><?= esc($comanda['cliente_documento']) ?></td></tr>
+        <?php endif ?>
     <?php endif ?>
     <tr><td>Atendió</td><td class="der"><?= esc($cajero) ?></td></tr>
 </table>
