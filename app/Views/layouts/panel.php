@@ -92,7 +92,12 @@ $puedeVender = in_array($rol, ['gerencia', 'recepcion'], true);
                     </a>
                 </li>
                 <?php if ($rol === 'gerencia'): ?>
-                    <div class="titulo-grupo">Configuración</div>
+                    <div class="titulo-grupo">Gerencia</div>
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($seccion ?? '') === 'reportes' ? 'active' : '' ?>" href="<?= site_url('reportes') ?>">
+                            <i class="bi bi-graph-up me-2"></i>Reportes
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link <?= ($seccion ?? '') === 'tipos' ? 'active' : '' ?>" href="<?= site_url('tipos') ?>">
                             <i class="bi bi-houses me-2"></i>Tipos de alojamiento
@@ -114,10 +119,10 @@ $puedeVender = in_array($rol, ['gerencia', 'recepcion'], true);
 
         <div class="col-12 col-md-9 col-lg-10 p-0">
             <div class="barra-superior d-flex justify-content-end align-items-center gap-3 px-4 py-2">
-                <span class="text-muted small">
+                <a href="<?= site_url('perfil') ?>" class="text-muted small text-decoration-none" title="Mi perfil">
                     <i class="bi bi-person-circle me-1"></i><?= esc(session()->get('usuario_nombre')) ?>
                     <span class="badge text-bg-light border ms-1"><?= esc($rolEtiqueta) ?></span>
-                </span>
+                </a>
                 <form action="<?= site_url('logout') ?>" method="post" class="mb-0">
                     <?= csrf_field() ?>
                     <button class="btn btn-sm btn-outline-secondary" title="Cerrar sesión">

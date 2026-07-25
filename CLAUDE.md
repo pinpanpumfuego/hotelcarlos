@@ -43,7 +43,11 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       acción según estado (empezar/terminar con novedades/enviar a limpieza), historial con
       duración y quién limpió. El rol limpieza entra directo a /limpieza al hacer login y
       no ve dinero ni reservas pendientes en el dashboard.
-- [ ] Página "Mi perfil" para que cada usuario cambie su propia contraseña
+- [x] Reportes gerenciales (`Reportes`, solo gerencia): filtro por periodo (máx 92 días),
+      ocupación %, cobrado/facturado, ADR y RevPAR con su fórmula visible, gráficas Chart.js
+      (ocupación por día e ingresos por día), pagos por método, export CSV para Excel.
+- [x] "Mi perfil" (`Perfil`): cambio de contraseña propio con verificación de la actual.
+      El nombre de usuario de la barra superior enlaza al perfil.
 - [ ] Caja por turnos y arqueo (siguiente pieza financiera tras el folio)
 
 ## Decisión de arquitectura: local-first + nube

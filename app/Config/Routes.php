@@ -25,6 +25,10 @@ $routes->post('logout', 'Login::salir');
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('panel', 'Dashboard::index');
 
+    // Perfil propio
+    $routes->get('perfil', 'Perfil::index');
+    $routes->post('perfil/clave', 'Perfil::cambiarClave');
+
     // Tablero de limpieza: todo el personal
     $routes->get('limpieza', 'Limpieza::index');
     $routes->post('limpieza/iniciar/(:num)', 'Limpieza::iniciar/$1');
@@ -67,6 +71,9 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
 
 // ── Configuración: solo gerencia ────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($routes) {
+    $routes->get('reportes', 'Reportes::index');
+    $routes->get('reportes/csv', 'Reportes::csv');
+
     $routes->post('unidades/eliminar/(:num)', 'Unidades::eliminar/$1');
 
     $routes->get('tipos', 'Tipos::index');
