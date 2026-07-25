@@ -5,9 +5,15 @@
     <h1 class="h3 mb-0">Huéspedes</h1>
     <div class="d-flex gap-2">
         <form method="get" action="<?= site_url('huespedes') ?>" class="d-flex gap-2">
-            <input type="search" name="q" class="form-control" placeholder="Buscar por nombre o documento"
-                   value="<?= esc($buscar ?? '') ?>">
-            <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="search" name="q" class="form-control" placeholder="Buscar por nombre o documento"
+                       value="<?= esc($buscar ?? '') ?>">
+            </div>
+            <button class="btn btn-outline-primary">Buscar</button>
+            <?php if (($buscar ?? '') !== ''): ?>
+                <a href="<?= site_url('huespedes') ?>" class="btn btn-link text-decoration-none text-nowrap">Limpiar</a>
+            <?php endif ?>
         </form>
         <a href="<?= site_url('huespedes/nuevo') ?>" class="btn btn-primary text-nowrap">
             <i class="bi bi-plus-lg me-1"></i>Nuevo huésped
@@ -30,7 +36,10 @@
             </thead>
             <tbody>
                 <?php if (empty($huespedes)): ?>
-                    <tr><td colspan="6" class="text-center text-muted py-4">No hay huéspedes registrados<?= ($buscar ?? '') !== '' ? ' que coincidan con la búsqueda' : ' todavía' ?>.</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-5">
+                        <i class="bi bi-people fs-3 d-block mb-2 opacity-50"></i>
+                        No hay huéspedes registrados<?= ($buscar ?? '') !== '' ? ' que coincidan con la búsqueda' : ' todavía' ?>.
+                    </td></tr>
                 <?php endif ?>
                 <?php foreach ($huespedes as $h): ?>
                     <tr>
@@ -54,6 +63,12 @@
             </tbody>
         </table>
     </div>
+    <?php if ($paginador->getPageCount() > 1): ?>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 pt-3">
+            <span class="text-muted small"><?= esc($totalActual) ?> huésped<?= $totalActual === 1 ? '' : 'es' ?></span>
+            <?= $paginador->links('default', 'bootstrap') ?>
+        </div>
+    <?php endif ?>
 </div>
 
 <?= $this->endSection() ?>

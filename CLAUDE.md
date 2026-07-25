@@ -62,6 +62,11 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       incidencias por cabaña o zona común con prioridad, opción de **bloquear la cabaña**
       (deja de venderse en la web al instante), flujo abierta → en proceso → resuelta con
       registro de quién y qué se hizo. Al resolver, la cabaña bloqueada pasa a limpieza.
+- [x] Pulido general: layout del panel responsive de verdad (menú fijo en escritorio, offcanvas
+      en móvil, sin scroll horizontal), menú generado desde un array por rol, paginación
+      Bootstrap propia (`app/Views/paginacion/bootstrap.php`, alias `bootstrap` en Config\Pager),
+      filtros + buscador + paginación en Reservas y Huéspedes, estados vacíos con icono,
+      columnas que se ocultan en móvil y vista de Cabañas coherente con el rol.
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 

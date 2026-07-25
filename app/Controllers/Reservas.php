@@ -22,10 +22,20 @@ class Reservas extends BaseController
 
     public function index()
     {
+        $filtros = [
+            'estado' => (string) $this->request->getGet('estado'),
+            'buscar' => trim((string) $this->request->getGet('q')),
+        ];
+
+        $consulta = $this->reservas->consultaDetallada($filtros);
+
         return view('reservas/index', [
-            'titulo'   => 'Reservas',
-            'seccion'  => 'reservas',
-            'reservas' => $this->reservas->conDetalles(),
+            'titulo'      => 'Reservas',
+            'seccion'     => 'reservas',
+            'reservas'    => $consulta->paginate(20),
+            'paginador'   => $this->reservas->pager,
+            'filtros'     => $filtros,
+            'totalActual' => $this->reservas->pager->getTotal(),
         ]);
     }
 

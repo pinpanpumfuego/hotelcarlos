@@ -27,10 +27,12 @@ class Huespedes extends BaseController
         }
 
         return view('huespedes/index', [
-            'titulo'    => 'Huéspedes',
-            'seccion'   => 'huespedes',
-            'huespedes' => $builder->findAll(),
-            'buscar'    => $buscar,
+            'titulo'      => 'Huéspedes',
+            'seccion'     => 'huespedes',
+            'huespedes'   => $builder->paginate(20),
+            'paginador'   => $this->huespedes->pager,
+            'totalActual' => $this->huespedes->pager->getTotal(),
+            'buscar'      => $buscar,
         ]);
     }
 

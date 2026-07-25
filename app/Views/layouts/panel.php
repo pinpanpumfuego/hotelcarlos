@@ -15,19 +15,30 @@
             --bosque-oscuro: #143425;
             --bosque-claro: #2a5f44;
             --arena: #b98a4a;
+            --ancho-menu: 250px;
         }
         body { min-height: 100vh; background: #f4f6f4; font-family: 'Inter', system-ui, sans-serif; }
 
-        /* ── Menú lateral ── */
-        .sidebar { min-height: 100vh; background: linear-gradient(180deg, var(--bosque-oscuro), var(--bosque) 70%); }
-        .sidebar .nav-link { color: #c5d6cb; border-radius: .5rem; padding: .55rem .9rem; font-size: .93rem; }
-        .sidebar .nav-link:hover { background: rgba(255,255,255,.08); color: #fff; }
-        .sidebar .nav-link.active { background: rgba(255,255,255,.14); color: #fff; font-weight: 600; }
-        .sidebar .navbar-brand { color: #fff; font-weight: 700; font-size: 1rem; line-height: 1.3; }
-        .sidebar .titulo-grupo { color: #86a893; font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; margin: 1.1rem 0 .3rem .9rem; }
+        /* ── Menú lateral: fijo en escritorio, desplegable en móvil ── */
+        .menu-lateral {
+            background: linear-gradient(180deg, var(--bosque-oscuro), var(--bosque) 70%);
+            width: var(--ancho-menu);
+        }
+        .menu-lateral .nav-link { color: #c5d6cb; border-radius: .5rem; padding: .55rem .9rem; font-size: .93rem; }
+        .menu-lateral .nav-link:hover { background: rgba(255,255,255,.08); color: #fff; }
+        .menu-lateral .nav-link.active { background: rgba(255,255,255,.14); color: #fff; font-weight: 600; }
+        .menu-lateral .marca { color: #fff; font-weight: 700; font-size: 1rem; line-height: 1.3; }
+        .menu-lateral .titulo-grupo {
+            color: #86a893; font-size: .7rem; text-transform: uppercase;
+            letter-spacing: .12em; margin: 1.1rem 0 .3rem .9rem;
+        }
+        @media (min-width: 992px) {
+            .menu-lateral { position: fixed; top: 0; bottom: 0; left: 0; overflow-y: auto; z-index: 1030; }
+            .zona-contenido { margin-left: var(--ancho-menu); }
+        }
 
         /* ── Barra superior ── */
-        .barra-superior { background: #fff; border-bottom: 1px solid #e3e8e3; }
+        .barra-superior { background: #fff; border-bottom: 1px solid #e3e8e3; position: sticky; top: 0; z-index: 1020; }
 
         /* ── Tarjetas y tablas ── */
         .card { border-radius: .8rem; }
@@ -42,6 +53,14 @@
         .btn-outline-primary { color: var(--bosque); border-color: var(--bosque); }
         .btn-outline-primary:hover { background: var(--bosque); border-color: var(--bosque); }
         a { color: var(--bosque-claro); }
+        .page-link { color: var(--bosque); }
+        .active > .page-link { background: var(--bosque); border-color: var(--bosque); }
+
+        /* En móvil, las acciones de las tablas no se aprietan */
+        @media (max-width: 575px) {
+            main { padding: 1rem !important; }
+            h1.h3 { font-size: 1.35rem; }
+        }
     </style>
 </head>
 <body>
@@ -49,122 +68,113 @@
 $rol         = session()->get('usuario_rol');
 $rolEtiqueta = \App\Models\UsuarioModel::ROLES[$rol] ?? $rol;
 $puedeVender = in_array($rol, ['gerencia', 'recepcion'], true);
+$activa      = $seccion ?? '';
+
+// Menú según el rol: [clave, url, icono, etiqueta] agrupados por sección
+$grupos = [];
+$grupos[''] = [['panel', 'panel', 'bi-speedometer2', 'Panel']];
+if ($puedeVender) {
+    $grupos['Recepción'] = [
+        ['calendario', 'calendario', 'bi-calendar3', 'Calendario'],
+        ['reservas', 'reservas', 'bi-calendar-check', 'Reservas'],
+        ['huespedes', 'huespedes', 'bi-people', 'Huéspedes'],
+        ['caja', 'caja', 'bi-cash-coin', 'Caja'],
+    ];
+}
+$grupos['Operación'] = [
+    ['limpieza', 'limpieza', 'bi-bucket', 'Limpieza'],
+    ['mantenimiento', 'mantenimiento', 'bi-tools', 'Mantenimiento'],
+    ['unidades', 'unidades', 'bi-door-open', 'Cabañas'],
+];
+if ($rol === 'gerencia') {
+    $grupos['Gerencia'] = [
+        ['reportes', 'reportes', 'bi-graph-up', 'Reportes'],
+        ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento'],
+        ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios'],
+        ['administracion', 'administracion', 'bi-gear', 'Administración'],
+    ];
+}
 ?>
-<div class="container-fluid">
-    <div class="row">
-        <nav class="col-12 col-md-3 col-lg-2 sidebar p-3">
-            <a class="navbar-brand d-block mb-3 text-decoration-none" href="<?= site_url('panel') ?>">
-                <i class="bi bi-tree me-1"></i><?= esc(config('Hotel')->nombre) ?>
+
+<?php
+// El mismo menú se usa en el panel lateral fijo y en el desplegable móvil
+$pintarMenu = static function () use ($grupos, $activa) { ?>
+    <a class="marca d-block mb-3 text-decoration-none" href="<?= site_url('panel') ?>">
+        <i class="bi bi-tree me-1"></i><?= esc(config('Hotel')->nombre) ?>
+    </a>
+    <ul class="nav nav-pills flex-column gap-1">
+        <?php foreach ($grupos as $tituloGrupo => $enlaces): ?>
+            <?php if ($tituloGrupo !== ''): ?>
+                <div class="titulo-grupo"><?= esc($tituloGrupo) ?></div>
+            <?php endif ?>
+            <?php foreach ($enlaces as [$clave, $ruta, $icono, $etiqueta]): ?>
+                <li class="nav-item">
+                    <a class="nav-link <?= $activa === $clave ? 'active' : '' ?>" href="<?= site_url($ruta) ?>">
+                        <i class="bi <?= $icono ?> me-2"></i><?= esc($etiqueta) ?>
+                    </a>
+                </li>
+            <?php endforeach ?>
+        <?php endforeach ?>
+    </ul>
+    <div class="mt-4 pt-3 border-top border-light border-opacity-10">
+        <a href="<?= site_url('/') ?>" class="nav-link" target="_blank" rel="noopener">
+            <i class="bi bi-globe2 me-2"></i>Ver web pública
+        </a>
+    </div>
+<?php }; ?>
+
+<!-- Menú fijo (escritorio) -->
+<nav class="menu-lateral p-3 d-none d-lg-block"><?php $pintarMenu(); ?></nav>
+
+<!-- Menú desplegable (móvil y tableta) -->
+<div class="offcanvas offcanvas-start menu-lateral d-lg-none" tabindex="-1" id="menuMovil" aria-label="Menú de navegación">
+    <div class="offcanvas-header pb-0">
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body pt-0"><?php $pintarMenu(); ?></div>
+</div>
+
+<div class="zona-contenido">
+    <div class="barra-superior d-flex align-items-center gap-3 px-3 px-md-4 py-2">
+        <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button"
+                data-bs-toggle="offcanvas" data-bs-target="#menuMovil" aria-label="Abrir menú">
+            <i class="bi bi-list"></i>
+        </button>
+        <span class="fw-semibold d-lg-none text-truncate"><?= esc($titulo ?? 'Panel') ?></span>
+
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <a href="<?= site_url('perfil') ?>" class="text-muted small text-decoration-none text-nowrap" title="Mi perfil">
+                <i class="bi bi-person-circle me-1"></i>
+                <span class="d-none d-sm-inline"><?= esc(session()->get('usuario_nombre')) ?></span>
+                <span class="badge text-bg-light border ms-1"><?= esc($rolEtiqueta) ?></span>
             </a>
-            <ul class="nav nav-pills flex-column gap-1">
-                <li class="nav-item">
-                    <a class="nav-link <?= ($seccion ?? '') === 'panel' ? 'active' : '' ?>" href="<?= site_url('panel') ?>">
-                        <i class="bi bi-speedometer2 me-2"></i>Panel
-                    </a>
-                </li>
-                <?php if ($puedeVender): ?>
-                    <div class="titulo-grupo">Recepción</div>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($seccion ?? '') === 'calendario' ? 'active' : '' ?>" href="<?= site_url('calendario') ?>">
-                            <i class="bi bi-calendar3 me-2"></i>Calendario
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($seccion ?? '') === 'reservas' ? 'active' : '' ?>" href="<?= site_url('reservas') ?>">
-                            <i class="bi bi-calendar-check me-2"></i>Reservas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($seccion ?? '') === 'huespedes' ? 'active' : '' ?>" href="<?= site_url('huespedes') ?>">
-                            <i class="bi bi-people me-2"></i>Huéspedes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($seccion ?? '') === 'caja' ? 'active' : '' ?>" href="<?= site_url('caja') ?>">
-                            <i class="bi bi-cash-coin me-2"></i>Caja
-                        </a>
-                    </li>
-                <?php endif ?>
-                <div class="titulo-grupo">Operación</div>
-                <li class="nav-item">
-                    <a class="nav-link <?= ($seccion ?? '') === 'limpieza' ? 'active' : '' ?>" href="<?= site_url('limpieza') ?>">
-                        <i class="bi bi-bucket me-2"></i>Limpieza
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= ($seccion ?? '') === 'mantenimiento' ? 'active' : '' ?>" href="<?= site_url('mantenimiento') ?>">
-                        <i class="bi bi-tools me-2"></i>Mantenimiento
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?= ($seccion ?? '') === 'unidades' ? 'active' : '' ?>" href="<?= site_url('unidades') ?>">
-                        <i class="bi bi-door-open me-2"></i>Cabañas
-                    </a>
-                </li>
-                <?php if ($rol === 'gerencia'): ?>
-                    <div class="titulo-grupo">Gerencia</div>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($seccion ?? '') === 'reportes' ? 'active' : '' ?>" href="<?= site_url('reportes') ?>">
-                            <i class="bi bi-graph-up me-2"></i>Reportes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($seccion ?? '') === 'tipos' ? 'active' : '' ?>" href="<?= site_url('tipos') ?>">
-                            <i class="bi bi-houses me-2"></i>Tipos de alojamiento
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($seccion ?? '') === 'usuarios' ? 'active' : '' ?>" href="<?= site_url('usuarios') ?>">
-                            <i class="bi bi-person-gear me-2"></i>Usuarios
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= ($seccion ?? '') === 'administracion' ? 'active' : '' ?>" href="<?= site_url('administracion') ?>">
-                            <i class="bi bi-gear me-2"></i>Administración
-                        </a>
-                    </li>
-                <?php endif ?>
-            </ul>
-            <div class="mt-4 pt-3 border-top border-light border-opacity-10">
-                <a href="<?= site_url('/') ?>" class="nav-link" target="_blank" rel="noopener">
-                    <i class="bi bi-globe2 me-2"></i>Ver web pública
-                </a>
-            </div>
-        </nav>
-
-        <div class="col-12 col-md-9 col-lg-10 p-0">
-            <div class="barra-superior d-flex justify-content-end align-items-center gap-3 px-4 py-2">
-                <a href="<?= site_url('perfil') ?>" class="text-muted small text-decoration-none" title="Mi perfil">
-                    <i class="bi bi-person-circle me-1"></i><?= esc(session()->get('usuario_nombre')) ?>
-                    <span class="badge text-bg-light border ms-1"><?= esc($rolEtiqueta) ?></span>
-                </a>
-                <form action="<?= site_url('logout') ?>" method="post" class="mb-0">
-                    <?= csrf_field() ?>
-                    <button class="btn btn-sm btn-outline-secondary" title="Cerrar sesión">
-                        <i class="bi bi-box-arrow-right me-1"></i>Salir
-                    </button>
-                </form>
-            </div>
-
-            <main class="p-4">
-                <?php if (session()->getFlashdata('ok')): ?>
-                    <div class="alert alert-success alert-dismissible fade show">
-                        <i class="bi bi-check-circle me-1"></i><?= esc(session()->getFlashdata('ok')) ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif ?>
-                <?php if (session()->getFlashdata('error')): ?>
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        <i class="bi bi-exclamation-triangle me-1"></i><?= esc(session()->getFlashdata('error')) ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif ?>
-
-                <?= $this->renderSection('contenido') ?>
-            </main>
+            <form action="<?= site_url('logout') ?>" method="post" class="mb-0">
+                <?= csrf_field() ?>
+                <button class="btn btn-sm btn-outline-secondary" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right"></i><span class="d-none d-md-inline ms-1">Salir</span>
+                </button>
+            </form>
         </div>
     </div>
+
+    <main class="p-4">
+        <?php if (session()->getFlashdata('ok')): ?>
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="bi bi-check-circle me-1"></i><?= esc(session()->getFlashdata('ok')) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif ?>
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle me-1"></i><?= esc(session()->getFlashdata('error')) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif ?>
+
+        <?= $this->renderSection('contenido') ?>
+    </main>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

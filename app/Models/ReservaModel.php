@@ -42,11 +42,39 @@ class ReservaModel extends Model
     /** Reservas con datos del huésped y de la unidad. */
     public function conDetalles()
     {
-        return $this->select('reservas.*, huespedes.nombre AS huesped_nombre, huespedes.apellidos AS huesped_apellidos, unidades.nombre AS unidad_nombre')
+        return $this->consultaDetallada()->findAll();
+    }
+
+    /**
+     * Consulta base de reservas con huésped y unidad, lista para filtrar o paginar.
+     * $filtros admite: estado, buscar (código, nombre, apellidos o documento).
+     */
+    public function consultaDetallada(array $filtros = []): self
+    {
+        $this->select('reservas.*, huespedes.nombre AS huesped_nombre, huespedes.apellidos AS huesped_apellidos,
+                       huespedes.num_documento, unidades.nombre AS unidad_nombre')
             ->join('huespedes', 'huespedes.id = reservas.huesped_id')
-            ->join('unidades', 'unidades.id = reservas.unidad_id')
-            ->orderBy('reservas.fecha_entrada', 'DESC')
-            ->findAll();
+            ->join('unidades', 'unidades.id = reservas.unidad_id');
+
+        if (! empty($filtros['estado'])) {
+            if ($filtros['estado'] === 'activas') {
+                $this->whereIn('reservas.estado', self::ESTADOS_ACTIVOS);
+            } else {
+                $this->where('reservas.estado', $filtros['estado']);
+            }
+        }
+
+        if (! empty($filtros['buscar'])) {
+            $texto = $filtros['buscar'];
+            $this->groupStart()
+                ->like('reservas.codigo', $texto)
+                ->orLike('huespedes.nombre', $texto)
+                ->orLike('huespedes.apellidos', $texto)
+                ->orLike('huespedes.num_documento', $texto)
+                ->groupEnd();
+        }
+
+        return $this->orderBy('reservas.fecha_entrada', 'DESC')->orderBy('reservas.id', 'DESC');
     }
 
     /**
