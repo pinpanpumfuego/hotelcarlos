@@ -48,6 +48,12 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       (ocupación por día e ingresos por día), pagos por método, export CSV para Excel.
 - [x] "Mi perfil" (`Perfil`): cambio de contraseña propio con verificación de la actual.
       El nombre de usuario de la barra superior enlaza al perfil.
+- [x] Módulo Administración (`Administracion`, solo gerencia): configuración clave-valor en BD
+      (`configuracion`, `ConfiguracionModel`) con **cifrado** para secretos (contraseña SMTP,
+      llave privada y secreto de integridad Wompi; requiere `encryption.key` en .env).
+      Tres bloques: datos del hotel (pisan a `Config\Hotel` vía su constructor), correo SMTP
+      con botón de envío de prueba, y credenciales Wompi (guardadas para la futura
+      integración de pago). Los secretos nunca se re-muestran: badge "Guardada" + en blanco = conservar.
 - [ ] Caja por turnos y arqueo (siguiente pieza financiera tras el folio)
 
 ## Decisión de arquitectura: local-first + nube
