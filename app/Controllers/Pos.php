@@ -8,6 +8,7 @@ use App\Models\CartaCategoriaModel;
 use App\Models\CartaProductoModel;
 use App\Models\ComandaLineaModel;
 use App\Models\ComandaModel;
+use App\Models\ComandaPagoModel;
 use App\Models\FolioModel;
 use App\Models\MesaModel;
 use App\Models\ReservaModel;
@@ -267,7 +268,30 @@ class Pos extends BaseController
         return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle($id)]);
     }
 
-    /** Cobra la comanda; efectivo va a caja, "habitacion" al folio. */
+    /** Fija la propina de la comanda. */
+    public function propina(int $id)
+    {
+        $comanda = $this->comandas->find($id);
+        if ($comanda === null || $comanda['estado'] !== 'abierta') {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda no está abierta.']);
+        }
+
+        $datos = $this->request->getJSON(true) ?? [];
+        $valor = (float) ($datos['valor'] ?? 0);
+        $tipo  = ($datos['tipo'] ?? 'valor') === 'porcentaje' ? 'porcentaje' : 'valor';
+
+        $bruto   = (float) $this->comandas->recalcularTotal($id) - (float) $comanda['descuento'];
+        $propina = $tipo === 'porcentaje' ? round(max(0, $bruto) * min(100, max(0, $valor)) / 100) : max(0, $valor);
+
+        $this->comandas->update($id, ['propina' => $propina]);
+
+        return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle($id)]);
+    }
+
+    /**
+     * Registra un pago (total o parcial). La comanda se cierra sola
+     * cuando lo cobrado cubre el importe a pagar.
+     */
     public function cobrar(int $id)
     {
         $comanda = $this->comandaDetalle($id);
@@ -287,24 +311,36 @@ class Pos extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Para cargar a la cabaña, la comanda debe estar ligada a un huésped alojado.']);
         }
 
-        $aPagar   = (float) $comanda['a_pagar'];
-        $recibido = $forma === 'efectivo' ? (float) ($datos['recibido'] ?? $aPagar) : null;
-        $cambio   = $recibido !== null ? max(0, $recibido - $aPagar) : null;
+        $pendiente = (float) $comanda['pendiente'];
+        // Importe de este pago: el indicado, o todo lo que queda
+        $importe = isset($datos['importe']) ? (float) $datos['importe'] : $pendiente;
+        $importe = min(max(0, $importe), $pendiente);
 
-        if ($forma === 'efectivo' && $recibido < $aPagar) {
-            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'El efectivo recibido es menor que el total.']);
+        if ($importe <= 0) {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda ya está pagada.']);
         }
 
-        $aviso = '';
+        $recibido = null;
+        $cambio   = null;
+        if ($forma === 'efectivo') {
+            $recibido = (float) ($datos['recibido'] ?? $importe);
+            if ($recibido < $importe) {
+                return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'El efectivo recibido es menor que el importe a cobrar.']);
+            }
+            $cambio = round($recibido - $importe, 2);
+        }
+
+        $avisos = [];
+
         if ($forma === 'habitacion') {
             (new FolioModel())->insert([
                 'reserva_id' => $comanda['reserva_id'],
                 'tipo'       => 'cargo',
                 'concepto'   => 'Restaurante · comanda ' . $comanda['numero'],
-                'valor'      => $aPagar,
+                'valor'      => $importe,
                 'usuario_id' => session()->get('usuario_id'),
             ]);
-            $aviso = 'Cargado al folio de ' . $comanda['reserva_codigo'] . '.';
+            $avisos[] = 'Cargado al folio de ' . $comanda['reserva_codigo'] . '.';
         } elseif ($forma === 'efectivo') {
             $turno = (new CajaTurnoModel())->abierto();
             if ($turno !== null) {
@@ -312,29 +348,50 @@ class Pos extends BaseController
                     'turno_id'   => $turno['id'],
                     'tipo'       => 'ingreso',
                     'concepto'   => 'Restaurante · comanda ' . $comanda['numero'],
-                    'valor'      => $aPagar,
+                    'valor'      => $importe,
                     'usuario_id' => session()->get('usuario_id'),
                 ]);
-                $aviso = 'El efectivo entró en la caja del turno.';
+                $avisos[] = 'El efectivo entró en la caja del turno.';
             } else {
-                $aviso = 'Aviso: no hay turno de caja abierto, el efectivo no quedó registrado en ninguna caja.';
+                $avisos[] = 'Aviso: no hay turno de caja abierto, el efectivo no quedó registrado en ninguna caja.';
             }
         }
 
-        $this->comandas->update($id, [
-            'estado'     => 'cobrada',
+        (new ComandaPagoModel())->insert([
+            'comanda_id' => $id,
             'forma_pago' => $forma,
+            'valor'      => $importe,
             'recibido'   => $recibido,
             'cambio'     => $cambio,
-            'cerrada_en' => date('Y-m-d H:i:s'),
+            'usuario_id' => session()->get('usuario_id'),
         ]);
 
+        $actualizada = $this->comandaDetalle($id);
+        $cerrada     = $actualizada['pendiente'] <= 0.01;
+
+        if ($cerrada) {
+            $this->comandas->update($id, [
+                'estado'     => 'cobrada',
+                'forma_pago' => $forma,
+                'recibido'   => $recibido,
+                'cambio'     => $cambio,
+                'cerrada_en' => date('Y-m-d H:i:s'),
+            ]);
+            array_unshift($avisos, 'Comanda ' . $comanda['numero'] . ' cobrada por completo.');
+        } else {
+            array_unshift($avisos, 'Pago de ' . number_format($importe, 0, ',', '.')
+                . ' registrado. Quedan $' . number_format($actualizada['pendiente'], 0, ',', '.') . ' por cobrar.');
+        }
+
         return $this->response->setJSON([
-            'ok'      => true,
-            'cambio'  => $cambio,
-            'total'   => $aPagar,
-            'numero'  => $comanda['numero'],
-            'mensaje' => 'Comanda ' . $comanda['numero'] . ' cobrada. ' . $aviso,
+            'ok'         => true,
+            'cerrada'    => $cerrada,
+            'cambio'     => $cambio,
+            'pendiente'  => $actualizada['pendiente'],
+            'comanda'    => $cerrada ? null : $actualizada,
+            'comanda_id' => $id,
+            'numero'     => $comanda['numero'],
+            'mensaje'    => implode(' ', $avisos),
         ]);
     }
 
@@ -386,6 +443,22 @@ class Pos extends BaseController
         return $this->response->setJSON(['ok' => true, 'mensaje' => 'Comanda movida a ' . $mesa['nombre'] . '.']);
     }
 
+    /** Recibo imprimible (80 mm) de una comanda. */
+    public function recibo(int $id)
+    {
+        $comanda = $this->comandaDetalle($id);
+        if ($comanda === null) {
+            return redirect()->to('pos');
+        }
+
+        return view('pos/recibo', [
+            'comanda' => $comanda,
+            'hotel'   => config('Hotel'),
+            'formas'  => ComandaModel::FORMAS_PAGO,
+            'cajero'  => session()->get('usuario_nombre'),
+        ]);
+    }
+
     // ───────────────────────────── Ayudantes ─────────────────────────────
 
     private function comandaDetalle(int $id): ?array
@@ -414,11 +487,17 @@ class Pos extends BaseController
         }
         unset($l);
 
+        $pagos = (new ComandaPagoModel())->deComanda($id);
+
         $comanda['id']         = (int) $comanda['id'];
         $comanda['reserva_id'] = $comanda['reserva_id'] !== null ? (int) $comanda['reserva_id'] : null;
         $comanda['total']      = (float) $comanda['total'];
         $comanda['descuento']  = (float) $comanda['descuento'];
-        $comanda['a_pagar']    = max(0, $comanda['total'] - $comanda['descuento']);
+        $comanda['propina']    = (float) $comanda['propina'];
+        $comanda['a_pagar']    = max(0, $comanda['total'] - $comanda['descuento'] + $comanda['propina']);
+        $comanda['pagado']     = array_sum(array_column($pagos, 'valor'));
+        $comanda['pendiente']  = max(0, round($comanda['a_pagar'] - $comanda['pagado'], 2));
+        $comanda['pagos']      = $pagos;
         $comanda['lineas']     = $lineas;
         $comanda['pendientes'] = count(array_filter($lineas, static fn ($l) => $l['enviado_cocina'] === 0));
 

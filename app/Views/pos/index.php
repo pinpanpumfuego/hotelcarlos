@@ -260,14 +260,24 @@
                 <div class="fila-total" id="fila-descuento" style="display:none">
                     <span>Descuento</span><span id="tk-descuento">$0</span>
                 </div>
-                <div class="fila-total grande"><span>Total</span><span id="tk-total">$0</span></div>
+                <div class="fila-total" id="fila-propina" style="display:none">
+                    <span>Propina</span><span id="tk-propina">$0</span>
+                </div>
+                <div class="fila-total" id="fila-pagado" style="display:none">
+                    <span>Ya cobrado</span><span id="tk-pagado">$0</span>
+                </div>
+                <div class="fila-total grande">
+                    <span id="tk-etiqueta-total">Total</span><span id="tk-total">$0</span>
+                </div>
             </div>
 
             <div class="acciones">
                 <button class="btn ambar ancho" id="btn-cocina">
                     <i class="bi bi-fire"></i> Enviar a cocina <span class="insignia" id="ins-pendientes">0</span>
                 </button>
-                <button class="btn" id="btn-descuento"><i class="bi bi-percent"></i> Descuento</button>
+                <button class="btn" id="btn-descuento"><i class="bi bi-tag"></i> Descuento</button>
+                <button class="btn" id="btn-propina"><i class="bi bi-coin"></i> Propina</button>
+                <button class="btn" id="btn-recibo"><i class="bi bi-printer"></i> Recibo</button>
                 <button class="btn rojo" id="btn-anular"><i class="bi bi-x-lg"></i> Anular</button>
                 <button class="btn verde ancho" id="btn-cobrar"><i class="bi bi-cash-coin"></i> Cobrar</button>
             </div>
@@ -300,7 +310,12 @@
 <div class="capa" id="modal-cobro">
     <div class="modal-pos">
         <h2>Cobrar comanda</h2>
-        <p class="ayuda">Total a pagar: <strong id="cob-total">$0</strong></p>
+        <p class="ayuda">Pendiente de cobro: <strong id="cob-total">$0</strong></p>
+
+        <p class="ayuda" style="margin-bottom:6px">Dividir la cuenta</p>
+        <div class="rapidos" id="cob-dividir"></div>
+        <div class="visor" id="cob-importe" style="font-size:1.35rem">$0</div>
+
         <div class="formas" id="cob-formas"></div>
         <div id="cob-efectivo">
             <p class="ayuda">Efectivo recibido</p>
@@ -554,10 +569,19 @@
 
         $('#fila-descuento').style.display = comanda.descuento > 0 ? 'flex' : 'none';
         $('#tk-descuento').textContent = '−' + pesos(comanda.descuento);
-        $('#tk-total').textContent = pesos(comanda.a_pagar);
+        $('#fila-propina').style.display = comanda.propina > 0 ? 'flex' : 'none';
+        $('#tk-propina').textContent = pesos(comanda.propina);
+
+        const parcial = comanda.pagado > 0;
+        $('#fila-pagado').style.display = parcial ? 'flex' : 'none';
+        $('#tk-pagado').textContent = pesos(comanda.pagado);
+        $('#tk-etiqueta-total').textContent = parcial ? 'Pendiente' : 'Total';
+        $('#tk-total').textContent = pesos(parcial ? comanda.pendiente : comanda.a_pagar);
+
         $('#ins-pendientes').textContent = comanda.pendientes;
         $('#btn-cocina').disabled = comanda.pendientes === 0;
-        $('#btn-cobrar').disabled = comanda.a_pagar <= 0;
+        $('#btn-cobrar').disabled = comanda.pendiente <= 0;
+        $('#btn-recibo').disabled = comanda.lineas.length === 0;
     }
 
     async function anadirProducto(productoId) {
@@ -685,6 +709,19 @@
         });
     };
 
+    $('#btn-propina').onclick = () => {
+        abrirTeclado('Propina en pesos', 'Se suma al total de la cuenta.', comanda.propina, async (valor) => {
+            const datos = await api('/comanda/' + comanda.id + '/propina', {
+                method: 'POST', body: JSON.stringify({ tipo: 'valor', valor: valor }),
+            });
+            if (datos) { comanda = datos.comanda; pintarComanda(); }
+        });
+    };
+
+    $('#btn-recibo').onclick = () => {
+        window.open(<?= json_encode(rtrim(site_url('pos/recibo'), '/')) ?> + '/' + comanda.id + '?auto=1', '_blank');
+    };
+
     $('#btn-anular').onclick = () => {
         abrirTexto('Anular comanda', 'Escribe el motivo (queda registrado).', '', async (motivo) => {
             if (!motivo) { avisar('Debes indicar el motivo.', true); return; }
@@ -712,20 +749,59 @@
 
     // ── Cobro ────────────────────────────────────────────────────
     let formaSel = 'efectivo';
+    let importeCobro = 0;   // cuánto se cobra en este pago (permite dividir la cuenta)
 
     function actualizarCambio() {
         const recibido = parseInt($('#cob-visor').textContent, 10) || 0;
-        const cambio = recibido - comanda.a_pagar;
+        const cambio = recibido - importeCobro;
         $('#cob-cambio').style.display = cambio >= 0 && recibido > 0 ? 'block' : 'none';
         $('#cob-cambio-valor').textContent = pesos(Math.max(0, cambio));
     }
 
+    function fijarImporte(valor) {
+        importeCobro = Math.min(Math.max(0, Math.round(valor)), comanda.pendiente);
+        $('#cob-importe').textContent = pesos(importeCobro);
+        pintarRapidosEfectivo();
+        actualizarCambio();
+    }
+
+    function pintarRapidosEfectivo() {
+        const rap = $('#cob-rapidos');
+        rap.innerHTML = '';
+        const exacto = importeCobro;
+        const sugerencias = [exacto, Math.ceil(exacto / 10000) * 10000, 20000, 50000, 100000, 200000];
+        [...new Set(sugerencias)].filter((v) => v >= exacto && v > 0).slice(0, 6).forEach((v) => {
+            const b = document.createElement('button');
+            b.textContent = v === exacto ? 'Justo · ' + pesos(v) : pesos(v);
+            b.onclick = () => { prepararVisor('#cob-visor', Math.round(v)); actualizarCambio(); };
+            rap.appendChild(b);
+        });
+    }
+
     $('#btn-cobrar').onclick = () => {
-        if (!comanda || comanda.a_pagar <= 0) return;
+        if (!comanda || comanda.pendiente <= 0) return;
         formaSel = 'efectivo';
-        $('#cob-total').textContent = pesos(comanda.a_pagar);
+        $('#cob-total').textContent = pesos(comanda.pendiente);
         prepararVisor('#cob-visor', 0);
         $('#cob-cambio').style.display = 'none';
+
+        // Dividir la cuenta: todo, o en partes iguales entre los comensales
+        const div = $('#cob-dividir');
+        div.innerHTML = '';
+        const opciones = [{ etiqueta: 'Todo', partes: 1 }, { etiqueta: 'Mitad', partes: 2 },
+            { etiqueta: 'En 3', partes: 3 }, { etiqueta: 'En 4', partes: 4 }];
+        opciones.forEach((o) => {
+            const b = document.createElement('button');
+            const importe = Math.round(comanda.pendiente / o.partes);
+            b.innerHTML = o.etiqueta + '<br><small>' + pesos(importe) + '</small>';
+            b.onclick = () => {
+                div.querySelectorAll('button').forEach((x) => x.style.borderColor = 'var(--borde)');
+                b.style.borderColor = 'var(--verde)';
+                fijarImporte(importe);
+            };
+            div.appendChild(b);
+        });
+        fijarImporte(comanda.pendiente);
 
         // Formas de pago disponibles
         const formas = <?= json_encode($formasPago) ?>;
@@ -745,27 +821,15 @@
             cont.appendChild(b);
         });
 
-        // Importes rápidos de efectivo
-        const rap = $('#cob-rapidos');
-        rap.innerHTML = '';
-        const exacto = comanda.a_pagar;
-        const sugerencias = [exacto, Math.ceil(exacto / 10000) * 10000, Math.ceil(exacto / 50000) * 50000, 50000, 100000, 200000];
-        [...new Set(sugerencias)].filter((v) => v >= exacto).slice(0, 6).forEach((v) => {
-            const b = document.createElement('button');
-            b.textContent = v === exacto ? 'Justo · ' + pesos(v) : pesos(v);
-            b.onclick = () => { prepararVisor('#cob-visor', Math.round(v)); actualizarCambio(); };
-            rap.appendChild(b);
-        });
-
         $('#cob-efectivo').style.display = 'block';
         $('#modal-cobro').classList.add('abierta');
     };
 
     $('#cob-confirmar').onclick = async () => {
-        const cuerpo = { forma_pago: formaSel };
+        const cuerpo = { forma_pago: formaSel, importe: importeCobro };
         if (formaSel === 'efectivo') {
             const recibido = parseInt($('#cob-visor').textContent, 10) || 0;
-            cuerpo.recibido = recibido > 0 ? recibido : comanda.a_pagar;
+            cuerpo.recibido = recibido > 0 ? recibido : importeCobro;
         }
         const datos = await api('/comanda/' + comanda.id + '/cobrar', {
             method: 'POST', body: JSON.stringify(cuerpo),
@@ -778,7 +842,29 @@
             mensaje = 'Cambio a devolver: ' + pesos(datos.cambio) + '. ' + mensaje;
         }
         avisar(mensaje);
-        $('#btn-volver').click();
+
+        if (datos.cerrada) {
+            // Ofrece el recibo antes de volver al mapa de mesas
+            const comandaId = datos.comanda_id;
+            abrirTexto('Comanda cobrada', mensaje, '', () => {},
+                '<div class="acciones" style="padding:0 0 8px;">'
+                + '<button class="btn" id="rec-imprimir"><i class="bi bi-printer"></i> Imprimir recibo</button>'
+                + '<button class="btn verde" id="rec-listo">Listo</button></div>');
+            $('#txt-campo').style.display = 'none';
+            $('#txt-aceptar').parentElement.style.display = 'none';
+            $('#rec-imprimir').onclick = () => {
+                window.open(<?= json_encode(rtrim(site_url('pos/recibo'), '/')) ?> + '/' + comandaId + '?auto=1', '_blank');
+            };
+            $('#rec-listo').onclick = () => {
+                $('#modal-texto').classList.remove('abierta');
+                $('#txt-campo').style.display = '';
+                $('#txt-aceptar').parentElement.style.display = '';
+                $('#btn-volver').click();
+            };
+        } else {
+            comanda = datos.comanda;
+            pintarComanda();
+        }
     };
 
     // ── Reloj y arranque ─────────────────────────────────────────

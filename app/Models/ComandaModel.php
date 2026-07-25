@@ -10,7 +10,7 @@ class ComandaModel extends Model
     protected $primaryKey    = 'id';
     protected $allowedFields = [
         'numero', 'mesa', 'mesa_id', 'comensales', 'reserva_id', 'estado', 'total',
-        'descuento', 'motivo_descuento', 'forma_pago', 'recibido', 'cambio',
+        'descuento', 'motivo_descuento', 'propina', 'forma_pago', 'recibido', 'cambio',
         'usuario_id', 'cerrada_en', 'notas',
     ];
     protected $useTimestamps = true;

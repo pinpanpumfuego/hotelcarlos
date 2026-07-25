@@ -85,6 +85,9 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       devuelve el CSRF renovado en la cabecera `X-CSRF-TOKEN`.
       **Ojo al ampliar tablas:** añadir siempre los campos nuevos a `$allowedFields` del modelo
       (CI4 los descarta en silencio si no están) — ya pasó con descuento/mesa_id/recibido.
+- [x] TPV avanzado: **propina**, **división de cuenta con pagos parciales** (tabla `comanda_pagos`:
+      varias formas de pago por comanda; la comanda se cierra sola cuando lo cobrado cubre el total)
+      y **recibo imprimible** en formato 80 mm (`/pos/recibo/:id`, `?auto=1` lanza la impresión).
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 
