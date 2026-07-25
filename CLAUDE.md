@@ -67,6 +67,13 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       Bootstrap propia (`app/Views/paginacion/bootstrap.php`, alias `bootstrap` en Config\Pager),
       filtros + buscador + paginación en Reservas y Huéspedes, estados vacíos con icono,
       columnas que se ocultan en móvil y vista de Cabañas coherente con el rol.
+- [x] **TPV del restaurante** (`Tpv` operación, `Carta` gerencia; tablas `carta_categorias`,
+      `carta_productos`, `comandas`, `comanda_lineas`): carta configurable con categorías,
+      precios y disponibilidad (agotado); comandas por mesa o ligadas a un huésped **alojado**;
+      pantalla táctil con carta por pestañas y cuenta en vivo; cobro por efectivo (entra a la
+      **caja** del turno), tarjeta/transferencia/wompi, o **cargar a la cabaña** (cargo al
+      **folio**, se paga en el check-out); anulación con motivo; pantalla de **cocina** con
+      líneas pendientes, antigüedad por color y marcar "listo". Seeder `CartaEjemplo`.
 - [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 

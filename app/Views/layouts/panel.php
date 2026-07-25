@@ -79,6 +79,7 @@ if ($puedeVender) {
         ['reservas', 'reservas', 'bi-calendar-check', 'Reservas'],
         ['huespedes', 'huespedes', 'bi-people', 'Huéspedes'],
         ['caja', 'caja', 'bi-cash-coin', 'Caja'],
+        ['tpv', 'tpv', 'bi-cup-hot', 'Restaurante'],
     ];
 }
 $grupos['Operación'] = [
@@ -90,6 +91,7 @@ if ($rol === 'gerencia') {
     $grupos['Gerencia'] = [
         ['reportes', 'reportes', 'bi-graph-up', 'Reportes'],
         ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento'],
+        ['carta', 'carta', 'bi-journal-text', 'Carta del restaurante'],
         ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios'],
         ['administracion', 'administracion', 'bi-gear', 'Administración'],
     ];

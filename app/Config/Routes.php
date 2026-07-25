@@ -74,6 +74,17 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->get('unidades/nueva', 'Unidades::nueva');
     $routes->post('unidades/guardar', 'Unidades::guardar');
 
+    // Restaurante (TPV)
+    $routes->get('tpv', 'Tpv::index');
+    $routes->post('tpv/abrir', 'Tpv::abrir');
+    $routes->get('tpv/cocina', 'Tpv::cocina');
+    $routes->get('tpv/comanda/(:num)', 'Tpv::comanda/$1');
+    $routes->post('tpv/comanda/(:num)/anadir', 'Tpv::anadir/$1');
+    $routes->post('tpv/comanda/(:num)/cobrar', 'Tpv::cobrar/$1');
+    $routes->post('tpv/comanda/(:num)/anular', 'Tpv::anular/$1');
+    $routes->post('tpv/linea/(:num)/cantidad', 'Tpv::cantidad/$1');
+    $routes->post('tpv/linea/(:num)/entregar', 'Tpv::entregar/$1');
+
     $routes->get('caja', 'Caja::index');
     $routes->post('caja/abrir', 'Caja::abrir');
     $routes->post('caja/movimiento', 'Caja::movimiento');
@@ -84,6 +95,15 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
 $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($routes) {
     $routes->get('reportes', 'Reportes::index');
     $routes->get('reportes/csv', 'Reportes::csv');
+
+    // Carta del restaurante
+    $routes->get('carta', 'Carta::index');
+    $routes->post('carta/categoria/guardar', 'Carta::guardarCategoria');
+    $routes->post('carta/categoria/eliminar/(:num)', 'Carta::eliminarCategoria/$1');
+    $routes->post('carta/producto/guardar', 'Carta::guardarProducto');
+    $routes->post('carta/producto/actualizar/(:num)', 'Carta::actualizarProducto/$1');
+    $routes->post('carta/producto/disponible/(:num)', 'Carta::alternarDisponible/$1');
+    $routes->post('carta/producto/eliminar/(:num)', 'Carta::eliminarProducto/$1');
 
     $routes->get('administracion', 'Administracion::index');
     $routes->post('administracion/hotel', 'Administracion::guardarHotel');
