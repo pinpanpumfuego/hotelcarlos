@@ -26,8 +26,8 @@ function escenaParaTipo(string $nombre): string
         <h1 class="mb-3"><?= esc($hotel->nombre) ?></h1>
         <p class="eslogan mb-4">Montaña, lago y silencio.<br class="d-sm-none"> El descanso que estabas buscando.</p>
         <div class="d-flex gap-3 justify-content-center flex-wrap">
-            <a class="btn btn-reserva btn-lg" href="https://wa.me/<?= esc($hotel->whatsapp) ?>?text=Hola,%20quiero%20reservar" target="_blank" rel="noopener">
-                <i class="bi bi-whatsapp me-1"></i>Reservar ahora
+            <a class="btn btn-reserva btn-lg" href="<?= site_url('reservar') ?>">
+                <i class="bi bi-calendar-check me-1"></i>Reservar ahora
             </a>
             <a class="btn btn-contorno btn-lg" href="<?= site_url('alojamientos') ?>">Ver alojamientos</a>
         </div>
@@ -139,10 +139,10 @@ function escenaParaTipo(string $nombre): string
     <div class="container reveal">
         <h2 class="titulo-seccion mb-3" style="color:#fff;">¿Listo para desconectar?</h2>
         <p class="opacity-75 mb-4 fs-5">Escríbenos y te ayudamos a planear tu estadía perfecta.</p>
-        <a class="btn btn-reserva btn-lg px-5" href="https://wa.me/<?= esc($hotel->whatsapp) ?>?text=Hola,%20quiero%20reservar" target="_blank" rel="noopener">
-            <i class="bi bi-whatsapp me-1"></i>Reservar por WhatsApp
+        <a class="btn btn-reserva btn-lg px-5" href="<?= site_url('reservar') ?>">
+            <i class="bi bi-calendar-check me-1"></i>Reservar en línea
         </a>
-        <p class="small opacity-50 mt-3 mb-0">Respuesta rápida en horario de atención · Reserva directa sin comisiones</p>
+        <p class="small opacity-50 mt-3 mb-0">Disponibilidad en tiempo real · Reserva directa sin comisiones</p>
     </div>
 </section>
 

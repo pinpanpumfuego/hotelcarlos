@@ -9,6 +9,13 @@ $routes->get('/', 'Web::inicio');
 $routes->get('alojamientos', 'Web::alojamientos');
 $routes->get('contacto', 'Web::contacto');
 
+// Motor de reservas online
+$routes->get('reservar', 'Reservar::index');
+$routes->post('reservar/disponibilidad', 'Reservar::disponibilidad');
+$routes->post('reservar/datos', 'Reservar::datos');
+$routes->post('reservar/confirmar', 'Reservar::confirmar');
+$routes->get('reservar/exito/(:segment)', 'Reservar::exito/$1');
+
 // ── Acceso ──────────────────────────────────────────────────────────
 $routes->get('login', 'Login::index');
 $routes->post('login/entrar', 'Login::entrar');

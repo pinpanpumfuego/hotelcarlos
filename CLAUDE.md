@@ -55,7 +55,15 @@ códigos únicos, timestamps, operaciones idempotentes, nunca asumir conexión p
 - [ ] Desplegar en dinahosting (hosting compartido "Multihosting", dominio sanantoniodeloslagos.com,
       contratado 2026-07-25). Método: clave SSH generada en el PC local, pública pegada en el panel
       de dinahosting; nunca pedir contraseñas por chat.
-- [ ] Motor de reservas online con pago (Wompi) — sustituirá el botón de WhatsApp
+- [x] Motor de reservas online (`Reservar` controller): fechas/personas → disponibilidad real
+      por tipo → datos del huésped → crea reserva `pendiente` con código y asignación automática
+      de cabaña. Antispam (honeypot + throttle 5/min/IP), re-chequeo anti-carrera, PRG.
+      Recepción confirma desde el panel. Los CTA de la web apuntan a /reservar (WhatsApp quedó
+      como canal secundario en contacto).
+- [x] Inventario real: 1 tipo "Cabaña" × 7 unidades (seeder `InventarioReal`);
+      capacidad 4 y tarifa 350.000 COP son PROVISIONALES, confirmar con Javier.
+- [ ] Pago online con Wompi sobre el motor de reservas
+- [ ] Aviso por correo al hotel/huésped cuando entra una reserva web (necesita SMTP)
 - [ ] Autocheck-in y portal del huésped
 
 ## Fases siguientes (según propuesta)

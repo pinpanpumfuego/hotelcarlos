@@ -122,8 +122,8 @@
                 <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'alojamientos' ? 'active' : '' ?>" href="<?= site_url('alojamientos') ?>">Alojamientos</a></li>
                 <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'contacto' ? 'active' : '' ?>" href="<?= site_url('contacto') ?>">Contacto</a></li>
                 <li class="nav-item ms-md-2">
-                    <a class="btn btn-reserva btn-sm px-3 py-2" href="https://wa.me/<?= esc($hotel->whatsapp) ?>?text=Hola,%20quiero%20reservar" target="_blank" rel="noopener">
-                        <i class="bi bi-whatsapp me-1"></i>Reservar
+                    <a class="btn btn-reserva btn-sm px-3 py-2" href="<?= site_url('reservar') ?>">
+                        <i class="bi bi-calendar-check me-1"></i>Reservar
                     </a>
                 </li>
             </ul>
@@ -149,8 +149,8 @@
             <div class="col-md-4">
                 <h2 class="h6 mb-3 titulo-pie">Reservas</h2>
                 <p class="small mb-2">Reserva directa, sin comisiones de intermediarios.</p>
-                <a class="btn btn-reserva btn-sm px-3" href="https://wa.me/<?= esc($hotel->whatsapp) ?>?text=Hola,%20quiero%20reservar" target="_blank" rel="noopener">
-                    <i class="bi bi-whatsapp me-1"></i>Escríbenos por WhatsApp
+                <a class="btn btn-reserva btn-sm px-3" href="<?= site_url('reservar') ?>">
+                    <i class="bi bi-calendar-check me-1"></i>Reservar en línea
                 </a>
             </div>
         </div>

@@ -37,8 +37,8 @@ function escenaParaTipoLista(string $nombre): string
                             <span class="chip"><i class="bi bi-water me-1"></i>Acceso al lago</span>
                             <span class="chip"><i class="bi bi-p-circle me-1"></i>Parqueadero</span>
                         </div>
-                        <a class="btn btn-reserva" href="https://wa.me/<?= esc($hotel->whatsapp) ?>?text=Hola,%20me%20interesa%20<?= rawurlencode($t['nombre']) ?>" target="_blank" rel="noopener">
-                            <i class="bi bi-whatsapp me-1"></i>Consultar disponibilidad
+                        <a class="btn btn-reserva" href="<?= site_url('reservar') ?>">
+                            <i class="bi bi-calendar-check me-1"></i>Consultar disponibilidad
                         </a>
                     </div>
                 </div>

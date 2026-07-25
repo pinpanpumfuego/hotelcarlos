@@ -67,6 +67,22 @@ class ReservaModel extends Model
         return $builder->countAllResults() === 0;
     }
 
+    /** Unidades de un tipo que están libres en el rango [entrada, salida). */
+    public function unidadesLibresDelTipo(int $tipoId, string $entrada, string $salida): array
+    {
+        $unidades = $this->db->table('unidades')
+            ->where('tipo_id', $tipoId)
+            ->whereNotIn('estado', ['bloqueada'])
+            ->orderBy('nombre')
+            ->get()
+            ->getResultArray();
+
+        return array_values(array_filter(
+            $unidades,
+            fn ($u) => $this->unidadDisponible((int) $u['id'], $entrada, $salida)
+        ));
+    }
+
     /** Calcula el total: noches × tarifa base del tipo de la unidad. */
     public function calcularTotal(int $unidadId, string $entrada, string $salida): float
     {
