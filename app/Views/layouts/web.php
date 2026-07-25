@@ -53,7 +53,8 @@
 
         /* ── Hero ── */
         .hero { position: relative; overflow: hidden; color: #fff; }
-        .hero svg.fondo { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .hero .fondo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .hero .velo { position: absolute; inset: 0; background: linear-gradient(rgba(10, 25, 18, .25), rgba(10, 25, 18, .55)); }
         .hero .contenido {
             position: relative; z-index: 1;
             padding: clamp(5rem, 14vh, 9rem) 0 clamp(6rem, 16vh, 10rem);
