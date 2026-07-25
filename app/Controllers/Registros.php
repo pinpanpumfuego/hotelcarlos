@@ -147,6 +147,30 @@ class Registros extends BaseController
             ->with('ok', 'Registro devuelto al huésped con tus indicaciones. Puede volver a enviarlo con el mismo enlace.');
     }
 
+    /** Envía al huésped su enlace de registro por correo. */
+    public function enviarEnlace(int $id)
+    {
+        $registro = $this->registros->conReserva($id);
+        if ($registro === null) {
+            return redirect()->to('registros')->with('error', 'El registro no existe.');
+        }
+        if (empty($registro['email'])) {
+            return redirect()->to('registros/ver/' . $id)
+                ->with('error', 'El huésped no tiene correo registrado. Usa el botón de WhatsApp.');
+        }
+
+        $correo = new \App\Libraries\Correo();
+        $ok     = $correo->enlaceRegistro($registro, site_url('registro/' . $registro['token']));
+
+        if ($ok) {
+            return redirect()->to('registros/ver/' . $id)->with('ok', 'Enlace enviado a ' . $registro['email'] . '.');
+        }
+
+        return redirect()->to('registros/ver/' . $id)->with('error', $correo->configurado()
+            ? 'No se pudo enviar. Revisa el registro de correos en Administración.'
+            : 'El correo no está configurado. Ve a Administración → Correo saliente, o envíalo por WhatsApp.');
+    }
+
     /** Marca el reporte a las autoridades como realizado. */
     public function marcarReporte(int $id)
     {

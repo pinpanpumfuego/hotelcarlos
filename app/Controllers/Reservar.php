@@ -159,7 +159,7 @@ class Reservar extends BaseController
         $noches = (new \DateTime($busqueda['entrada']))->diff(new \DateTime($busqueda['salida']))->days;
         $codigo = $this->reservas->generarCodigo();
 
-        $this->reservas->insert([
+        $reservaId = $this->reservas->insert([
             'codigo'        => $codigo,
             'huesped_id'    => $huespedId,
             'unidad_id'     => $libres[0]['id'],
@@ -171,6 +171,19 @@ class Reservar extends BaseController
             'total'         => $noches * (float) $tipo['tarifa_base'],
             'notas'         => 'Reserva creada desde la web. ' . trim((string) $this->request->getPost('comentarios')),
         ]);
+
+        // Aviso interno: el hotel debe saber que hay una reserva por confirmar
+        $completa = $this->reservas
+            ->select('reservas.*, huespedes.nombre, huespedes.apellidos, huespedes.email, huespedes.telefono,
+                      unidades.nombre AS unidad_nombre')
+            ->join('huespedes', 'huespedes.id = reservas.huesped_id')
+            ->join('unidades', 'unidades.id = reservas.unidad_id')
+            ->where('reservas.id', $reservaId)
+            ->first();
+
+        if ($completa !== null) {
+            (new \App\Libraries\Correo())->avisoReservaWeb($completa);
+        }
 
         return redirect()->to('reservar/exito/' . $codigo);
     }

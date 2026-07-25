@@ -42,6 +42,10 @@ class Administracion extends BaseController
                 'clave_guardada'   => $this->config->existe('correo_clave'),
             ],
 
+            // Registro de correos enviados
+            'correosLog'   => (new \App\Models\CorreoLogModel())->ultimos(20),
+            'tiposCorreo'  => \App\Models\CorreoLogModel::TIPOS,
+
             // Wompi
             'wompi' => [
                 'ambiente'            => $this->config->obtener('wompi_ambiente', 'pruebas'),

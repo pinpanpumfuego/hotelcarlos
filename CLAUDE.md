@@ -144,7 +144,15 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       el control). **Seguridad de documentos:** se guardan en `writable/uploads/documentos` (fuera de
       public/, acceso web directo 403), solo se sirven por controlador a personal con sesión, con
       `no-store` y registro en el log de cada consulta. Verificado el ciclo completo en móvil.
-- [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
+- [x] **Sistema de correos** (`App\Libraries\Correo`, plantillas en `app/Views/correos/`,
+      tabla `correos_log`): plantilla HTML con la marca (tablas + estilos en línea, compatible con
+      Gmail/Outlook/móvil) y tres avisos automáticos — **confirmación de reserva** con su enlace de
+      registro (al confirmar), **aviso interno** al hotel cuando entra una reserva web, y **reenvío
+      manual** del enlace de registro. Todo envío queda anotado en `correos_log` con su estado
+      (enviado / fallido / sin configurar) y el motivo, visible en Administración.
+      **Nunca interrumpe la operación**: si el correo no está configurado o falla, la reserva se
+      confirma igual y el mensaje al usuario le dice qué hacer (enviar por WhatsApp).
+      Pendiente solo de que Javier ponga credenciales SMTP reales.
 - [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 
 ## Decisión de arquitectura: local-first + nube

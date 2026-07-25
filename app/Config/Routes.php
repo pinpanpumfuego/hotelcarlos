@@ -76,6 +76,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->post('registros/aprobar/(:num)', 'Registros::aprobar/$1');
     $routes->post('registros/rechazar/(:num)', 'Registros::rechazar/$1');
     $routes->post('registros/reporte/(:num)', 'Registros::marcarReporte/$1');
+    $routes->post('registros/enviar-enlace/(:num)', 'Registros::enviarEnlace/$1');
     $routes->post('registros/generar/(:num)', 'Registros::generar/$1');
 
     $routes->get('reservas', 'Reservas::index');

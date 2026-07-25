@@ -248,6 +248,14 @@ $enviado     = $registro['estado'] === 'enviado';
                 </a>
             <?php endif ?>
         </div>
+        <?php if ($registro['email']): ?>
+            <form method="post" action="<?= site_url('registros/enviar-enlace/' . $registro['id']) ?>" class="mt-2">
+                <?= csrf_field() ?>
+                <button class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-envelope me-1"></i>Enviar por correo a <?= esc($registro['email']) ?>
+                </button>
+            </form>
+        <?php endif ?>
     </div>
 </div>
 

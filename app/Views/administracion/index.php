@@ -106,6 +106,58 @@
         </div>
     </div>
 
+    <!-- ═══ Correos enviados ═══ -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-send me-2 text-primary"></i>Correos enviados
+                <span class="text-muted small fw-normal">— últimos 20</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Destinatario</th>
+                            <th class="d-none d-lg-table-cell">Asunto</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($correosLog)): ?>
+                            <tr><td colspan="5" class="text-center text-muted py-4">
+                                Todavía no se ha enviado ningún correo.
+                            </td></tr>
+                        <?php endif ?>
+                        <?php foreach ($correosLog as $c): ?>
+                            <tr>
+                                <td class="text-muted small text-nowrap"><?= date('d/m H:i', strtotime($c['created_at'])) ?></td>
+                                <td><?= esc($tiposCorreo[$c['tipo']] ?? $c['tipo']) ?></td>
+                                <td class="small"><?= esc($c['destinatario']) ?></td>
+                                <td class="small text-muted d-none d-lg-table-cell"><?= esc($c['asunto']) ?></td>
+                                <td>
+                                    <?php if ($c['estado'] === 'enviado'): ?>
+                                        <span class="badge text-bg-success">Enviado</span>
+                                    <?php elseif ($c['estado'] === 'sin_configurar'): ?>
+                                        <span class="badge text-bg-warning" title="<?= esc($c['error'] ?? '') ?>">Sin configurar</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-danger" title="<?= esc(mb_substr($c['error'] ?? '', 0, 300)) ?>">Falló</span>
+                                    <?php endif ?>
+                                </td>
+                            </tr>
+                        <?php endforeach ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white small text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Pasa el ratón por encima de un envío fallido para ver el motivo.
+                Los correos nunca interrumpen la operación del hotel: si fallan, quedan anotados aquí.
+            </div>
+        </div>
+    </div>
+
     <!-- ═══ Wompi ═══ -->
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100">

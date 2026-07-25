@@ -173,7 +173,36 @@ class Reservas extends BaseController
 
         $this->reservas->update($id, ['estado' => 'confirmada']);
 
-        return redirect()->to('reservas/ver/' . $id)->with('ok', 'Reserva confirmada.');
+        // Al confirmar se avisa al huésped y se le envía su enlace de registro
+        $aviso    = '';
+        $completa = $this->reservaParaCorreo($id);
+
+        if ($completa !== null && ! empty($completa['email'])) {
+            $registro = (new \App\Models\RegistroModel())->paraReserva($completa);
+            $correo   = new \App\Libraries\Correo();
+
+            if ($correo->confirmacionReserva($completa, site_url('registro/' . $registro['token']))) {
+                $aviso = ' Se envió la confirmación por correo a ' . $completa['email'] . ' con su enlace de registro.';
+            } elseif (! $correo->configurado()) {
+                $aviso = ' El correo no está configurado todavía: envíale el enlace de registro por WhatsApp desde esta ficha.';
+            } else {
+                $aviso = ' No se pudo enviar el correo (revisa Administración → correos enviados).';
+            }
+        }
+
+        return redirect()->to('reservas/ver/' . $id)->with('ok', 'Reserva confirmada.' . $aviso);
+    }
+
+    /** Reserva con los datos que necesitan las plantillas de correo. */
+    private function reservaParaCorreo(int $id): ?array
+    {
+        return $this->reservas
+            ->select('reservas.*, huespedes.nombre, huespedes.apellidos, huespedes.email, huespedes.telefono,
+                      unidades.nombre AS unidad_nombre')
+            ->join('huespedes', 'huespedes.id = reservas.huesped_id')
+            ->join('unidades', 'unidades.id = reservas.unidad_id')
+            ->where('reservas.id', $id)
+            ->first();
     }
 
     /** Añade un cargo al folio (consumos, daños, servicios...). */
