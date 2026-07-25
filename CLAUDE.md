@@ -26,9 +26,13 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
 - [x] CRUD de huéspedes (con búsqueda por nombre/documento)
 - [x] Reservas: creación con control anti-sobreventa (`ReservaModel::unidadDisponible`),
       total automático (noches × tarifa), check-in/out que actualiza el estado de la unidad, cancelación
-- [ ] Calendario visual de disponibilidad (vista cinta)
-- [ ] Autenticación y roles (gerencia, recepción, limpieza...)
+- [x] Calendario visual de disponibilidad (vista cinta, 21 días, clic en casilla libre = reserva prefijada)
+- [x] Autenticación con sesiones: login con throttling (5 intentos/min), CSRF global,
+      cabeceras seguras, roles gerencia/recepcion/limpieza aplicados en rutas y menú,
+      CRUD de usuarios (solo gerencia). Admin inicial: seeder `UsuarioAdmin`
+      (admin@hotelcarlos.local / Admin2026! — cambiar en producción)
 - [ ] Folio del huésped y caja
+- [ ] Página "Mi perfil" para que cada usuario cambie su propia contraseña
 
 ## Fases siguientes (según propuesta)
 

@@ -22,7 +22,10 @@ huéspedes, restaurante, limpieza y más, según la propuesta funcional incluida
    composer install
    php spark migrate
    php spark db:seed DatosIniciales
+   php spark db:seed UsuarioAdmin
    ```
-4. Abrir http://localhost/hotelcarlos
+4. Abrir http://localhost/hotelcarlos e iniciar sesión con
+   `admin@hotelcarlos.local` / `Admin2026!` (usuario local de desarrollo —
+   cámbialo antes de cualquier despliegue real).
 
 La configuración local está en `.env` (no se sube al repositorio; usar `env` como plantilla).

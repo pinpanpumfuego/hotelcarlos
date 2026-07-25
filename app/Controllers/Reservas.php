@@ -30,9 +30,23 @@ class Reservas extends BaseController
 
     public function nueva()
     {
+        // Prefill desde el calendario: ?unidad=X&entrada=YYYY-MM-DD
+        $prefill = [];
+        $unidad  = (int) $this->request->getGet('unidad');
+        $entrada = (string) $this->request->getGet('entrada');
+
+        if ($unidad > 0) {
+            $prefill['unidad_id'] = $unidad;
+        }
+        if (\DateTime::createFromFormat('Y-m-d', $entrada) !== false) {
+            $prefill['fecha_entrada'] = $entrada;
+            $prefill['fecha_salida']  = (new \DateTime($entrada))->modify('+1 day')->format('Y-m-d');
+        }
+
         return view('reservas/form', [
             'titulo'    => 'Nueva reserva',
             'seccion'   => 'reservas',
+            'reserva'   => $prefill,
             'huespedes' => $this->huespedes->orderBy('apellidos')->findAll(),
             'unidades'  => $this->unidades->conTipo(),
         ]);
