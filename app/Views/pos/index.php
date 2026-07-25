@@ -6,19 +6,39 @@
     <title>TPV · <?= esc(config('Hotel')->nombre) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
+        /* ── Tema claro (por defecto): cómodo con luz de día y en jornadas largas ── */
         :root {
-            --fondo: #14181c;
-            --panel: #1d232a;
-            --panel-claro: #262e37;
-            --borde: #333d47;
-            --texto: #e8edf2;
-            --texto-suave: #96a3b0;
-            --verde: #2f9e5f;
-            --verde-oscuro: #247d4b;
-            --ambar: #d9a441;
-            --rojo: #d0555a;
-            --azul: #3d84c6;
+            --fondo: #eef1ee;          /* gris verdoso suave, nunca blanco puro */
+            --panel: #ffffff;
+            --panel-claro: #f4f6f3;
+            --borde: #d9ded8;
+            --texto: #22302a;          /* verde muy oscuro, más suave que el negro */
+            --texto-suave: #6d7a72;
+            --verde: #2f7d52;
+            --verde-oscuro: #24603f;
+            --ambar: #9d6220;
+            --ambar-suave: #fdf3e4;
+            --rojo: #b3454a;
+            --azul: #2e6f8e;
+            --sombra: 0 1px 3px rgba(34, 48, 42, .10);
             --alto-boton: 68px;
+        }
+
+        /* ── Modo noche: apagado, sin negros duros ── */
+        [data-tema="noche"] {
+            --fondo: #1b2129;
+            --panel: #232b34;
+            --panel-claro: #2c353f;
+            --borde: #3a4550;
+            --texto: #dfe6ea;
+            --texto-suave: #9aa7b1;
+            --verde: #4fa87a;
+            --verde-oscuro: #377a58;
+            --ambar: #d8a05a;
+            --ambar-suave: #3a3020;
+            --rojo: #c9686d;
+            --azul: #5b9ac4;
+            --sombra: 0 1px 3px rgba(0, 0, 0, .3);
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body {
@@ -57,12 +77,12 @@
         .rejilla-mesas { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
         .mesa {
             background: var(--panel); border: 2px solid var(--borde); border-radius: 14px;
-            padding: 16px 12px; min-height: 118px; text-align: left;
+            padding: 16px 12px; min-height: 118px; text-align: left; box-shadow: var(--sombra);
             display: flex; flex-direction: column; justify-content: space-between;
         }
         .mesa .nombre { font-weight: 700; font-size: 1.1rem; }
         .mesa .dato { color: var(--texto-suave); font-size: .85rem; }
-        .mesa.ocupada { border-color: var(--ambar); background: linear-gradient(160deg, #2a2418, var(--panel)); }
+        .mesa.ocupada { border-color: var(--ambar); background: var(--ambar-suave); }
         .mesa.ocupada .total { color: var(--ambar); font-weight: 700; font-size: 1.15rem; }
         .mesa.libre .estado { color: var(--verde); font-weight: 600; }
 
@@ -74,10 +94,11 @@
             background: var(--panel); border-bottom: 1px solid var(--borde);
         }
         .cat {
-            flex: 0 0 auto; padding: 14px 20px; border-radius: 12px; font-weight: 600;
-            background: var(--panel-claro); border: 2px solid transparent; min-height: 56px;
+            flex: 0 0 auto; padding: 12px 20px 10px; border-radius: 12px; font-weight: 600;
+            background: var(--panel-claro); color: var(--texto); min-height: 56px;
+            border: 1px solid var(--borde); border-bottom: 4px solid var(--cat, var(--borde));
         }
-        .cat.activa { border-color: currentColor; }
+        .cat.activa { background: var(--panel); box-shadow: var(--sombra); border-color: var(--cat, var(--borde)); }
         .productos {
             flex: 1; overflow-y: auto; padding: 12px;
             display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -85,7 +106,7 @@
         }
         .producto {
             background: var(--panel); border: 1px solid var(--borde); border-radius: 12px;
-            padding: 14px 12px; min-height: 92px; text-align: left;
+            padding: 14px 12px; min-height: 92px; text-align: left; box-shadow: var(--sombra);
             display: flex; flex-direction: column; justify-content: space-between; gap: 6px;
         }
         .producto:active { background: var(--panel-claro); }
@@ -108,10 +129,10 @@
         }
         .linea.sel { background: var(--panel-claro); border-color: var(--azul); }
         .linea .cant {
-            background: var(--panel-claro); border-radius: 8px; min-width: 34px;
-            text-align: center; padding: 3px 6px; font-weight: 700;
+            background: var(--panel-claro); border: 1px solid var(--borde); border-radius: 8px;
+            min-width: 34px; text-align: center; padding: 3px 6px; font-weight: 700;
         }
-        .linea.enviada .cant { background: var(--verde-oscuro); }
+        .linea.enviada .cant { background: var(--verde); border-color: var(--verde); color: #fff; }
         .linea .desc { flex: 1; min-width: 0; }
         .linea .nom { font-weight: 600; }
         .linea .nota { color: var(--ambar); font-size: .8rem; }
@@ -137,18 +158,18 @@
             background: var(--panel-claro); border: 1px solid var(--borde);
         }
         .btn.verde { background: var(--verde); border-color: var(--verde); color: #fff; }
-        .btn.ambar { background: var(--ambar); border-color: var(--ambar); color: #1a1a1a; }
+        .btn.ambar { background: var(--ambar); border-color: var(--ambar); color: #fff; }
         .btn.rojo { background: transparent; border-color: var(--rojo); color: var(--rojo); }
         .btn.ancho { grid-column: span 2; }
         .btn:disabled { opacity: .4; }
         .insignia {
-            background: #fff; color: #1a1a1a; border-radius: 999px;
+            background: rgba(0, 0, 0, .18); color: inherit; border-radius: 999px;
             padding: 1px 8px; font-size: .8rem; margin-left: 4px;
         }
 
         /* ── Modales ── */
         .capa {
-            position: fixed; inset: 0; background: rgba(0,0,0,.72);
+            position: fixed; inset: 0; background: rgba(22, 32, 27, .55);
             display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50;
         }
         .capa.abierta { display: flex; }
@@ -179,20 +200,20 @@
             min-height: 62px; font-weight: 600; display: flex; align-items: center;
             justify-content: center; gap: 8px; padding: 8px;
         }
-        .forma.sel { border-color: var(--verde); background: rgba(47,158,95,.18); }
+        .forma.sel { border-color: var(--verde); background: rgba(47,125,82,.12); }
         .campo {
             width: 100%; background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px;
             padding: 14px; color: var(--texto); font-size: 1rem; margin-bottom: 12px;
         }
-        .cambio { background: rgba(47,158,95,.15); border: 1px solid var(--verde); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+        .cambio { background: rgba(47,125,82,.10); border: 1px solid var(--verde); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
         .cambio .valor { font-size: 1.8rem; font-weight: 700; color: var(--verde); }
 
         /* ── Aviso flotante ── */
         #aviso {
             position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(120%);
-            background: var(--panel-claro); border: 1px solid var(--borde); border-left: 5px solid var(--verde);
+            background: var(--panel); border: 1px solid var(--borde); border-left: 5px solid var(--verde);
             border-radius: 12px; padding: 14px 20px; max-width: 90vw; z-index: 90;
-            transition: transform .25s ease; box-shadow: 0 8px 30px rgba(0,0,0,.5);
+            transition: transform .25s ease; box-shadow: 0 8px 26px rgba(34, 48, 42, .22);
         }
         #aviso.ver { transform: translateX(-50%) translateY(0); }
         #aviso.error { border-left-color: var(--rojo); }
@@ -223,6 +244,7 @@
         <span class="sub d-none" id="aviso-caja" style="color:var(--ambar); display:none;">
             <i class="bi bi-exclamation-triangle"></i> Sin turno de caja
         </span>
+        <button class="btn-cab" id="btn-tema" title="Cambiar entre modo día y noche"><i class="bi bi-moon"></i></button>
         <button class="btn-cab" id="btn-suelta"><i class="bi bi-bag"></i> Para llevar</button>
         <a class="btn-cab" href="<?= site_url('tpv/cocina') ?>" style="text-decoration:none"><i class="bi bi-fire"></i></a>
         <a class="btn-cab" href="<?= site_url('panel') ?>" style="text-decoration:none"><i class="bi bi-box-arrow-right"></i></a>
@@ -493,7 +515,7 @@
         estado.categorias.forEach((c) => {
             const b = document.createElement('button');
             b.className = 'cat' + (c.id === categoriaActiva ? ' activa' : '');
-            b.style.color = c.color;
+            b.style.setProperty('--cat', c.color);
             b.textContent = c.nombre;
             b.onclick = () => { categoriaActiva = c.id; pintarCategorias(); pintarProductos(); };
             cont.appendChild(b);
@@ -866,6 +888,23 @@
             pintarComanda();
         }
     };
+
+    // ── Tema día / noche ─────────────────────────────────────────
+    function aplicarTema(tema) {
+        document.documentElement.dataset.tema = tema;
+        $('#btn-tema').innerHTML = tema === 'noche'
+            ? '<i class="bi bi-sun"></i>'
+            : '<i class="bi bi-moon"></i>';
+        try { localStorage.setItem('pos-tema', tema); } catch (e) { /* sin almacenamiento */ }
+    }
+
+    $('#btn-tema').onclick = () => {
+        aplicarTema(document.documentElement.dataset.tema === 'noche' ? 'dia' : 'noche');
+    };
+
+    let temaGuardado = 'dia';
+    try { temaGuardado = localStorage.getItem('pos-tema') || 'dia'; } catch (e) { /* sin almacenamiento */ }
+    aplicarTema(temaGuardado);
 
     // ── Reloj y arranque ─────────────────────────────────────────
     function reloj() {
