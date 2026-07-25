@@ -54,7 +54,13 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       Tres bloques: datos del hotel (pisan a `Config\Hotel` vía su constructor), correo SMTP
       con botón de envío de prueba, y credenciales Wompi (guardadas para la futura
       integración de pago). Los secretos nunca se re-muestran: badge "Guardada" + en blanco = conservar.
-- [ ] Caja por turnos y arqueo (siguiente pieza financiera tras el folio)
+- [x] Caja por turnos (`Caja`, gerencia+recepción; tablas `caja_turnos` y `caja_movimientos`):
+      apertura con base, movimientos manuales, **los pagos en efectivo del folio entran solos
+      al turno abierto** (aviso si no hay turno), cierre con arqueo (contado vs esperado,
+      faltante/sobrante en historial). Un solo turno abierto a la vez.
+- [ ] Mantenimiento (incidencias por cabaña con prioridad y bloqueo de unidad)
+- [ ] Notificaciones por correo (confirmación de reserva web) — cuando haya SMTP real en Administración
+- [ ] Pago online Wompi en el motor de reservas — cuando haya credenciales reales en Administración
 
 ## Decisión de arquitectura: local-first + nube
 

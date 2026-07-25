@@ -206,7 +206,7 @@ class Reservas extends BaseController
             return redirect()->to('reservas/ver/' . $id)->with('error', 'Indica un valor mayor que cero y un método de pago.');
         }
 
-        (new FolioModel())->insert([
+        $folioId = (new FolioModel())->insert([
             'reserva_id' => $id,
             'tipo'       => 'pago',
             'concepto'   => 'Pago (' . FolioModel::METODOS[$metodo] . ')',
@@ -215,7 +215,26 @@ class Reservas extends BaseController
             'usuario_id' => session()->get('usuario_id'),
         ]);
 
-        return redirect()->to('reservas/ver/' . $id)->with('ok', 'Pago registrado.');
+        // Los pagos en efectivo entran automáticamente a la caja del turno abierto
+        $aviso = '';
+        if ($metodo === 'efectivo') {
+            $turno = (new \App\Models\CajaTurnoModel())->abierto();
+            if ($turno !== null) {
+                (new \App\Models\CajaMovimientoModel())->insert([
+                    'turno_id'            => $turno['id'],
+                    'tipo'                => 'ingreso',
+                    'concepto'            => 'Pago reserva ' . $reserva['codigo'],
+                    'valor'               => $valor,
+                    'usuario_id'          => session()->get('usuario_id'),
+                    'folio_movimiento_id' => $folioId,
+                ]);
+                $aviso = ' El efectivo quedó registrado en la caja del turno.';
+            } else {
+                $aviso = ' Aviso: no hay turno de caja abierto, el efectivo no quedó en ninguna caja.';
+            }
+        }
+
+        return redirect()->to('reservas/ver/' . $id)->with('ok', 'Pago registrado.' . $aviso);
     }
 
     /** El huésped llega: la reserva pasa a "checkin" y la unidad a "ocupada". */

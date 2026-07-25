@@ -67,6 +67,11 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
 
     $routes->get('unidades/nueva', 'Unidades::nueva');
     $routes->post('unidades/guardar', 'Unidades::guardar');
+
+    $routes->get('caja', 'Caja::index');
+    $routes->post('caja/abrir', 'Caja::abrir');
+    $routes->post('caja/movimiento', 'Caja::movimiento');
+    $routes->post('caja/cerrar', 'Caja::cerrar');
 });
 
 // ── Configuración: solo gerencia ────────────────────────────────────

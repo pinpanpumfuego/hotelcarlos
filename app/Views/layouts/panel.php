@@ -79,6 +79,11 @@ $puedeVender = in_array($rol, ['gerencia', 'recepcion'], true);
                             <i class="bi bi-people me-2"></i>Huéspedes
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= ($seccion ?? '') === 'caja' ? 'active' : '' ?>" href="<?= site_url('caja') ?>">
+                            <i class="bi bi-cash-coin me-2"></i>Caja
+                        </a>
+                    </li>
                 <?php endif ?>
                 <div class="titulo-grupo">Operación</div>
                 <li class="nav-item">
