@@ -10,8 +10,8 @@ use CodeIgniter\Config\BaseConfig;
  */
 class Hotel extends BaseConfig
 {
-    public string $nombre    = 'San Antonio de los Lagos';
-    public string $eslogan   = 'Hotel rural · naturaleza, descanso y montaña';
+    public string $nombre    = 'San Antonio de los Lagos Ecolodge';
+    public string $eslogan   = 'Cabañas junto al lago, entre montañas de Colombia';
     public string $telefono  = '+57 300 000 0000';
     public string $whatsapp  = '573000000000'; // solo dígitos, con indicativo del país
     public string $email     = 'reservas@sanantoniodeloslagos.com';

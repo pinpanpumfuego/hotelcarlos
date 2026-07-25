@@ -12,7 +12,7 @@ class Web extends BaseController
         return view('web/inicio', [
             'hotel'        => config('Hotel'),
             'tipos'        => (new TipoUnidadModel())->orderBy('tarifa_base')->findAll(),
-            'tituloPagina' => 'Hotel rural en Colombia',
+            'tituloPagina' => 'Cabañas junto al lago en Colombia',
             'paginaActiva' => 'inicio',
         ]);
     }

@@ -49,7 +49,9 @@ códigos únicos, timestamps, operaciones idempotentes, nunca asumir conexión p
 - [x] Web pública "escaparate" (`Web` controller, vistas `web/*`, layout `layouts/web.php`):
       inicio, alojamientos (tarifas leídas de la BD) y contacto, con botón de reserva por WhatsApp.
       La raíz `/` es la web pública; el panel vive en `/panel`. Marca y contactos centralizados
-      en `app/Config/Hotel.php` (nombre actual: San Antonio de los Lagos, datos provisionales).
+      en `app/Config/Hotel.php`. Nombre confirmado por Javier: **San Antonio de los Lagos Ecolodge**;
+      los alojamientos reales son **cabañas** (triangulares con techo de paja, junto al lago — ver
+      video en `public/assets/video/`). Teléfono/dirección aún provisionales.
 - [ ] Desplegar en dinahosting (hosting compartido "Multihosting", dominio sanantoniodeloslagos.com,
       contratado 2026-07-25). Método: clave SSH generada en el PC local, pública pegada en el panel
       de dinahosting; nunca pedir contraseñas por chat.

@@ -22,7 +22,7 @@ function escenaParaTipo(string $nombre): string
     <div class="velo" aria-hidden="true"></div>
 
     <div class="container contenido text-center">
-        <p class="etiqueta" style="color:#f2cd7f;">Hotel rural · Colombia</p>
+        <p class="etiqueta" style="color:#f2cd7f;">Ecolodge · Colombia</p>
         <h1 class="mb-3"><?= esc($hotel->nombre) ?></h1>
         <p class="eslogan mb-4">Montaña, lago y silencio.<br class="d-sm-none"> El descanso que estabas buscando.</p>
         <div class="d-flex gap-3 justify-content-center flex-wrap">
@@ -43,8 +43,8 @@ function escenaParaTipo(string $nombre): string
                 <h2 class="titulo-seccion mb-3">Un refugio entre montañas y agua</h2>
                 <p class="text-muted fs-5 mb-0">
                     En <?= esc($hotel->nombre) ?> el día empieza con niebla sobre el lago y termina
-                    junto al fuego. Habitaciones, cabañas y glamping pensados para desconectarte
-                    de la ciudad y reconectarte con lo esencial.
+                    junto al fuego. Nuestras cabañas a la orilla del agua están pensadas para
+                    desconectarte de la ciudad y reconectarte con lo esencial.
                 </p>
             </div>
         </div>
