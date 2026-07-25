@@ -254,6 +254,9 @@ if ($rol === 'gerencia') {
         ['modificadores', 'modificadores', 'bi-sliders', 'Modificadores', 0],
         ['insumos', 'insumos', 'bi-box-seam', 'Insumos y costes', 0],
         ['preparaciones', 'preparaciones', 'bi-stack', 'Preparaciones', 0],
+        ['personal', 'personal', 'bi-people-fill', 'Personal', 0],
+        ['turnos', 'turnos', 'bi-calendar-week', 'Turnos', 0],
+        ['ausencias', 'ausencias', 'bi-calendar-x', 'Ausencias', 0],
         ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0],
         ['administracion', 'administracion', 'bi-gear', 'Administración', 0],
     ];

@@ -146,6 +146,15 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       Panel de control rehecho: saludo según la hora, KPIs con tipografía editorial, **gráfica de
       ocupación de 14 días** (Chart.js con degradado y tooltip en %), lista de cabañas legible de un
       vistazo y estados vacíos ilustrados. Verificado en 11 pantallas a 1280 px y en móvil.
+- [x] **Módulo de personal** (`Personal` y `Turnos`; tablas `empleados`, `turnos`, `ausencias`,
+      `empleado_documentos`): fichas con datos personales, laborales y **seguridad social colombiana**
+      (EPS, ARL, fondo de pensiones, caja de compensación, banco), contacto de emergencia, antigüedad
+      calculada, vínculo opcional con una cuenta de `usuarios` y baja que conserva el historial.
+      **Cuadrante semanal de turnos** con plantillas (mañana/tarde/noche/partido), horas por persona,
+      copia de una semana a la siguiente y **detección de solapes**. **Ausencias** (vacaciones,
+      incapacidad, permiso, licencia, falta) con aprobación; una vez aprobadas **bloquean esos días
+      en el cuadrante**. Documentos laborales con el mismo almacenamiento seguro que los del huésped.
+      **Fuera de alcance a propósito: nómina** — la liquidación va en el software contable.
 - [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
 - [ ] Combos / menús cerrados (producto compuesto de otros productos) — propuesto, no elegido aún
 - [x] **Registro en línea del huésped / autocheck-in** (tablas `registros`, `registro_acompanantes`,

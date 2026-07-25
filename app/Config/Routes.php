@@ -197,6 +197,28 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->post('tipos/actualizar/(:num)', 'Tipos::actualizar/$1');
     $routes->post('tipos/eliminar/(:num)', 'Tipos::eliminar/$1');
 
+    // Personal: fichas, turnos y ausencias
+    $routes->get('personal', 'Personal::index');
+    $routes->get('personal/nuevo', 'Personal::nuevo');
+    $routes->post('personal/guardar', 'Personal::guardar');
+    $routes->get('personal/ver/(:num)', 'Personal::ver/$1');
+    $routes->get('personal/editar/(:num)', 'Personal::editar/$1');
+    $routes->post('personal/actualizar/(:num)', 'Personal::actualizar/$1');
+    $routes->post('personal/estado/(:num)', 'Personal::alternarActivo/$1');
+    $routes->post('personal/documento/(:num)', 'Personal::subirDocumento/$1');
+    $routes->get('personal/documento/(:num)', 'Personal::documento/$1');
+    $routes->post('personal/documento/eliminar/(:num)', 'Personal::eliminarDocumento/$1');
+
+    $routes->get('turnos', 'Turnos::index');
+    $routes->post('turnos/guardar', 'Turnos::guardar');
+    $routes->post('turnos/eliminar/(:num)', 'Turnos::eliminar/$1');
+    $routes->post('turnos/copiar', 'Turnos::copiarSemana');
+
+    $routes->get('ausencias', 'Turnos::ausencias');
+    $routes->post('ausencias/guardar', 'Turnos::guardarAusencia');
+    $routes->post('ausencias/resolver/(:num)', 'Turnos::resolverAusencia/$1');
+    $routes->post('ausencias/eliminar/(:num)', 'Turnos::eliminarAusencia/$1');
+
     $routes->get('usuarios', 'Usuarios::index');
     $routes->get('usuarios/nuevo', 'Usuarios::nuevo');
     $routes->post('usuarios/guardar', 'Usuarios::guardar');
