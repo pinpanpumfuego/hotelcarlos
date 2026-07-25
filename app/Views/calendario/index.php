@@ -27,6 +27,19 @@ $hoy        = date('Y-m-d');
     <span class="text-muted">Haz clic en una casilla libre para crear una reserva en esa fecha.</span>
 </div>
 
+<?php if (empty($unidades)): ?>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center text-muted py-5">
+            <i class="bi bi-calendar-x fs-1 d-block mb-3 opacity-50"></i>
+            <h2 class="h5">Todavía no hay cabañas</h2>
+            <p class="mb-3">El calendario muestra la disponibilidad de cada alojamiento. Crea primero las cabañas.</p>
+            <a href="<?= site_url('unidades/nueva') ?>" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Crear la primera cabaña
+            </a>
+        </div>
+    </div>
+<?php else: ?>
+
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
         <table class="table table-bordered align-middle mb-0" style="min-width: 1100px;">
@@ -87,5 +100,11 @@ $hoy        = date('Y-m-d');
         </table>
     </div>
 </div>
+
+<p class="text-muted small mt-3 d-lg-none">
+    <i class="bi bi-arrow-left-right me-1"></i>Desliza la tabla hacia los lados para ver más días.
+</p>
+
+<?php endif ?>
 
 <?= $this->endSection() ?>

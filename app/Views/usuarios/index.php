@@ -14,10 +14,10 @@
             <thead class="table-light">
                 <tr>
                     <th>Nombre</th>
-                    <th>Email</th>
+                    <th class="d-none d-md-table-cell">Email</th>
                     <th>Rol</th>
                     <th>Estado</th>
-                    <th>Último acceso</th>
+                    <th class="d-none d-lg-table-cell">Último acceso</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
@@ -30,12 +30,15 @@
                                 <span class="badge text-bg-info ms-1">Tú</span>
                             <?php endif ?>
                         </td>
-                        <td><?= esc($u['email']) ?></td>
-                        <td><?= esc(\App\Models\UsuarioModel::ROLES[$u['rol']] ?? $u['rol']) ?></td>
+                        <td class="d-none d-md-table-cell"><?= esc($u['email']) ?></td>
+                        <td>
+                            <?= esc(\App\Models\UsuarioModel::ROLES[$u['rol']] ?? $u['rol']) ?>
+                            <div class="small text-muted d-md-none"><?= esc($u['email']) ?></div>
+                        </td>
                         <td>
                             <span class="badge text-bg-<?= $u['activo'] ? 'success' : 'secondary' ?>"><?= $u['activo'] ? 'Activo' : 'Inactivo' ?></span>
                         </td>
-                        <td class="text-muted"><?= $u['ultimo_acceso'] ? esc(date('d/m/Y H:i', strtotime($u['ultimo_acceso']))) : 'Nunca' ?></td>
+                        <td class="text-muted d-none d-lg-table-cell"><?= $u['ultimo_acceso'] ? esc(date('d/m/Y H:i', strtotime($u['ultimo_acceso']))) : 'Nunca' ?></td>
                         <td class="text-end">
                             <a href="<?= site_url('usuarios/editar/' . $u['id']) ?>" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-pencil"></i>

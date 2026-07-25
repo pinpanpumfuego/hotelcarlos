@@ -130,6 +130,14 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       al cambiar un insumo o una preparación. **Ciclos bloqueados** en la interfaz (no se ofrecen
       candidatos que dependan de la actual) y en el servidor (`generariaCiclo`).
       Verificado: tomate $8→$12/g ⇒ hogao $4→$7/g ⇒ sancocho $10.070→$10.230.
+- [x] **Segundo repaso de usabilidad** (auditoría de las 45 vistas): formularios antiguos rehechos
+      (tipos, unidades, huéspedes, usuarios, reservas) con enlace de vuelta, textos de ayuda bajo
+      cada campo, selección de estado y rol como tarjetas en vez de desplegables, y barra de acciones
+      en el pie de la tarjeta. Partial reutilizable `partes/errores.php`. Columnas secundarias
+      ocultas en móvil en caja, usuarios, mantenimiento, restaurante y preparaciones. Estado vacío
+      en el calendario con acción directa. Eliminados `welcome_message.php` y el controlador `Home`
+      (código muerto de la instalación de CI4).
+      Verificado: 27 rutas del panel y 5 públicas responden 200, y 10 pantallas sin desbordamiento a 375 px.
 - [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
 - [ ] Combos / menús cerrados (producto compuesto de otros productos) — propuesto, no elegido aún
 - [x] **Registro en línea del huésped / autocheck-in** (tablas `registros`, `registro_acompanantes`,

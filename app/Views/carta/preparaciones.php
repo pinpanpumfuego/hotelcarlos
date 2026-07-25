@@ -24,10 +24,10 @@
             <thead class="table-light">
                 <tr>
                     <th>Preparación</th>
-                    <th>Rendimiento por tanda</th>
+                    <th class="d-none d-md-table-cell">Rendimiento por tanda</th>
                     <th class="text-end">Coste por unidad</th>
-                    <th>Se usa en</th>
-                    <th>Estado</th>
+                    <th class="d-none d-lg-table-cell">Se usa en</th>
+                    <th class="d-none d-md-table-cell">Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
@@ -48,7 +48,7 @@
                                 <div class="small text-muted"><?= esc($p['notas']) ?></div>
                             <?php endif ?>
                         </td>
-                        <td><?= rtrim(rtrim(number_format((float) $p['rendimiento'], 3, ',', '.'), '0'), ',') ?> <?= esc($p['unidad']) ?></td>
+                        <td class="d-none d-md-table-cell"><?= rtrim(rtrim(number_format((float) $p['rendimiento'], 3, ',', '.'), '0'), ',') ?> <?= esc($p['unidad']) ?></td>
                         <td class="text-end">
                             <?php if ($p['listo']): ?>
                                 $<?= number_format((float) $p['costo_unitario'], 2, ',', '.') ?> / <?= esc($p['unidad']) ?>
@@ -56,14 +56,14 @@
                                 <span class="text-muted">—</span>
                             <?php endif ?>
                         </td>
-                        <td>
+                        <td class="d-none d-lg-table-cell">
                             <?php if ($p['usos'] > 0): ?>
                                 <span class="badge text-bg-light border"><?= $p['usos'] ?> receta<?= $p['usos'] > 1 ? 's' : '' ?></span>
                             <?php else: ?>
                                 <span class="text-muted small">—</span>
                             <?php endif ?>
                         </td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <?php if (! $p['listo']): ?>
                                 <span class="badge text-bg-warning">Sin ingredientes</span>
                             <?php elseif (! $p['activo']): ?>

@@ -140,7 +140,15 @@
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead class="table-light">
-                <tr><th>Abierto</th><th>Cerrado</th><th>Quién</th><th class="text-end">Base</th><th class="text-end">Contado</th><th class="text-end">Diferencia</th><th>Notas</th></tr>
+                <tr>
+                    <th>Abierto</th>
+                    <th class="d-none d-md-table-cell">Cerrado</th>
+                    <th>Quién</th>
+                    <th class="text-end d-none d-lg-table-cell">Base</th>
+                    <th class="text-end">Contado</th>
+                    <th class="text-end">Diferencia</th>
+                    <th class="d-none d-lg-table-cell">Notas</th>
+                </tr>
             </thead>
             <tbody>
                 <?php if (empty($historial)): ?>
@@ -149,10 +157,10 @@
                 <?php foreach ($historial as $t): ?>
                     <?php $dif = (float) $t['diferencia']; ?>
                     <tr>
-                        <td class="text-muted small"><?= date('d/m H:i', strtotime($t['apertura'])) ?></td>
-                        <td class="text-muted small"><?= date('d/m H:i', strtotime($t['cierre'])) ?></td>
+                        <td class="text-muted small text-nowrap"><?= date('d/m H:i', strtotime($t['apertura'])) ?></td>
+                        <td class="text-muted small d-none d-md-table-cell"><?= date('d/m H:i', strtotime($t['cierre'])) ?></td>
                         <td><?= esc($t['usuario_nombre']) ?></td>
-                        <td class="text-end">$<?= number_format((float) $t['base_inicial'], 0, ',', '.') ?></td>
+                        <td class="text-end d-none d-lg-table-cell">$<?= number_format((float) $t['base_inicial'], 0, ',', '.') ?></td>
                         <td class="text-end">$<?= number_format((float) $t['efectivo_contado'], 0, ',', '.') ?></td>
                         <td class="text-end">
                             <?php if (abs($dif) < 0.01): ?>
@@ -163,7 +171,7 @@
                                 <span class="badge text-bg-info">Sobró $<?= number_format($dif, 0, ',', '.') ?></span>
                             <?php endif ?>
                         </td>
-                        <td class="text-muted small"><?= esc($t['notas'] ?? '—') ?></td>
+                        <td class="text-muted small d-none d-lg-table-cell"><?= esc($t['notas'] ?? '—') ?></td>
                     </tr>
                 <?php endforeach ?>
             </tbody>

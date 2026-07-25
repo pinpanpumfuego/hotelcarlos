@@ -111,7 +111,13 @@ $coloresPrioridad = ['baja' => 'secondary', 'media' => 'info', 'alta' => 'warnin
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead class="table-light">
-                <tr><th>Incidencia</th><th>Dónde</th><th>Resolvió</th><th>Cuándo</th><th>Solución</th></tr>
+                <tr>
+                    <th>Incidencia</th>
+                    <th>Dónde</th>
+                    <th class="d-none d-md-table-cell">Resolvió</th>
+                    <th class="d-none d-md-table-cell">Cuándo</th>
+                    <th class="d-none d-lg-table-cell">Solución</th>
+                </tr>
             </thead>
             <tbody>
                 <?php if (empty($resueltas)): ?>
@@ -121,9 +127,9 @@ $coloresPrioridad = ['baja' => 'secondary', 'media' => 'info', 'alta' => 'warnin
                     <tr>
                         <td class="fw-semibold"><?= esc($i['titulo']) ?></td>
                         <td><?= esc($i['unidad_nombre'] ?? $i['ubicacion'] ?? '—') ?></td>
-                        <td><?= esc($i['resolvio_nombre'] ?? '—') ?></td>
-                        <td class="text-muted small"><?= date('d/m H:i', strtotime($i['resuelta_en'])) ?></td>
-                        <td class="text-muted small"><?= esc($i['solucion'] ?? '—') ?></td>
+                        <td class="d-none d-md-table-cell"><?= esc($i['resolvio_nombre'] ?? '—') ?></td>
+                        <td class="text-muted small d-none d-md-table-cell"><?= date('d/m H:i', strtotime($i['resuelta_en'])) ?></td>
+                        <td class="text-muted small d-none d-lg-table-cell"><?= esc($i['solucion'] ?? '—') ?></td>
                     </tr>
                 <?php endforeach ?>
             </tbody>

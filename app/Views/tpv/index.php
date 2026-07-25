@@ -83,7 +83,14 @@
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead class="table-light">
-                <tr><th>Número</th><th>Cerrada</th><th>Atendió</th><th>Forma de pago</th><th class="text-end">Total</th><th>Estado</th></tr>
+                <tr>
+                    <th>Número</th>
+                    <th class="d-none d-md-table-cell">Cerrada</th>
+                    <th class="d-none d-lg-table-cell">Atendió</th>
+                    <th class="d-none d-md-table-cell">Forma de pago</th>
+                    <th class="text-end">Total</th>
+                    <th>Estado</th>
+                </tr>
             </thead>
             <tbody>
                 <?php if (empty($historial)): ?>
@@ -92,9 +99,9 @@
                 <?php foreach ($historial as $c): ?>
                     <tr>
                         <td class="fw-semibold"><?= esc($c['numero']) ?><?= $c['reserva_codigo'] ? ' <span class="text-muted small">· ' . esc($c['reserva_codigo']) . '</span>' : '' ?></td>
-                        <td class="text-muted small"><?= $c['cerrada_en'] ? date('d/m H:i', strtotime($c['cerrada_en'])) : '—' ?></td>
-                        <td><?= esc($c['usuario_nombre']) ?></td>
-                        <td><?= esc(\App\Models\ComandaModel::FORMAS_PAGO[$c['forma_pago']] ?? '—') ?></td>
+                        <td class="text-muted small d-none d-md-table-cell"><?= $c['cerrada_en'] ? date('d/m H:i', strtotime($c['cerrada_en'])) : '—' ?></td>
+                        <td class="d-none d-lg-table-cell"><?= esc($c['usuario_nombre']) ?></td>
+                        <td class="d-none d-md-table-cell"><?= esc(\App\Models\ComandaModel::FORMAS_PAGO[$c['forma_pago']] ?? '—') ?></td>
                         <td class="text-end">$<?= number_format((float) $c['total'], 0, ',', '.') ?></td>
                         <td>
                             <span class="badge text-bg-<?= $c['estado'] === 'cobrada' ? 'success' : 'danger' ?>">
