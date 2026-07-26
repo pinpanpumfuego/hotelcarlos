@@ -32,7 +32,10 @@ class Unidades extends BaseController
             'titulo'    => 'Cabañas',
             'seccion'   => 'unidades',
             'unidades'  => $this->unidades->conTipo(),
+            // Cada cabaña enseña su propia foto; si no tiene, la de su tipo
             'portadas'  => $medios->portadasPorTipo(),
+            'propias'   => $medios->portadasPorUnidad(),
+            'galerias'  => $this->conteoGalerias(),
             'revisiones' => $revisions,
         ]);
     }
@@ -58,7 +61,8 @@ class Unidades extends BaseController
             'excepciones' => $servicios->excepcionesDeUnidad($id),
             'inventario'  => (new InventarioItemModel())->deUnidad($id),
             'revisiones'  => (new RevisionInventarioModel())->deUnidad($id),
-            'fotos'       => (new MedioModel())->deUnidad($id),
+            'galeria'     => (new MedioModel())->deUnidad($id, true),
+            'fotos'       => (new MedioModel())->deUnidad($id, false),
             'galeriaTipo' => (new MedioModel())->deTipo((int) $unidad['tipo_id']),
             'mantenimientos' => $this->incidenciasAbiertas($id),
             'limpiezas'   => $this->ultimasLimpiezas($id),
@@ -363,20 +367,95 @@ class Unidades extends BaseController
     //  Fotos internas de la cabaña
     // ─────────────────────────────────────────────────────────────
 
+    /**
+     * Sube una foto de la cabaña. Con «publicar» marcado va a la galería que
+     * se ve en la web; sin marcar queda como foto interna del equipo.
+     */
     public function subirFoto(int $id)
     {
         if ($this->unidades->find($id) === null) {
             return redirect()->to('unidades')->with('error', 'La cabaña no existe.');
         }
 
+        $publico = $this->request->getPost('publicar') !== null;
+
         $r = (new Galeria())->subirFoto(
             $this->request->getFile('foto'),
             null,
             $id,
-            (string) $this->request->getPost('alt')
+            (string) $this->request->getPost('alt'),
+            $publico
         );
 
-        return redirect()->to('unidades/ver/' . $id . '#fotos')->with($r['ok'] ? 'ok' : 'error', $r['mensaje']);
+        $ancla = $publico ? '#galeria' : '#fotos';
+
+        return redirect()->to('unidades/ver/' . $id . $ancla)->with($r['ok'] ? 'ok' : 'error', $r['mensaje']);
+    }
+
+    /** Añade un vídeo a la galería de la cabaña. */
+    public function anadirVideo(int $id)
+    {
+        if ($this->unidades->find($id) === null) {
+            return redirect()->to('unidades')->with('error', 'La cabaña no existe.');
+        }
+
+        $r = (new Galeria())->anadirVideo(
+            null,
+            $id,
+            (string) $this->request->getPost('url'),
+            (string) $this->request->getPost('titulo')
+        );
+
+        return redirect()->to('unidades/ver/' . $id . '#galeria')->with($r['ok'] ? 'ok' : 'error', $r['mensaje']);
+    }
+
+    public function portadaFoto(int $medioId)
+    {
+        $medios = new MedioModel();
+        $medio  = $medios->find($medioId);
+        if ($medio === null || $medio['unidad_id'] === null) {
+            return redirect()->to('unidades')->with('error', 'Esa foto no existe.');
+        }
+
+        $medios->marcarPortada($medioId);
+
+        return redirect()->to('unidades/ver/' . $medio['unidad_id'] . '#galeria')
+            ->with('ok', 'Portada cambiada: es la primera que se ve de esta cabaña.');
+    }
+
+    public function moverFoto(int $medioId)
+    {
+        $medios = new MedioModel();
+        $medio  = $medios->find($medioId);
+        if ($medio === null || $medio['unidad_id'] === null) {
+            return redirect()->to('unidades')->with('error', 'Esa foto no existe.');
+        }
+
+        $direccion = $this->request->getPost('direccion') === 'abajo' ? 1 : -1;
+        $medios->update($medioId, ['orden' => max(0, (int) $medio['orden'] + $direccion * 2)]);
+        $medios->renumerar(null, (int) $medio['unidad_id'], (int) $medio['publico']);
+
+        return redirect()->to('unidades/ver/' . $medio['unidad_id'] . '#galeria');
+    }
+
+    /** Pasa una foto de interna a publicable, o al revés: mueve el archivo de sitio. */
+    public function alternarPublica(int $medioId)
+    {
+        $medios = new MedioModel();
+        $medio  = $medios->find($medioId);
+        if ($medio === null || $medio['unidad_id'] === null) {
+            return redirect()->to('unidades')->with('error', 'Esa foto no existe.');
+        }
+
+        if ($medio['tipo'] === 'video') {
+            return redirect()->to('unidades/ver/' . $medio['unidad_id'] . '#galeria')
+                ->with('error', 'Los vídeos siempre son públicos: si no quieres publicarlo, quítalo.');
+        }
+
+        $r = (new Galeria())->cambiarVisibilidad($medioId, (int) $medio['publico'] !== 1);
+
+        return redirect()->to('unidades/ver/' . $medio['unidad_id'] . ($r['publico'] ? '#galeria' : '#fotos'))
+            ->with($r['ok'] ? 'ok' : 'error', $r['mensaje']);
     }
 
     public function eliminarFoto(int $medioId)
@@ -388,7 +467,7 @@ class Unidades extends BaseController
 
         (new Galeria())->eliminar($medioId);
 
-        return redirect()->to('unidades/ver/' . $medio['unidad_id'] . '#fotos')->with('ok', 'Foto eliminada.');
+        return redirect()->to('unidades/ver/' . $medio['unidad_id'] . '#galeria')->with('ok', 'Elemento eliminado.');
     }
 
     /**
@@ -418,6 +497,20 @@ class Unidades extends BaseController
     }
 
     // ─────────────────────────────────────────────────────────────
+
+    /** Cuántos elementos publicables tiene la galería de cada cabaña. */
+    private function conteoGalerias(): array
+    {
+        $filas = $this->db->table('medios')
+            ->select('unidad_id, COUNT(*) AS total')
+            ->where('unidad_id IS NOT NULL')
+            ->where('publico', 1)
+            ->groupBy('unidad_id')
+            ->get()
+            ->getResultArray();
+
+        return array_map('intval', array_column($filas, 'total', 'unidad_id'));
+    }
 
     private function incidenciasAbiertas(int $unidadId): array
     {

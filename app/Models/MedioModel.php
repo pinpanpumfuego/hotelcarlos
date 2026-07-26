@@ -7,24 +7,26 @@ use CodeIgniter\Model;
 /**
  * Galería de fotos y vídeos.
  *
- * Las de un tipo de alojamiento son comerciales y públicas (se ven en la web).
- * Las de una cabaña concreta son internas: pueden mostrar cerraduras, llaves o
- * desperfectos, así que se guardan fuera de public/ y se sirven por controlador.
+ * Un medio pertenece a un tipo de alojamiento (lo genérico que se anuncia)
+ * o a una cabaña concreta (sus vistas, su terraza, su vídeo).
+ *
+ * Lo que decide dónde se guarda el archivo es `publico`:
+ *  · público  → public/medios/…, lo sirve Apache y se ve en la web.
+ *  · interno  → writable/uploads/unidades/, fuera del alcance del navegador;
+ *               solo se sirve por controlador al personal con sesión.
  */
 class MedioModel extends Model
 {
     protected $table         = 'medios';
     protected $primaryKey    = 'id';
     protected $allowedFields = [
-        'tipo_unidad_id', 'unidad_id', 'tipo', 'archivo', 'miniatura',
+        'tipo_unidad_id', 'unidad_id', 'publico', 'tipo', 'archivo', 'miniatura',
         'url', 'titulo', 'alt', 'orden', 'portada', 'usuario_id',
     ];
     protected $useTimestamps = true;
 
-    /** Carpeta pública de las fotos comerciales. */
-    public const CARPETA_PUBLICA = 'medios/tipos';
-
-    /** Carpeta protegida de las fotos internas de cada cabaña. */
+    public const CARPETA_TIPOS   = 'medios/tipos';
+    public const CARPETA_CABANAS = 'medios/cabanas';
     public const CARPETA_PRIVADA = 'unidades';
 
     /** Galería de un tipo de alojamiento, la portada primero. */
@@ -37,16 +39,49 @@ class MedioModel extends Model
             ->findAll();
     }
 
-    /** Galería interna de una cabaña. */
-    public function deUnidad(int $unidadId): array
+    /**
+     * Galería de una cabaña.
+     *
+     * @param bool|null $publico true = solo las publicables, false = solo las
+     *                           internas, null = todas.
+     */
+    public function deUnidad(int $unidadId, ?bool $publico = null): array
     {
-        return $this->where('unidad_id', $unidadId)
+        $this->where('unidad_id', $unidadId);
+
+        if ($publico !== null) {
+            $this->where('publico', $publico ? 1 : 0);
+        }
+
+        return $this->orderBy('portada', 'DESC')
             ->orderBy('orden')
             ->orderBy('id')
             ->findAll();
     }
 
-    /** Portadas de todos los tipos, indexadas por tipo, para pintar listados. */
+    /** Galerías publicables de varias cabañas a la vez, indexadas por cabaña. */
+    public function publicasDeUnidades(array $unidadIds): array
+    {
+        if ($unidadIds === []) {
+            return [];
+        }
+
+        $filas = $this->whereIn('unidad_id', $unidadIds)
+            ->where('publico', 1)
+            ->orderBy('portada', 'DESC')
+            ->orderBy('orden')
+            ->orderBy('id')
+            ->findAll();
+
+        $porUnidad = [];
+        foreach ($filas as $f) {
+            $porUnidad[(int) $f['unidad_id']][] = $f;
+        }
+
+        return $porUnidad;
+    }
+
+    /** Portadas de todos los tipos, indexadas por tipo. */
     public function portadasPorTipo(): array
     {
         $filas = $this->where('tipo_unidad_id IS NOT NULL')
@@ -63,16 +98,51 @@ class MedioModel extends Model
         return $portadas;
     }
 
-    /** Deja una sola portada por tipo. */
+    /** Portada propia de cada cabaña, cuando la tiene. */
+    public function portadasPorUnidad(): array
+    {
+        $filas = $this->where('unidad_id IS NOT NULL')
+            ->where('publico', 1)
+            ->where('tipo', 'foto')
+            ->orderBy('portada', 'DESC')
+            ->orderBy('orden')
+            ->findAll();
+
+        $portadas = [];
+        foreach ($filas as $f) {
+            $portadas[(int) $f['unidad_id']] ??= $f;
+        }
+
+        return $portadas;
+    }
+
+    /** Deja una sola portada dentro de la misma galería. */
     public function marcarPortada(int $id): void
     {
         $medio = $this->find($id);
-        if ($medio === null || $medio['tipo_unidad_id'] === null) {
+        if ($medio === null) {
             return;
         }
 
-        $this->builder()->where('tipo_unidad_id', $medio['tipo_unidad_id'])->update(['portada' => 0]);
+        $builder = $this->builder();
+        $medio['tipo_unidad_id'] !== null
+            ? $builder->where('tipo_unidad_id', $medio['tipo_unidad_id'])
+            : $builder->where('unidad_id', $medio['unidad_id'])->where('publico', $medio['publico']);
+        $builder->update(['portada' => 0]);
+
         $this->update($id, ['portada' => 1]);
+    }
+
+    /** Renumera 0,1,2… para que el orden quede sin huecos. */
+    public function renumerar(?int $tipoId, ?int $unidadId, int $publico = 1): void
+    {
+        $this->where('publico', $publico);
+        $tipoId !== null ? $this->where('tipo_unidad_id', $tipoId) : $this->where('unidad_id', $unidadId);
+
+        $orden = 0;
+        foreach ($this->orderBy('orden')->orderBy('id')->findAll() as $m) {
+            $this->update($m['id'], ['orden' => $orden++]);
+        }
     }
 
     /** Siguiente posición libre en la galería. */
@@ -84,14 +154,24 @@ class MedioModel extends Model
         return (int) ($builder->first()['orden'] ?? 0) + 1;
     }
 
-    /** URL pública de una foto de tipo, o del embebido si es vídeo. */
+    /** Carpeta relativa dentro de public/ donde vive un medio publicado. */
+    public static function carpetaDe(array $medio): string
+    {
+        return $medio['tipo_unidad_id'] !== null ? self::CARPETA_TIPOS : self::CARPETA_CABANAS;
+    }
+
+    /** URL de la imagen grande; si es vídeo, su enlace. */
     public static function urlPublica(array $medio): string
     {
         if ($medio['tipo'] === 'video') {
             return (string) $medio['url'];
         }
 
-        return base_url(self::CARPETA_PUBLICA . '/' . $medio['archivo']);
+        if ((int) $medio['publico'] !== 1) {
+            return site_url('unidades/foto/' . $medio['id']);
+        }
+
+        return base_url(self::carpetaDe($medio) . '/' . $medio['archivo']);
     }
 
     /** URL de la miniatura, con la imagen grande como respaldo. */
@@ -101,7 +181,11 @@ class MedioModel extends Model
             return (string) $medio['url'];
         }
 
-        return base_url(self::CARPETA_PUBLICA . '/' . ($medio['miniatura'] ?: $medio['archivo']));
+        if ((int) $medio['publico'] !== 1) {
+            return site_url('unidades/foto/' . $medio['id']);
+        }
+
+        return base_url(self::carpetaDe($medio) . '/' . ($medio['miniatura'] ?: $medio['archivo']));
     }
 
     /**
@@ -114,11 +198,21 @@ class MedioModel extends Model
             return null;
         }
 
-        if (preg_match('~(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/)([\w-]{6,})~', $url, $m)) {
+        if (preg_match('~(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([\w-]{6,})~', $url, $m)) {
             return 'https://www.youtube-nocookie.com/embed/' . $m[1];
         }
         if (preg_match('~vimeo\.com/(?:video/)?(\d+)~', $url, $m)) {
             return 'https://player.vimeo.com/video/' . $m[1];
+        }
+
+        return null;
+    }
+
+    /** Miniatura de un vídeo de YouTube, para no dejar un hueco gris. */
+    public static function miniaturaVideo(?string $url): ?string
+    {
+        if ($url !== null && preg_match('~(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([\w-]{6,})~', $url, $m)) {
+            return 'https://i.ytimg.com/vi/' . $m[1] . '/hqdefault.jpg';
         }
 
         return null;

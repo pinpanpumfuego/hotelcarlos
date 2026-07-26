@@ -335,51 +335,132 @@ $totalPiezas = array_sum(array_map(static fn ($i) => (int) $i['cantidad'], $conC
             <?php endif ?>
         </div>
 
-        <!-- Fotos que se publican (viven en el tipo) -->
-        <div class="card border-0 shadow-sm mb-4" id="fotos-web">
+        <!-- ══ Galería propia de la cabaña: se publica ══ -->
+        <div class="card border-0 shadow-sm mb-4" id="galeria">
             <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span class="fw-semibold"><i class="bi bi-globe2 me-2"></i>Fotos que se publican en la web</span>
-                <?php if ($esGestor): ?>
-                    <a href="<?= site_url('tipos/ficha/' . $unidad['tipo_id']) ?>#galeria" class="btn btn-sm btn-primary">
-                        <i class="bi bi-upload me-1"></i>Subir fotos a la web
-                    </a>
-                <?php endif ?>
+                <span class="fw-semibold"><i class="bi bi-images me-2"></i>Galería de <?= esc($unidad['nombre']) ?></span>
+                <span class="text-muted small"><?= count($galeria) ?> elemento<?= count($galeria) === 1 ? '' : 's' ?> · se publican</span>
             </div>
+
             <div class="card-body">
                 <p class="form-text mb-3">
-                    Son las de <strong><?= esc($unidad['tipo_nombre']) ?></strong> y las comparten
-                    <strong>todas las cabañas de este tipo</strong>: se suben una sola vez, no siete.
+                    Fotos y vídeos <strong>de esta cabaña en concreto</strong>: su vista, su terraza, su interior.
+                    Se ven en la web junto a las de
+                    <a href="<?= site_url('tipos/ficha/' . $unidad['tipo_id']) ?>#galeria"><?= esc($unidad['tipo_nombre']) ?></a>
+                    (<?= count($galeriaTipo) ?> comune<?= count($galeriaTipo) === 1 ? '' : 's' ?> a todas).
                 </p>
 
-                <?php if ($galeriaTipo === []): ?>
+                <?php if ($galeria === []): ?>
                     <div class="aviso-sin-fotos">
                         <i class="bi bi-camera fs-3 d-block mb-2 opacity-50"></i>
-                        <p class="mb-2">Todavía no hay ninguna foto publicada.</p>
-                        <?php if ($esGestor): ?>
-                            <a href="<?= site_url('tipos/ficha/' . $unidad['tipo_id']) ?>#galeria" class="btn btn-primary btn-sm">
-                                <i class="bi bi-upload me-1"></i>Subir la primera foto
-                            </a>
-                        <?php else: ?>
-                            <p class="small text-muted mb-0">Pídeselo a gerencia.</p>
-                        <?php endif ?>
+                        <p class="mb-0">Esta cabaña todavía no tiene fotos propias. Súbelas aquí abajo.</p>
                     </div>
                 <?php else: ?>
-                    <div class="galeria-interna">
-                        <?php foreach (array_slice($galeriaTipo, 0, 6) as $m): ?>
-                            <figure class="foto">
+                    <div class="galeria">
+                        <?php foreach ($galeria as $i => $m): ?>
+                            <?php $mini = \App\Models\MedioModel::miniaturaVideo($m['url'] ?? null); ?>
+                            <figure class="pieza <?= (int) $m['portada'] === 1 ? 'es-portada' : '' ?>">
                                 <?php if ($m['tipo'] === 'video'): ?>
-                                    <div class="hueco-video"><i class="bi bi-play-circle"></i></div>
+                                    <?php if ($mini !== null): ?>
+                                        <div class="marco-video con-imagen" style="background-image: url('<?= esc($mini) ?>')">
+                                            <i class="bi bi-play-circle-fill"></i>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="marco-video">
+                                            <i class="bi bi-play-circle"></i>
+                                            <span class="small text-truncate"><?= esc($m['titulo'] ?? 'Vídeo') ?></span>
+                                        </div>
+                                    <?php endif ?>
                                 <?php else: ?>
                                     <img src="<?= esc(\App\Models\MedioModel::urlMiniatura($m)) ?>"
-                                         alt="<?= esc($m['alt'] ?? $unidad['tipo_nombre']) ?>" loading="lazy">
+                                         alt="<?= esc($m['alt'] ?? $unidad['nombre']) ?>" loading="lazy">
                                 <?php endif ?>
+
+                                <?php if ((int) $m['portada'] === 1): ?>
+                                    <span class="etiqueta-portada"><i class="bi bi-star-fill me-1"></i>Portada</span>
+                                <?php endif ?>
+
+                                <figcaption>
+                                    <span class="text-truncate small text-muted"><?= esc($m['alt'] ?? $m['titulo'] ?? '') ?></span>
+                                    <?php if ($esGestor): ?>
+                                        <div class="acciones">
+                                            <?php if ($i > 0): ?>
+                                                <form method="post" action="<?= site_url('unidades/foto/mover/' . $m['id']) ?>">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="direccion" value="arriba">
+                                                    <button class="btn btn-sm btn-link p-0" title="Mover antes"><i class="bi bi-arrow-left"></i></button>
+                                                </form>
+                                            <?php endif ?>
+                                            <?php if ($i < count($galeria) - 1): ?>
+                                                <form method="post" action="<?= site_url('unidades/foto/mover/' . $m['id']) ?>">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="direccion" value="abajo">
+                                                    <button class="btn btn-sm btn-link p-0" title="Mover después"><i class="bi bi-arrow-right"></i></button>
+                                                </form>
+                                            <?php endif ?>
+                                            <?php if ($m['tipo'] === 'foto' && (int) $m['portada'] !== 1): ?>
+                                                <form method="post" action="<?= site_url('unidades/foto/portada/' . $m['id']) ?>">
+                                                    <?= csrf_field() ?>
+                                                    <button class="btn btn-sm btn-link p-0" title="Poner de portada"><i class="bi bi-star"></i></button>
+                                                </form>
+                                            <?php endif ?>
+                                            <?php if ($m['tipo'] === 'foto'): ?>
+                                                <form method="post" action="<?= site_url('unidades/foto/publicar/' . $m['id']) ?>">
+                                                    <?= csrf_field() ?>
+                                                    <button class="btn btn-sm btn-link p-0" title="Pasar a foto interna"><i class="bi bi-eye-slash"></i></button>
+                                                </form>
+                                            <?php endif ?>
+                                            <form method="post" action="<?= site_url('unidades/foto/eliminar/' . $m['id']) ?>"
+                                                  onsubmit="return confirm('¿Eliminar de la galería?');">
+                                                <?= csrf_field() ?>
+                                                <button class="btn btn-sm btn-link text-danger p-0" title="Eliminar"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    <?php endif ?>
+                                </figcaption>
                             </figure>
                         <?php endforeach ?>
                     </div>
-                    <?php if (count($galeriaTipo) > 6): ?>
-                        <p class="form-text mt-2 mb-0">y <?= count($galeriaTipo) - 6 ?> más…</p>
-                    <?php endif ?>
                 <?php endif ?>
+            </div>
+
+            <div class="card-body border-top">
+                <form method="post" action="<?= site_url('unidades/foto/' . $unidad['id']) ?>" enctype="multipart/form-data"
+                      class="row g-2 align-items-end">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="publicar" value="1">
+                    <div class="col-md-5">
+                        <label class="form-label small mb-1 fw-semibold">Subir foto de esta cabaña</label>
+                        <input type="file" name="foto" class="form-control form-control-sm" accept="image/*" required>
+                        <div class="form-text">Se reduce sola. Puedes subir todas las que quieras, una a una.</div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small mb-1 fw-semibold">Qué se ve</label>
+                        <input type="text" name="alt" class="form-control form-control-sm" maxlength="200"
+                               placeholder="Terraza de la Cabaña 1 al amanecer">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-sm w-100"><i class="bi bi-upload me-1"></i>Subir</button>
+                    </div>
+                </form>
+
+                <form method="post" action="<?= site_url('unidades/video/' . $unidad['id']) ?>"
+                      class="row g-2 align-items-end mt-2 pt-3 border-top">
+                    <?= csrf_field() ?>
+                    <div class="col-md-5">
+                        <label class="form-label small mb-1 fw-semibold">Añadir vídeo</label>
+                        <input type="url" name="url" class="form-control form-control-sm" placeholder="https://youtu.be/…" required>
+                        <div class="form-text">De YouTube o Vimeo. El archivo no se sube: pesaría demasiado.</div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small mb-1 fw-semibold">Título</label>
+                        <input type="text" name="titulo" class="form-control form-control-sm" maxlength="150"
+                               placeholder="Recorrido por la Cabaña 1">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-play-btn me-1"></i>Añadir</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -395,7 +476,7 @@ $totalPiezas = array_sum(array_map(static fn ($i) => (int) $i['cantidad'], $conC
                 </p>
 
                 <?php if ($fotos === []): ?>
-                    <p class="text-muted small">Todavía no hay fotos de esta cabaña.</p>
+                    <p class="text-muted small">No hay fotos internas de esta cabaña.</p>
                 <?php else: ?>
                     <div class="galeria-interna mb-3">
                         <?php foreach ($fotos as $f): ?>
@@ -405,11 +486,19 @@ $totalPiezas = array_sum(array_map(static fn ($i) => (int) $i['cantidad'], $conC
                                 </a>
                                 <figcaption>
                                     <span class="text-truncate"><?= esc($f['alt'] ?? '') ?></span>
-                                    <form method="post" action="<?= site_url('unidades/foto/eliminar/' . $f['id']) ?>"
-                                          onsubmit="return confirm('¿Eliminar esta foto?');">
-                                        <?= csrf_field() ?>
-                                        <button class="btn btn-sm btn-link text-danger p-0" title="Eliminar"><i class="bi bi-trash"></i></button>
-                                    </form>
+                                    <div class="d-flex gap-2">
+                                        <?php if ($esGestor): ?>
+                                            <form method="post" action="<?= site_url('unidades/foto/publicar/' . $f['id']) ?>">
+                                                <?= csrf_field() ?>
+                                                <button class="btn btn-sm btn-link p-0" title="Publicar en la web"><i class="bi bi-eye"></i></button>
+                                            </form>
+                                        <?php endif ?>
+                                        <form method="post" action="<?= site_url('unidades/foto/eliminar/' . $f['id']) ?>"
+                                              onsubmit="return confirm('¿Eliminar esta foto?');">
+                                            <?= csrf_field() ?>
+                                            <button class="btn btn-sm btn-link text-danger p-0" title="Eliminar"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
                                 </figcaption>
                             </figure>
                         <?php endforeach ?>
@@ -420,7 +509,7 @@ $totalPiezas = array_sum(array_map(static fn ($i) => (int) $i['cantidad'], $conC
                       class="row g-2 align-items-end border-top pt-3">
                     <?= csrf_field() ?>
                     <div class="col-sm-5">
-                        <label class="form-label small mb-1">Foto</label>
+                        <label class="form-label small mb-1">Foto interna</label>
                         <input type="file" name="foto" class="form-control form-control-sm" accept="image/*" capture="environment" required>
                     </div>
                     <div class="col-sm-5">
@@ -429,7 +518,7 @@ $totalPiezas = array_sum(array_map(static fn ($i) => (int) $i['cantidad'], $conC
                                placeholder="Terraza tras el aseo, gotera en el techo…">
                     </div>
                     <div class="col-sm-2">
-                        <button class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-upload"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-upload"></i></button>
                     </div>
                 </form>
             </div>
@@ -457,10 +546,27 @@ $totalPiezas = array_sum(array_map(static fn ($i) => (int) $i['cantidad'], $conC
         display: flex; justify-content: space-between; align-items: center; gap: .3rem;
         padding: .3rem .5rem; font-size: .74rem; color: var(--tinta-suave);
     }
-    .hueco-video { height: 105px; display: flex; align-items: center; justify-content: center;
-                   background: #e9efe9; color: var(--bosque); font-size: 1.6rem; }
     .aviso-sin-fotos { text-align: center; padding: 1.6rem 1rem; color: var(--tinta-suave);
                        border: 2px dashed var(--borde-fuerte); border-radius: var(--radio); }
+
+    /* Galería publicable de la cabaña */
+    .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .7rem; }
+    .pieza { position: relative; margin: 0; border: 1px solid var(--borde);
+             border-radius: var(--radio-sm); overflow: hidden; background: var(--panel-tenue); }
+    .pieza.es-portada { border-color: var(--arena-clara); box-shadow: 0 0 0 2px rgba(185,135,63,.18); }
+    .pieza img { width: 100%; height: 118px; object-fit: cover; display: block; }
+    .marco-video { height: 118px; display: flex; flex-direction: column; align-items: center;
+                   justify-content: center; gap: .2rem; color: var(--tinta-media); background: #e9efe9; }
+    .marco-video i { font-size: 1.7rem; color: var(--bosque); }
+    .marco-video.con-imagen { background-size: cover; background-position: center; }
+    .marco-video.con-imagen i { color: #fff; font-size: 2.2rem; text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+    .etiqueta-portada { position: absolute; top: 6px; left: 6px; background: var(--arena);
+                        color: #fff; font-size: .66rem; font-weight: 600;
+                        padding: .1rem .45rem; border-radius: 99px; }
+    .pieza figcaption { display: flex; justify-content: space-between; align-items: center;
+                        gap: .3rem; padding: .3rem .5rem; }
+    .pieza .acciones { display: flex; gap: .35rem; flex-shrink: 0; }
+    .pieza .acciones form { display: inline; }
 </style>
 
 <?= $this->endSection() ?>

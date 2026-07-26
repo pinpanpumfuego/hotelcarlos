@@ -57,7 +57,7 @@ class Reservar extends BaseController
                     'total'      => $cotizacion['total'],
                     'porNoche'   => $cotizacion['media_noche'],
                     'cotizacion' => $cotizacion,
-                    'galeria'    => (new \App\Models\MedioModel())->deTipo((int) $tipo['id']),
+                    'galeria'    => $this->galeriaDelTipo((int) $tipo['id'], $libres),
                     'servicios'  => (new \App\Models\ServicioModel())->fichaDeTipo((int) $tipo['id']),
                 ];
             }
@@ -279,6 +279,27 @@ class Reservar extends BaseController
             'reserva'      => $reserva,
             'descuento'    => (new \App\Models\FolioModel())->totalDescuentos((int) $reserva['id']),
         ]);
+    }
+
+    /**
+     * Galería de un tipo con las fotos propias de las cabañas libres.
+     * Solo se enseña lo que el huésped podría llegar a ocupar.
+     */
+    private function galeriaDelTipo(int $tipoId, array $unidadesLibres): array
+    {
+        $medios  = new \App\Models\MedioModel();
+        $galeria = $medios->deTipo($tipoId);
+
+        $porCabana = $medios->publicasDeUnidades(array_map('intval', array_column($unidadesLibres, 'id')));
+
+        foreach ($unidadesLibres as $u) {
+            foreach ($porCabana[(int) $u['id']] ?? [] as $m) {
+                $m['alt']  = trim(($m['alt'] ?? '') !== '' ? $u['nombre'] . ' · ' . $m['alt'] : $u['nombre']);
+                $galeria[] = $m;
+            }
+        }
+
+        return $galeria;
     }
 
     private function recogerBusqueda(): array

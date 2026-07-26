@@ -29,12 +29,14 @@ class Galeria
     }
 
     /**
-     * Guarda una foto. Si $tipoId viene, es comercial y va a public/;
-     * si viene $unidadId, es interna y va a writable/ (no accesible desde fuera).
+     * Guarda una foto.
+     *
+     * $publico decide dónde acaba el archivo: las publicables van a public/
+     * (las sirve Apache) y las internas a writable/, fuera del navegador.
      *
      * @return array{ok: bool, mensaje: string}
      */
-    public function subirFoto(?UploadedFile $archivo, ?int $tipoId, ?int $unidadId, string $alt = ''): array
+    public function subirFoto(?UploadedFile $archivo, ?int $tipoId, ?int $unidadId, string $alt = '', bool $publico = true): array
     {
         if ($archivo === null || ! $archivo->isValid()) {
             $motivo = $archivo === null ? 'No llegó ningún archivo.' : $archivo->getErrorString();
@@ -50,7 +52,7 @@ class Galeria
             return ['ok' => false, 'mensaje' => 'La foto pesa más de 12 MB. Hazla más pequeña e inténtalo otra vez.'];
         }
 
-        $carpeta = $this->carpeta($tipoId);
+        $carpeta = $this->carpeta($tipoId, $publico);
         if (! is_dir($carpeta) && ! @mkdir($carpeta, 0755, true) && ! is_dir($carpeta)) {
             return ['ok' => false, 'mensaje' => 'No se pudo crear la carpeta de las fotos. Revisa los permisos.'];
         }
@@ -80,12 +82,13 @@ class Galeria
         $this->medios->insert([
             'tipo_unidad_id' => $tipoId,
             'unidad_id'      => $unidadId,
+            'publico'        => $publico ? 1 : 0,
             'tipo'           => 'foto',
             'archivo'        => $nombre,
             'miniatura'      => $mini,
             'alt'            => trim($alt) !== '' ? trim($alt) : null,
             'orden'          => $this->medios->siguienteOrden($tipoId, $unidadId),
-            'portada'        => $tipoId !== null && $this->medios->where('tipo_unidad_id', $tipoId)->countAllResults() === 0 ? 1 : 0,
+            'portada'        => $publico && $this->galeriaVacia($tipoId, $unidadId) ? 1 : 0,
             'usuario_id'     => session()->get('usuario_id'),
         ]);
 
@@ -98,12 +101,14 @@ class Galeria
         $url = trim($url);
 
         if (MedioModel::embebido($url) === null) {
-            return ['ok' => false, 'mensaje' => 'Pega el enlace de un vídeo de YouTube o Vimeo.'];
+            return ['ok' => false, 'mensaje' => 'Pega el enlace de un vídeo de YouTube o Vimeo. '
+                . 'Sirve tanto https://youtu.be/… como el enlace largo de la barra del navegador.'];
         }
 
         $this->medios->insert([
             'tipo_unidad_id' => $tipoId,
             'unidad_id'      => $unidadId,
+            'publico'        => 1,
             'tipo'           => 'video',
             'url'            => $url,
             'titulo'         => trim($titulo) !== '' ? trim($titulo) : null,
@@ -112,6 +117,17 @@ class Galeria
         ]);
 
         return ['ok' => true, 'mensaje' => 'Vídeo añadido a la galería.'];
+    }
+
+    /** ¿Es el primer elemento publicable de esta galería? Entonces será la portada. */
+    private function galeriaVacia(?int $tipoId, ?int $unidadId): bool
+    {
+        $medios = new MedioModel();
+        $tipoId !== null
+            ? $medios->where('tipo_unidad_id', $tipoId)
+            : $medios->where('unidad_id', $unidadId);
+
+        return $medios->where('publico', 1)->countAllResults() === 0;
     }
 
     /** Borra el registro y sus archivos. */
@@ -123,7 +139,10 @@ class Galeria
         }
 
         if ($medio['tipo'] === 'foto') {
-            $carpeta = $this->carpeta($medio['tipo_unidad_id'] !== null ? (int) $medio['tipo_unidad_id'] : null);
+            $carpeta = $this->carpeta(
+                $medio['tipo_unidad_id'] !== null ? (int) $medio['tipo_unidad_id'] : null,
+                (int) $medio['publico'] === 1
+            );
             foreach ([$medio['archivo'], $medio['miniatura']] as $nombre) {
                 if ($nombre !== null && is_file($carpeta . $nombre)) {
                     @unlink($carpeta . $nombre);
@@ -135,33 +154,103 @@ class Galeria
         $this->medios->delete($id);
 
         // Si se borró la portada, la primera que quede ocupa su lugar
-        if ($eraPortada && $medio['tipo_unidad_id'] !== null) {
-            $siguiente = $this->medios->where('tipo_unidad_id', $medio['tipo_unidad_id'])->orderBy('orden')->first();
-            if ($siguiente !== null) {
-                $this->medios->update($siguiente['id'], ['portada' => 1]);
+        if ($eraPortada) {
+            $siguiente = $this->medios;
+            $medio['tipo_unidad_id'] !== null
+                ? $siguiente->where('tipo_unidad_id', $medio['tipo_unidad_id'])
+                : $siguiente->where('unidad_id', $medio['unidad_id'])->where('publico', $medio['publico']);
+
+            $primera = $siguiente->orderBy('orden')->orderBy('id')->first();
+            if ($primera !== null) {
+                $this->medios->update($primera['id'], ['portada' => 1]);
             }
         }
 
         return true;
     }
 
+    /**
+     * Cambia una foto de interna a publicable o al revés.
+     * Mueve el archivo entre carpetas: si no, dejaría de encontrarse.
+     *
+     * @return array{ok: bool, mensaje: string, publico: bool}
+     */
+    public function cambiarVisibilidad(int $id, bool $aPublico): array
+    {
+        $medio = $this->medios->find($id);
+        if ($medio === null || $medio['tipo'] !== 'foto') {
+            return ['ok' => false, 'mensaje' => 'Esa foto no existe.', 'publico' => false];
+        }
+
+        $tipoId  = $medio['tipo_unidad_id'] !== null ? (int) $medio['tipo_unidad_id'] : null;
+        $origen  = $this->carpeta($tipoId, (int) $medio['publico'] === 1);
+        $destino = $this->carpeta($tipoId, $aPublico);
+
+        if (! is_dir($destino) && ! @mkdir($destino, 0755, true) && ! is_dir($destino)) {
+            return ['ok' => false, 'mensaje' => 'No se pudo preparar la carpeta de destino.', 'publico' => ! $aPublico];
+        }
+
+        foreach ([$medio['archivo'], $medio['miniatura']] as $nombre) {
+            if ($nombre !== null && is_file($origen . $nombre)) {
+                @rename($origen . $nombre, $destino . $nombre);
+            }
+        }
+
+        $this->medios->update($id, [
+            'publico' => $aPublico ? 1 : 0,
+            'portada' => 0,
+        ]);
+
+        // Si la galería pública se queda sin portada, la primera toma el relevo
+        if ($medio['unidad_id'] !== null) {
+            $publicas = $this->medios->deUnidad((int) $medio['unidad_id'], true);
+            $tienePortada = false;
+            foreach ($publicas as $p) {
+                if ((int) $p['portada'] === 1) {
+                    $tienePortada = true;
+                    break;
+                }
+            }
+            if (! $tienePortada && $publicas !== []) {
+                $this->medios->update($publicas[0]['id'], ['portada' => 1]);
+            }
+        }
+
+        return [
+            'ok'      => true,
+            'publico' => $aPublico,
+            'mensaje' => $aPublico
+                ? 'La foto pasa a la galería: ya se ve en la web.'
+                : 'La foto pasa a interna: deja de verse en la web.',
+        ];
+    }
+
     /** Ruta absoluta de una foto interna de cabaña, para servirla por controlador. */
     public function rutaPrivada(array $medio): ?string
     {
-        if ($medio['unidad_id'] === null || $medio['archivo'] === null) {
+        if ($medio['unidad_id'] === null || $medio['archivo'] === null || (int) $medio['publico'] === 1) {
             return null;
         }
 
-        $ruta = $this->carpeta(null) . $medio['archivo'];
+        $ruta = $this->carpeta(null, false) . $medio['archivo'];
 
         return is_file($ruta) ? $ruta : null;
     }
 
-    /** public/medios/tipos/ para lo comercial; writable/uploads/unidades/ para lo interno. */
-    private function carpeta(?int $tipoId): string
+    /**
+     * Dónde va el archivo:
+     *  · público de un tipo   → public/medios/tipos/
+     *  · público de una cabaña → public/medios/cabanas/
+     *  · interno              → writable/uploads/unidades/ (fuera del navegador)
+     */
+    private function carpeta(?int $tipoId, bool $publico): string
     {
-        return $tipoId !== null
-            ? FCPATH . MedioModel::CARPETA_PUBLICA . DIRECTORY_SEPARATOR
-            : WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . MedioModel::CARPETA_PRIVADA . DIRECTORY_SEPARATOR;
+        if (! $publico) {
+            return WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . MedioModel::CARPETA_PRIVADA . DIRECTORY_SEPARATOR;
+        }
+
+        $sub = $tipoId !== null ? MedioModel::CARPETA_TIPOS : MedioModel::CARPETA_CABANAS;
+
+        return FCPATH . str_replace('/', DIRECTORY_SEPARATOR, $sub) . DIRECTORY_SEPARATOR;
     }
 }

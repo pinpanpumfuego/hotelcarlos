@@ -203,12 +203,20 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       `inventario_revision_lineas`; columnas nuevas en `unidades`: `descripcion`, `ubicacion`, `orden`).
       **Reparto de responsabilidades**: lo que se anuncia va en el **tipo** (es lo que se vende) y lo
       que se limpia, se avería y se cuenta va en la **unidad** física.
-      · **Galería** (`/tipos/ficha/:id`): subida de fotos con redimensionado por GD a 1600 px y
-      miniatura de 480 px (verificado: 2400×1600 → 1600×1067, 51 KB), portada, reordenar, texto
-      alternativo, y vídeos de YouTube/Vimeo por enlace (no se suben archivos de vídeo).
-      Las fotos comerciales van a `public/medios/tipos/`; las **internas de cada cabaña** a
-      `writable/uploads/unidades/` y solo se sirven por controlador con `no-store` y registro de
-      acceso — **verificado: acceso web directo devuelve 403**.
+      · **Galerías**: hay dos niveles y **cada cabaña tiene la suya propia**.
+      En el tipo (`/tipos/ficha/:id`) van las fotos comunes a todas; en cada cabaña
+      (`/unidades/ver/:id#galeria`) las suyas: su vista, su terraza, su vídeo. Ambas admiten fotos
+      y **vídeos de YouTube/Vimeo por enlace** (el archivo de vídeo no se sube: pesaría demasiado),
+      con portada, reordenar y texto alternativo.
+      Redimensionado por GD a 1600 px + miniatura de 480 px (verificado: 2400×1600 → 1600×1067, 51 KB).
+      · **`medios.publico` decide dónde acaba el archivo**, no a quién pertenece:
+      publicable → `public/medios/tipos/` o `public/medios/cabanas/`; interno →
+      `writable/uploads/unidades/`, servido solo por controlador con `no-store` y registro de acceso.
+      El botón del ojo pasa una foto de una galería a la otra **moviendo el archivo de carpeta**.
+      **Verificado**: acceso directo al archivo interno → 403, y sin sesión el controlador no lo sirve.
+      · En la web, la galería de un tipo **junta lo común con las fotos de sus cabañas**, etiquetadas
+      con el nombre («Cabaña 1 · Terraza al amanecer»). En el motor de reservas solo se enseñan las
+      de las cabañas realmente libres en esas fechas.
       · **Servicios**: catálogo con icono y grupo; se marcan en el tipo y las cabañas los heredan.
       Cada cabaña admite **excepciones** (`unidad_servicios` con estado `si`/`no`): solo se guarda
       lo que se aparta del tipo, así un cambio en el tipo se propaga solo.

@@ -62,6 +62,10 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('unidades/revisar/(:num)', 'Unidades::guardarRevision/$1');
     $routes->get('unidades/foto/(:num)', 'Unidades::foto/$1');
     $routes->post('unidades/foto/(:num)', 'Unidades::subirFoto/$1');
+    $routes->post('unidades/video/(:num)', 'Unidades::anadirVideo/$1');
+    $routes->post('unidades/foto/portada/(:num)', 'Unidades::portadaFoto/$1');
+    $routes->post('unidades/foto/mover/(:num)', 'Unidades::moverFoto/$1');
+    $routes->post('unidades/foto/publicar/(:num)', 'Unidades::alternarPublica/$1');
     $routes->post('unidades/foto/eliminar/(:num)', 'Unidades::eliminarFoto/$1');
 });
 

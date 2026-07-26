@@ -23,11 +23,28 @@ class Web extends BaseController
         $medios    = new \App\Models\MedioModel();
         $servicios = new \App\Models\ServicioModel();
 
-        // Galería y servicios de cada tipo, para no consultarlos dentro de la vista
+        // Galería y servicios de cada tipo, para no consultarlos dentro de la vista.
+        // La galería junta lo común del tipo con las fotos propias de sus cabañas.
+        $unidades  = (new \App\Models\UnidadModel())->orderBy('orden')->orderBy('nombre')->findAll();
+        $porCabana = $medios->publicasDeUnidades(array_map('intval', array_column($unidades, 'id')));
+
         $galerias = [];
         $chips    = [];
         foreach ($tipos as $t) {
-            $galerias[$t['id']] = $medios->deTipo((int) $t['id']);
+            $galeria = $medios->deTipo((int) $t['id']);
+
+            foreach ($unidades as $u) {
+                if ((int) $u['tipo_id'] !== (int) $t['id']) {
+                    continue;
+                }
+                foreach ($porCabana[(int) $u['id']] ?? [] as $m) {
+                    // Se etiqueta con el nombre de la cabaña: el huésped sabe qué mira
+                    $m['alt'] = trim(($m['alt'] ?? '') !== '' ? $u['nombre'] . ' · ' . $m['alt'] : $u['nombre']);
+                    $galeria[] = $m;
+                }
+            }
+
+            $galerias[$t['id']] = $galeria;
             $chips[$t['id']]    = $servicios->fichaDeTipo((int) $t['id']);
         }
 

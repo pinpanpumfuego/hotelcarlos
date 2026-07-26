@@ -39,8 +39,11 @@ $iconos    = ['disponible' => 'bi-check-circle', 'ocupada' => 'bi-person-fill', 
     <div class="row g-3">
         <?php foreach ($unidades as $u): ?>
             <?php
-            $portada  = $portadas[(int) $u['tipo_id']] ?? null;
+            // Manda la foto propia de la cabaña; si no tiene, la de su tipo
+            $propia   = $propias[(int) $u['id']] ?? null;
+            $portada  = $propia ?? ($portadas[(int) $u['tipo_id']] ?? null);
             $revision = $revisiones[(int) $u['id']] ?? null;
+            $enGaleria = $galerias[(int) $u['id']] ?? 0;
             ?>
             <div class="col-sm-6 col-xl-4">
                 <a href="<?= site_url('unidades/ver/' . $u['id']) ?>" class="text-decoration-none">
@@ -56,6 +59,11 @@ $iconos    = ['disponible' => 'bi-check-circle', 'ocupada' => 'bi-person-fill', 
                                 <i class="bi <?= $iconos[$u['estado']] ?? 'bi-circle' ?> me-1"></i>
                                 <?= esc($etiquetas[$u['estado']] ?? $u['estado']) ?>
                             </span>
+                            <?php if ($enGaleria > 0): ?>
+                                <span class="conteo-fotos"><i class="bi bi-images me-1"></i><?= $enGaleria ?></span>
+                            <?php else: ?>
+                                <span class="conteo-fotos vacio"><i class="bi bi-camera me-1"></i>Sin fotos propias</span>
+                            <?php endif ?>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start gap-2">
@@ -115,6 +123,11 @@ $iconos    = ['disponible' => 'bi-check-circle', 'ocupada' => 'bi-person-fill', 
                                 color: var(--borde-fuerte); font-size: 2rem;
                                 background: repeating-linear-gradient(45deg, var(--panel-tenue), var(--panel-tenue) 10px, #eef2ee 10px, #eef2ee 20px); }
     .tarjeta-cabana .estado { position: absolute; top: 8px; left: 8px; }
+    .tarjeta-cabana .conteo-fotos {
+        position: absolute; bottom: 8px; right: 8px; background: rgba(28,42,35,.65);
+        color: #fff; font-size: .7rem; padding: .1rem .5rem; border-radius: 99px;
+    }
+    .tarjeta-cabana .conteo-fotos.vacio { background: rgba(28,42,35,.4); }
 </style>
 
 <?= $this->endSection() ?>
