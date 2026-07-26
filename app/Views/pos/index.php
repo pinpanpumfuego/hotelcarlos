@@ -129,6 +129,17 @@
         .chip-cliente.asignado { border-style: solid; border-color: var(--verde); background: rgba(47,125,82,.08); }
         .chip-cliente.asignado #ico-cliente { color: var(--verde); }
         .chip-cliente span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* Más discreto que el de cliente: se consulta, no se toca */
+        .chip-camarero {
+            display: flex; align-items: center; gap: 8px; margin-top: 6px;
+            padding: 7px 12px; font-size: .82rem; color: var(--texto-suave);
+        }
+        .chip-camarero i { color: var(--verde); }
+        .chip-camarero span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* Quién metió cada línea, cuando hay más de un camarero en la mesa */
+        .linea .quien { display: block; font-size: .74rem; color: var(--texto-suave); margin-top: 2px; }
+        .linea .quien i { font-size: .7rem; }
+        .mesa .camarero-mesa { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
         .lineas { flex: 1; overflow-y: auto; padding: 6px; }
         .linea {
             width: 100%; text-align: left; background: transparent; border-radius: 10px;
@@ -407,6 +418,11 @@
                     <span id="tk-cliente">Sin cliente asignado</span>
                     <i class="bi bi-pencil" style="margin-left:auto; opacity:.6"></i>
                 </button>
+                <!-- Quién atiende la mesa: no es un botón, es información -->
+                <div class="chip-camarero" id="chip-camarero" style="display:none">
+                    <i class="bi bi-person-badge" id="ico-camarero"></i>
+                    <span id="tk-camarero"></span>
+                </div>
             </div>
             <div class="aviso-listos" id="aviso-listos">
                 <i class="bi bi-bell-fill"></i><span id="texto-listos"></span>
@@ -957,8 +973,15 @@
                 const b = document.createElement('button');
                 b.className = 'mesa ' + (m.ocupada ? 'ocupada' : 'libre');
                 if (m.ocupada) {
+                    // Quién la lleva, y si la comanda entró desde un móvil
+                    const quien = m.camarero
+                        ? '<div class="dato camarero-mesa">'
+                            + (m.origen === 'movil' ? '<i class="bi bi-phone"></i> ' : '<i class="bi bi-person"></i> ')
+                            + escaparHtml(m.camarero) + '</div>'
+                        : '';
                     b.innerHTML = '<div><div class="nombre">' + escaparHtml(m.nombre) + '</div>'
-                        + '<div class="dato"><i class="bi bi-clock"></i> ' + m.abierta_hace + ' min</div></div>'
+                        + '<div class="dato"><i class="bi bi-clock"></i> ' + m.abierta_hace + ' min</div>'
+                        + quien + '</div>'
                         + '<div class="total">' + pesos(m.total) + '</div>';
                 } else {
                     b.innerHTML = '<div><div class="nombre">' + escaparHtml(m.nombre) + '</div>'
@@ -1058,6 +1081,23 @@
         $('#ico-cliente').className = 'bi ' + (comanda.cliente_tipo === 'huesped' ? 'bi-house-heart'
             : (comanda.cliente_tipo === 'ocasional' ? 'bi-person-check' : 'bi-person-plus'));
 
+        // ── Quién atiende ──
+        // Si la mesa la han tocado varios, se nombran todos: quien cobra tiene
+        // que saber a quién preguntar por un plato, y de quién es la propina.
+        const chipCam = $('#chip-camarero');
+        if (comanda.camarero || comanda.camareros.length) {
+            chipCam.style.display = 'flex';
+            const desdeMovil = comanda.origen === 'movil';
+            $('#ico-camarero').className = 'bi ' + (desdeMovil ? 'bi-phone' : 'bi-person-badge');
+            $('#tk-camarero').textContent = comanda.varias_manos
+                ? 'Atienden: ' + comanda.camareros.join(', ')
+                : 'Atiende: ' + (comanda.camarero || comanda.camareros[0])
+                    + (desdeMovil ? ' · desde el móvil' : '');
+            $('#tk-camarero').title = $('#tk-camarero').textContent;
+        } else {
+            chipCam.style.display = 'none';
+        }
+
         const cont = $('#tk-lineas');
         cont.innerHTML = '';
         if (!comanda.lineas.length) {
@@ -1079,6 +1119,10 @@
                 + '<span class="desc"><span class="nom">' + escaparHtml(l.nombre_producto) + '</span>'
                 + (mods ? '<span class="mods">' + escaparHtml(mods) + '</span>' : '')
                 + (l.notas ? '<span class="nota"><i class="bi bi-chat-left-text"></i> ' + escaparHtml(l.notas) + '</span>' : '')
+                // Solo cuando la mesa la llevan varios: si es uno solo, repetir
+                // su nombre en cada línea es ruido y ya está en la cabecera
+                + (comanda.varias_manos && l.camarero
+                    ? '<span class="quien"><i class="bi bi-person"></i> ' + escaparHtml(l.camarero) + '</span>' : '')
                 + (textoEstado[l.estado] ? '<span class="estado-plato ' + l.estado + '">' + textoEstado[l.estado] + '</span>' : '')
                 + '</span>'
                 + '<span class="imp">' + pesos(l.subtotal) + '</span>';

@@ -305,6 +305,17 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       del móvil no tiene usuario del sistema, responde el `empleado_id`. Ojo: `historial()` hacía un
       `join` normal contra `usuarios` y esas comandas **habrían desaparecido del historial sin
       avisar**; ahora es `left join` con `COALESCE(usuario, empleado)`.
+- [x] **El TPV enseña quién atiende cada mesa** (a petición de Javier).
+      El dato existía desde el TPV compartido (`comandas.empleado_id` y `comanda_lineas.empleado_id`)
+      pero **no se pintaba en ninguna parte**: se guardaba para los informes y nadie lo veía en
+      caliente, que es cuando hace falta.
+      · **Rejilla de mesas**: el nombre de quien la lleva, con icono de teléfono si la comanda entró
+      por el comandero. En un turno con varios, evita que dos vayan a la misma mesa.
+      · **Cabecera de la comanda**: «Atiende: X · desde el móvil».
+      · **Línea a línea, solo si la mesa la han tocado varios** (`varias_manos`). Con un solo
+      camarero repetir su nombre en cada plato es ruido y ya está en la cabecera.
+      · `origen` se deduce de `usuario_id IS NULL && empleado_id IS NOT NULL`: la pantalla fija
+      siempre graba usuario, el móvil nunca.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

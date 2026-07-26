@@ -20,10 +20,16 @@ class MesaModel extends Model
     {
         $mesas = $this->where('activa', 1)->orderBy('zona')->orderBy('orden')->orderBy('nombre')->findAll();
 
+        // Se trae también quién la lleva: en un turno con varios camareros,
+        // saber de un vistazo qué mesas son de quién evita que dos vayan a la
+        // misma y que ninguno vaya a otra
         $abiertas = db_connect()->table('comandas')
-            ->select('id, mesa_id, total, created_at, comensales')
-            ->where('estado', 'abierta')
-            ->where('mesa_id IS NOT NULL')
+            ->select('comandas.id, comandas.mesa_id, comandas.total, comandas.created_at,
+                      comandas.comensales, comandas.usuario_id, comandas.empleado_id,
+                      empleados.nombre AS camarero_nombre')
+            ->join('empleados', 'empleados.id = comandas.empleado_id', 'left')
+            ->where('comandas.estado', 'abierta')
+            ->where('comandas.mesa_id IS NOT NULL')
             ->get()->getResultArray();
 
         $porMesa = [];
@@ -38,6 +44,11 @@ class MesaModel extends Model
             $m['comensales']   = (int) ($comanda['comensales'] ?? 0);
             $m['abierta_hace'] = $comanda !== null ? (int) ((time() - strtotime($comanda['created_at'])) / 60) : null;
             $m['ocupada']      = $comanda !== null;
+            $m['camarero']     = $comanda['camarero_nombre'] ?? null;
+            // Del móvil o de la pantalla fija: una comanda del comandero no
+            // tiene usuario del sistema, solo empleado
+            $m['origen'] = $comanda !== null && $comanda['usuario_id'] === null && $comanda['empleado_id'] !== null
+                ? 'movil' : 'pantalla';
         }
 
         return $mesas;

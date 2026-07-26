@@ -21,6 +21,24 @@ class ComandaLineaModel extends Model
     }
 
     /**
+     * Igual, pero diciendo quién metió cada línea.
+     *
+     * Hace falta cuando varios camareros tocan la misma mesa en un turno: sin
+     * esto, el que cobra no sabe a quién preguntar por un plato raro. El join
+     * es `left` porque una línea puede no tener empleado (el TPV compartido
+     * puede estar apagado).
+     */
+    public function deComandaConCamarero(int $comandaId): array
+    {
+        return $this->select('comanda_lineas.*,
+                              TRIM(CONCAT(empleados.nombre, " ", COALESCE(empleados.apellidos, ""))) AS camarero')
+            ->join('empleados', 'empleados.id = comanda_lineas.empleado_id', 'left')
+            ->where('comanda_lineas.comanda_id', $comandaId)
+            ->orderBy('comanda_lineas.id')
+            ->findAll();
+    }
+
+    /**
      * Pendientes de una zona de preparación ('cocina' o 'barra'):
      * solo lo que el mesero ya envió y aún no está listo.
      * El reloj cuenta desde el envío, no desde que se abrió la comanda.

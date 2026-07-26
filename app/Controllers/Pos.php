@@ -874,10 +874,14 @@ class Pos extends BaseController
         $comanda = $this->comandas
             ->select('comandas.*, reservas.codigo AS reserva_codigo,
                       huespedes.nombre AS h_nombre, huespedes.apellidos AS h_apellidos,
-                      unidades.nombre AS unidad_nombre')
+                      unidades.nombre AS unidad_nombre,
+                      camarero.nombre AS camarero_nombre, camarero.apellidos AS camarero_apellidos,
+                      usuarios.nombre AS usuario_nombre')
             ->join('reservas', 'reservas.id = comandas.reserva_id', 'left')
             ->join('huespedes', 'huespedes.id = reservas.huesped_id', 'left')
             ->join('unidades', 'unidades.id = reservas.unidad_id', 'left')
+            ->join('empleados camarero', 'camarero.id = comandas.empleado_id', 'left')
+            ->join('usuarios', 'usuarios.id = comandas.usuario_id', 'left')
             ->where('comandas.id', $id)
             ->first();
 
@@ -885,8 +889,8 @@ class Pos extends BaseController
             return null;
         }
 
-        $lineas    = $this->lineas->deComanda($id);
-        $modifs    = (new LineaModificadorModel())->deLineas(array_column($lineas, 'id'));
+        $lineas = $this->lineas->deComandaConCamarero($id);
+        $modifs = (new LineaModificadorModel())->deLineas(array_column($lineas, 'id'));
 
         foreach ($lineas as &$l) {
             $l['modificadores'] = $modifs[(int) $l['id']] ?? [];
@@ -930,6 +934,29 @@ class Pos extends BaseController
             $lineas,
             static fn ($l) => $l['estado'] === 'nuevo' && $l['destino'] !== 'directo'
         ));
+
+        // ── Quién atiende esta mesa ──
+        // Se responde a dos preguntas distintas: quién la lleva (para saber a
+        // quién preguntar) y por dónde entró (una comanda del móvil no tiene
+        // usuario del sistema, así que si alguien la cobra mal no basta con
+        // mirar quién tenía la pantalla abierta).
+        $comanda['camarero'] = trim((string) ($comanda['camarero_nombre'] ?? '')) !== ''
+            ? trim($comanda['camarero_nombre'] . ' ' . ($comanda['camarero_apellidos'] ?? ''))
+            : null;
+        $comanda['origen'] = $comanda['usuario_id'] === null && $comanda['empleado_id'] !== null
+            ? 'movil' : 'pantalla';
+
+        // Los nombres de todos los que han metido algo, en orden de aparición.
+        // Si son varios, la interfaz lo dice línea a línea.
+        $manos = [];
+        foreach ($lineas as $l) {
+            $quien = trim((string) ($l['camarero'] ?? ''));
+            if ($quien !== '' && ! in_array($quien, $manos, true)) {
+                $manos[] = $quien;
+            }
+        }
+        $comanda['camareros']       = $manos;
+        $comanda['varias_manos']    = count($manos) > 1;
 
         // Etiqueta del cliente para la interfaz
         if ($comanda['reserva_id'] !== null) {
