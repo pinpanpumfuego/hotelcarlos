@@ -44,6 +44,77 @@
         </div>
     </div>
 
+    <!-- ═══ TPV compartido ═══ -->
+    <div class="col-lg-6" id="tpv">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-people me-2 text-primary"></i>TPV compartido
+            </div>
+            <form method="post" action="<?= site_url('administracion/tpv') ?>">
+                <?= csrf_field() ?>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="compartido" id="tpvCompartido"
+                               <?= $tpv['compartido'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="tpvCompartido">
+                            <strong>Cada camarero se identifica</strong>
+                            <span class="d-block form-text">
+                                La pantalla se bloquea y cada uno abre con su PIN de fichaje o su tarjeta.
+                                Todo lo que haga queda a su nombre. Apágalo si solo lo usa una persona.
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold">Se bloquea tras</label>
+                            <div class="input-group">
+                                <input type="number" name="bloqueo_seg" class="form-control" min="15" max="3600" step="15"
+                                       value="<?= (int) $tpv['bloqueo_seg'] ?>">
+                                <span class="input-group-text">seg</span>
+                            </div>
+                            <div class="form-text">Sin tocar la pantalla. También se bloquea al cobrar.</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold">Descuento sin permiso</label>
+                            <div class="input-group">
+                                <input type="number" name="descuento_libre" class="form-control" min="0" max="100" step="1"
+                                       value="<?= (float) $tpv['descuento_libre'] ?>">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text">Por encima lo autoriza un encargado.</div>
+                        </div>
+                    </div>
+
+                    <p class="form-text mb-2">
+                        <strong>Anular una comanda siempre</strong> pide el PIN de un encargado, y queda
+                        anotado quién lo autorizó.
+                    </p>
+
+                    <?php if ($tpv['con_rol'] === []): ?>
+                        <div class="alert alert-warning py-2 small mb-0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <strong>Nadie tiene acceso al TPV todavía.</strong> Si enciendes el modo compartido,
+                            la pantalla quedará bloqueada sin que nadie pueda abrirla. Asigna el rol y el PIN
+                            en <a href="<?= site_url('personal') ?>">las fichas del personal</a>.
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-light py-2 small mb-0">
+                            <i class="bi bi-person-check me-1"></i>
+                            Con acceso:
+                            <?php foreach ($tpv['con_rol'] as $i => $e): ?>
+                                <?= esc($e['nombre']) ?><?= $e['rol_tpv'] === 'encargado' ? ' <span class="badge text-bg-primary">encargado</span>' : '' ?><?= $i < count($tpv['con_rol']) - 1 ? ', ' : '' ?>
+                            <?php endforeach ?>
+                        </div>
+                    <?php endif ?>
+                </div>
+                <div class="card-footer bg-white p-3">
+                    <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ═══ Control de jornada ═══ -->
     <div class="col-lg-6" id="fichaje">
         <div class="card border-0 shadow-sm h-100">

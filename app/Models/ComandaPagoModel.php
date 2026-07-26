@@ -8,7 +8,7 @@ class ComandaPagoModel extends Model
 {
     protected $table         = 'comanda_pagos';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['comanda_id', 'forma_pago', 'valor', 'recibido', 'cambio', 'usuario_id'];
+    protected $allowedFields = ['comanda_id', 'forma_pago', 'valor', 'recibido', 'cambio', 'usuario_id', 'empleado_id'];
     protected $useTimestamps = true;
 
     /** Pagos de una comanda, con quién los cobró. */

@@ -127,6 +127,11 @@ class Reportes extends BaseController
             ->like('concepto', 'Alojamiento', 'after')
             ->where('DATE(created_at) >=', $desde)->where('DATE(created_at) <=', $hasta)->first()['valor'] ?? 0);
 
+        // Restaurante: qué ha hecho cada camarero y quién autorizó qué
+        $comandas      = new \App\Models\ComandaModel();
+        $porCamarero   = $comandas->porCamarero($desde, $hasta);
+        $autorizaciones = $comandas->autorizaciones($desde, $hasta);
+
         $pagosPorMetodo = $db->table('folio_movimientos')
             ->select("metodo, SUM(valor) AS total")
             ->where('tipo', 'pago')
@@ -163,6 +168,8 @@ class Reportes extends BaseController
             'pagosPorMetodo'  => $pagosPorMetodo,
             'creadas'         => $creadas,
             'canceladas'      => $canceladas,
+            'porCamarero'     => $porCamarero,
+            'autorizaciones'  => $autorizaciones,
         ];
     }
 }

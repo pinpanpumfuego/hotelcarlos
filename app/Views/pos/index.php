@@ -269,6 +269,56 @@
         .cambio .valor { font-size: 1.8rem; font-weight: 700; color: var(--verde); }
 
         /* ── Aviso flotante ── */
+        /* ── Bloqueo del TPV compartido ── */
+        .capa-bloqueo {
+            position: fixed; inset: 0; z-index: 200; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+            background: linear-gradient(165deg, #143425 0%, #1f4d36 60%, #26593f 100%);
+        }
+        .capa-bloqueo.abierta { display: flex; }
+        .panel-bloqueo {
+            background: var(--panel); border-radius: 20px; padding: 24px;
+            width: 100%; max-width: 380px; text-align: center;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, .3);
+        }
+        .panel-bloqueo h2 { margin: 4px 0 2px; font-size: 1.3rem; }
+        .marca-bloqueo {
+            width: 54px; height: 54px; margin: 0 auto 10px; border-radius: 50%;
+            background: #e9f4ee; color: var(--verde);
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        }
+        .visor-pin { display: flex; justify-content: center; gap: 14px; margin: 14px 0 10px; }
+        .punto {
+            width: 16px; height: 16px; border-radius: 50%;
+            border: 2px solid var(--borde); transition: all .16s ease;
+        }
+        .punto.lleno { background: var(--verde); border-color: var(--verde); transform: scale(1.12); }
+        .capa-bloqueo .teclado, #modal-autoriza .teclado {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 6px;
+        }
+        .capa-bloqueo .teclado button, #modal-autoriza .teclado button {
+            font: inherit; font-size: 1.45rem; font-weight: 600; padding: 15px 0;
+            border-radius: 13px; border: 1px solid var(--borde); background: #fbfdfb;
+            color: var(--tinta); cursor: pointer; transition: transform .08s ease;
+        }
+        .capa-bloqueo .teclado button:active, #modal-autoriza .teclado button:active { transform: scale(.94); }
+        .capa-bloqueo .teclado button.gris, #modal-autoriza .teclado button.gris {
+            color: var(--tinta-suave); font-size: 1.05rem;
+        }
+        .oculto { display: none !important; }
+
+        /* Quién está en la pantalla */
+        .chip-camarero {
+            display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+            background: rgba(255,255,255,.14); border: 0; border-radius: 99px;
+            padding: 5px 12px 5px 5px; color: #fff; font: inherit; font-size: .84rem;
+        }
+        .chip-camarero:hover { background: rgba(255,255,255,.22); }
+        .chip-camarero .inicial {
+            width: 26px; height: 26px; border-radius: 50%; background: #e3c9a4; color: #143425;
+            display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem;
+        }
+
         #aviso {
             position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(120%);
             background: var(--panel); border: 1px solid var(--borde); border-left: 5px solid var(--verde);
@@ -300,6 +350,12 @@
         <div class="sub" id="cab-sub"><?= esc(config('Hotel')->nombre) ?></div>
     </div>
     <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+        <?php if ($compartido): ?>
+            <button class="chip-camarero" id="chip-camarero" title="Cambiar de camarero">
+                <span class="inicial" id="cam-inicial">?</span>
+                <span id="cam-nombre">Nadie</span>
+            </button>
+        <?php endif ?>
         <span class="sub" id="reloj"></span>
         <span class="sub d-none" id="aviso-caja" style="color:var(--ambar); display:none;">
             <i class="bi bi-exclamation-triangle"></i> Sin turno de caja
@@ -512,6 +568,63 @@
     </div>
 </div>
 
+<!-- ═══ Bloqueo del TPV compartido ═══ -->
+<?php if ($compartido): ?>
+<div class="capa-bloqueo" id="bloqueo">
+    <div class="panel-bloqueo">
+        <div class="marca-bloqueo">
+            <i class="bi bi-lock-fill"></i>
+        </div>
+        <h2 id="blq-titulo">Identifícate</h2>
+        <p class="ayuda" id="blq-ayuda">Pasa tu tarjeta o teclea tu PIN</p>
+
+        <div class="visor-pin" id="blq-visor">
+            <span class="punto"></span><span class="punto"></span>
+            <span class="punto"></span><span class="punto"></span>
+        </div>
+
+        <div class="aviso error oculto" id="blq-error"></div>
+
+        <div class="teclado">
+            <button data-blq="1">1</button><button data-blq="2">2</button><button data-blq="3">3</button>
+            <button data-blq="4">4</button><button data-blq="5">5</button><button data-blq="6">6</button>
+            <button data-blq="7">7</button><button data-blq="8">8</button><button data-blq="9">9</button>
+            <button class="gris" data-blq="limpiar">Borrar</button>
+            <button data-blq="0">0</button>
+            <button class="gris" data-blq="atras"><i class="bi bi-backspace"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- Autorización de un encargado para acciones delicadas -->
+<div class="capa" id="modal-autoriza">
+    <div class="modal-pos">
+        <h2>Hace falta un encargado</h2>
+        <p class="ayuda" id="aut-ayuda"></p>
+
+        <div class="visor-pin" id="aut-visor">
+            <span class="punto"></span><span class="punto"></span>
+            <span class="punto"></span><span class="punto"></span>
+        </div>
+
+        <div class="aviso error oculto" id="aut-error"></div>
+
+        <div class="teclado">
+            <button data-aut="1">1</button><button data-aut="2">2</button><button data-aut="3">3</button>
+            <button data-aut="4">4</button><button data-aut="5">5</button><button data-aut="6">6</button>
+            <button data-aut="7">7</button><button data-aut="8">8</button><button data-aut="9">9</button>
+            <button class="gris" data-aut="limpiar">Borrar</button>
+            <button data-aut="0">0</button>
+            <button class="gris" data-aut="atras"><i class="bi bi-backspace"></i></button>
+        </div>
+
+        <div class="acciones" style="padding:6px 0 0;">
+            <button class="btn" data-cerrar>Cancelar</button>
+        </div>
+    </div>
+</div>
+<?php endif ?>
+
 <div id="aviso"></div>
 
 <script>
@@ -555,10 +668,211 @@
         try { datos = await res.json(); } catch (e) { /* respuesta sin JSON */ }
 
         if (!res.ok) {
+            // La pantalla se bloqueó mientras tanto
+            if (datos.bloqueado) {
+                bloquearPantalla(false);
+                avisar(datos.error, true);
+                return null;
+            }
+
+            // Hace falta que lo autorice un encargado: se pide y se reintenta
+            if (datos.necesita_pin && cfg.body) {
+                const pin = await pedirAutorizacion(datos.error);
+                if (!pin) { return null; }
+
+                const cuerpo = JSON.parse(cfg.body);
+                cuerpo.pin_encargado = pin;
+
+                return api(ruta, Object.assign({}, opciones, { body: JSON.stringify(cuerpo) }));
+            }
+
             avisar(datos.error || 'No se pudo completar la operación.', true);
             return null;
         }
         return datos;
+    }
+
+    // ── TPV compartido: bloqueo e identificación ─────────────────
+    const COMPARTIDO = <?= $compartido ? 'true' : 'false' ?>;
+    const SEG_BLOQUEO = <?= (int) $bloqueoSeg ?>;
+    let camarero = <?= json_encode($camarero) ?>;
+    let pinBlq = '';
+    let relojInactividad = null;
+
+    function pintarCamarero() {
+        if (!COMPARTIDO) { return; }
+        const chip = $('#chip-camarero');
+        $('#cam-inicial').textContent = camarero ? camarero.inicial : '?';
+        $('#cam-nombre').textContent = camarero ? camarero.nombre : 'Nadie';
+        chip.title = camarero
+            ? camarero.nombre + (camarero.rol === 'encargado' ? ' (encargado)' : '') + ' — toca para cambiar'
+            : 'Identifícate';
+    }
+
+    function pintarVisor(selector, valor) {
+        const puntos = $(selector).children;
+        for (let i = 0; i < puntos.length; i++) {
+            puntos[i].classList.toggle('lleno', i < valor.length);
+        }
+    }
+
+    function errorBloqueo(texto) {
+        const caja = $('#blq-error');
+        caja.textContent = texto;
+        caja.classList.remove('oculto');
+        clearTimeout(caja._t);
+        caja._t = setTimeout(() => caja.classList.add('oculto'), 4000);
+    }
+
+    /** Cierra la pantalla. avisarServidor=false cuando el servidor ya la cerró. */
+    async function bloquearPantalla(avisarServidor) {
+        camarero = null;
+        pinBlq = '';
+        pintarVisor('#blq-visor', '');
+        pintarCamarero();
+        $('#bloqueo').classList.add('abierta');
+        clearTimeout(relojInactividad);
+
+        if (avisarServidor !== false) {
+            try { await api('/bloquear', { method: 'POST', body: '{}' }); } catch (e) { /* da igual */ }
+        }
+    }
+
+    function reiniciarInactividad() {
+        if (!COMPARTIDO || !camarero) { return; }
+        clearTimeout(relojInactividad);
+        relojInactividad = setTimeout(() => bloquearPantalla(true), SEG_BLOQUEO * 1000);
+    }
+
+    async function identificar(datos) {
+        const r = await fetch(BASE + '/identificar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': token },
+            body: JSON.stringify(datos),
+        });
+        const nuevo = r.headers.get('X-CSRF-TOKEN');
+        if (nuevo) { token = nuevo; }
+
+        let cuerpo = {};
+        try { cuerpo = await r.json(); } catch (e) { /* sin JSON */ }
+
+        if (!r.ok || !cuerpo.ok) {
+            errorBloqueo(cuerpo.error || 'No se pudo comprobar.');
+            pinBlq = '';
+            pintarVisor('#blq-visor', '');
+            return;
+        }
+
+        camarero = cuerpo.camarero;
+        pinBlq = '';
+        pintarVisor('#blq-visor', '');
+        pintarCamarero();
+        $('#bloqueo').classList.remove('abierta');
+        avisar(cuerpo.mensaje);
+        reiniciarInactividad();
+    }
+
+    if (COMPARTIDO) {
+        pintarCamarero();
+        if (!camarero) { $('#bloqueo').classList.add('abierta'); }
+
+        document.querySelectorAll('[data-blq]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                const t = b.dataset.blq;
+                if (t === 'limpiar') { pinBlq = ''; }
+                else if (t === 'atras') { pinBlq = pinBlq.slice(0, -1); }
+                else if (pinBlq.length < 4) { pinBlq += t; }
+
+                pintarVisor('#blq-visor', pinBlq);
+                if (pinBlq.length === 4) { setTimeout(() => identificar({ pin: pinBlq }), 120); }
+            });
+        });
+
+        $('#chip-camarero').onclick = () => bloquearPantalla(true);
+
+        /**
+         * Lector de tarjetas.
+         *
+         * Los lectores RFID baratos se comportan como un teclado: «escriben»
+         * el número de la tarjeta y un Enter, mucho más rápido de lo que
+         * teclea una persona. Se distingue por esa velocidad.
+         */
+        let bufferTarjeta = '';
+        let ultimaTecla = 0;
+
+        document.addEventListener('keydown', function (e) {
+            const ahora = Date.now();
+            const rapido = ahora - ultimaTecla < 60;
+            ultimaTecla = ahora;
+
+            if (e.key === 'Enter') {
+                if (bufferTarjeta.length >= 4) {
+                    identificar({ tarjeta: bufferTarjeta });
+                }
+                bufferTarjeta = '';
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9]$/.test(e.key)) { return; }
+
+            // Si viene lento es una persona tecleando, no una tarjeta
+            bufferTarjeta = rapido ? bufferTarjeta + e.key : e.key;
+
+            // Teclado físico sobre la pantalla de bloqueo: también vale para el PIN
+            if (!rapido && $('#bloqueo').classList.contains('abierta') && /^[0-9]$/.test(e.key)) {
+                if (pinBlq.length < 4) {
+                    pinBlq += e.key;
+                    pintarVisor('#blq-visor', pinBlq);
+                    if (pinBlq.length === 4) { setTimeout(() => identificar({ pin: pinBlq }), 120); }
+                }
+            }
+        });
+
+        // Cualquier gesto cuenta como actividad
+        ['click', 'touchstart', 'keydown'].forEach(function (evento) {
+            document.addEventListener(evento, reiniciarInactividad, { passive: true });
+        });
+        reiniciarInactividad();
+    }
+
+    // ── Autorización de un encargado ─────────────────────────────
+    let resolverAutorizacion = null;
+    let pinAut = '';
+
+    /** Devuelve el PIN del encargado, o null si se cancela. */
+    function pedirAutorizacion(motivo) {
+        if (!COMPARTIDO) { return Promise.resolve(null); }
+
+        pinAut = '';
+        pintarVisor('#aut-visor', '');
+        $('#aut-ayuda').textContent = motivo || 'Pide a un encargado que teclee su PIN.';
+        $('#aut-error').classList.add('oculto');
+        $('#modal-autoriza').classList.add('abierta');
+
+        return new Promise(function (resolver) { resolverAutorizacion = resolver; });
+    }
+
+    function cerrarAutorizacion(pin) {
+        $('#modal-autoriza').classList.remove('abierta');
+        if (resolverAutorizacion) { resolverAutorizacion(pin); resolverAutorizacion = null; }
+    }
+
+    if (COMPARTIDO) {
+        document.querySelectorAll('[data-aut]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                const t = b.dataset.aut;
+                if (t === 'limpiar') { pinAut = ''; }
+                else if (t === 'atras') { pinAut = pinAut.slice(0, -1); }
+                else if (pinAut.length < 4) { pinAut += t; }
+
+                pintarVisor('#aut-visor', pinAut);
+                if (pinAut.length === 4) { setTimeout(() => cerrarAutorizacion(pinAut), 140); }
+            });
+        });
+
+        $('#modal-autoriza').querySelector('[data-cerrar]').addEventListener('click', function () {
+            cerrarAutorizacion(null);
+        });
     }
 
     // ── Vistas ───────────────────────────────────────────────────
@@ -1307,6 +1621,9 @@
                 window.open(<?= json_encode(rtrim(site_url('pos/recibo'), '/')) ?> + '/' + comandaId + '?auto=1', '_blank');
             };
             $('#rec-listo').onclick = () => {
+                // Cobrar cierra el turno de esa persona en la pantalla: el
+                // siguiente que llegue tiene que identificarse.
+                if (COMPARTIDO) { bloquearPantalla(true); }
                 $('#modal-texto').classList.remove('abierta');
                 $('#txt-campo').style.display = '';
                 $('#txt-aceptar').parentElement.style.display = '';

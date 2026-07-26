@@ -248,6 +248,31 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       **Verificado**: margen 62,5 % calculado en vivo; 4 adultos + 1 niño = $560.000; rechazo por
       día no operativo y por cupo insuficiente («solo quedan 1 plaza»); cargo al folio al realizarla;
       y reserva web de $1.190.000 que pasa a **$1.610.000** al añadir cabalgata y paseo en lancha.
+- [x] **TPV compartido entre camareros** (`App\Libraries\SesionTpv`, `App\Filters\Tpv`;
+      columnas nuevas `empleados.tarjeta_uid` y `rol_tpv`, `comandas.empleado_id` y `autorizo_id`,
+      `comanda_lineas.empleado_id`, `comanda_pagos.empleado_id`).
+      Antes todo se apuntaba a quien abrió sesión por la mañana; con varios turnos en la misma
+      pantalla eso no sirve ni para pagar propinas ni para saber quién anuló una comanda.
+      · **Activable** desde Administración: apagado, el TPV funciona como siempre.
+      · **Identificación con el PIN de fichaje** (se reutiliza, el camarero ya se lo sabe) **o con
+      tarjeta**. Los lectores RFID baratos se comportan como un teclado: «escriben» el número y un
+      Enter. Se distinguen de una persona **por la velocidad** (menos de 60 ms entre teclas), así
+      que no hacen falta drivers ni permisos del navegador. Descartado WebNFC: solo Android/Chrome.
+      · **La identidad vive en la sesión del servidor**, no en el navegador, y se exige con un
+      **filtro** (`tpv`) sobre el grupo de rutas — repartir la comprobación por el controlador
+      dejaría un hueco al olvidarla en un método. `identificar`, `bloquear` y `estado` quedan fuera
+      para poder pintar el mapa de mesas con la pantalla bloqueada.
+      **Verificado**: con token CSRF válido y la pantalla bloqueada, `POST /pos/api/abrir` → 401.
+      · **Bloqueo** por inactividad (configurable, 60 s por defecto), al cobrar y a mano desde el chip.
+      · **Permisos**: anular pide siempre PIN de encargado; el descuento, solo por encima del límite
+      configurable. El cliente reintenta solo la petición añadiendo `pin_encargado`.
+      **Verificado**: Pedro (camarero) intenta anular → pide encargado; con su propio PIN → «ese PIN
+      no es de un encargado»; con el de Marta → anulada, y en la BD queda `empleado_id=Pedro`,
+      `autorizo_id=Marta` y la línea también a nombre de Pedro.
+      · **Informe en Reportes**: ventas, ticket medio, propinas y anuladas por camarero, más el
+      listado de anulaciones y descuentos con quién los autorizó.
+      · Cuidado tomado: `.visor` ya existía en el TPV para el teclado numérico; las bolitas del PIN
+      usan `.visor-pin` para no pisar el estilo.
 - [x] **Control de jornada / fichaje** (`FichajeModel`, `App\Libraries\Fichaje`, controladores
       `Fichar` (terminal), `Empleado` (PWA) y `Fichajes` (gerencia); tabla `fichajes`;
       columnas nuevas en `empleados`: `pin_hash`, `pin_actualizado`, `ficha_movil`, `foto`).

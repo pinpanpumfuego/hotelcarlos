@@ -42,6 +42,16 @@ class Administracion extends BaseController
                 'clave_guardada'   => $this->config->existe('correo_clave'),
             ],
 
+            // TPV compartido
+            'tpv' => [
+                'compartido'      => $this->config->obtener('tpv_compartido', '0') === '1',
+                'bloqueo_seg'     => (int) $this->config->obtener('tpv_bloqueo_seg', '60'),
+                'descuento_libre' => (float) $this->config->obtener('tpv_descuento_libre', '10'),
+                'sin_rol'         => (new \App\Models\EmpleadoModel())->where('activo', 1)
+                    ->where('rol_tpv', 'ninguno')->countAllResults(),
+                'con_rol'         => (new \App\Models\EmpleadoModel())->delTpv(),
+            ],
+
             // Control de jornada
             'fichaje' => [
                 'terminal' => $this->config->obtener('fichaje_terminal', '1') === '1',
@@ -100,6 +110,18 @@ class Administracion extends BaseController
         ]);
 
         return redirect()->to('administracion')->with('ok', 'Datos del hotel guardados: la web pública y el panel ya los muestran.');
+    }
+
+    /** Ajustes del TPV compartido. */
+    public function guardarTpv()
+    {
+        $this->config->guardarPares([
+            'tpv_compartido'      => $this->request->getPost('compartido') !== null ? '1' : '0',
+            'tpv_bloqueo_seg'     => (string) max(15, min(3600, (int) $this->request->getPost('bloqueo_seg'))),
+            'tpv_descuento_libre' => (string) max(0, min(100, (float) $this->request->getPost('descuento_libre'))),
+        ]);
+
+        return redirect()->to('administracion#tpv')->with('ok', 'Ajustes del TPV guardados.');
     }
 
     /** Ajustes del control de jornada. */

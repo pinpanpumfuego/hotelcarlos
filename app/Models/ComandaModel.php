@@ -12,7 +12,7 @@ class ComandaModel extends Model
         'numero', 'mesa', 'mesa_id', 'comensales', 'reserva_id', 'estado', 'total',
         'cliente_nombre', 'cliente_documento', 'cliente_telefono',
         'descuento', 'motivo_descuento', 'cupon_id', 'propina', 'forma_pago', 'recibido', 'cambio',
-        'usuario_id', 'cerrada_en', 'notas',
+        'usuario_id', 'empleado_id', 'autorizo_id', 'cerrada_en', 'notas',
     ];
     protected $useTimestamps = true;
 
@@ -24,6 +24,51 @@ class ComandaModel extends Model
         'habitacion'    => 'Cargar a la cabaña',
         'bono'          => 'Bono regalo',
     ];
+
+    /**
+     * Qué ha hecho cada camarero en un periodo.
+     *
+     * Se mira quién abrió la comanda, no quién cobró: es quien atendió la mesa
+     * y de quien depende la propina.
+     */
+    public function porCamarero(string $desde, string $hasta): array
+    {
+        $filas = $this->select('empleados.id, empleados.nombre, empleados.apellidos, empleados.rol_tpv,
+                                COUNT(*) AS comandas,
+                                SUM(CASE WHEN comandas.estado = "cobrada" THEN comandas.total ELSE 0 END) AS ventas,
+                                SUM(CASE WHEN comandas.estado = "cobrada" THEN comandas.propina ELSE 0 END) AS propinas,
+                                SUM(CASE WHEN comandas.estado = "cobrada" THEN comandas.descuento ELSE 0 END) AS descuentos,
+                                SUM(CASE WHEN comandas.estado = "anulada" THEN 1 ELSE 0 END) AS anuladas,
+                                SUM(comandas.comensales) AS comensales')
+            ->join('empleados', 'empleados.id = comandas.empleado_id')
+            ->where('DATE(comandas.created_at) >=', $desde)
+            ->where('DATE(comandas.created_at) <=', $hasta)
+            ->groupBy('empleados.id')
+            ->orderBy('ventas', 'DESC')
+            ->findAll();
+
+        foreach ($filas as &$f) {
+            $f['ticket_medio'] = (int) $f['comandas'] > 0
+                ? round((float) $f['ventas'] / max(1, (int) $f['comandas']))
+                : 0;
+        }
+
+        return $filas;
+    }
+
+    /** Autorizaciones que ha dado cada encargado: anulaciones y descuentos grandes. */
+    public function autorizaciones(string $desde, string $hasta): array
+    {
+        return $this->select('comandas.numero, comandas.estado, comandas.total, comandas.descuento,
+                              comandas.notas, comandas.motivo_descuento, comandas.created_at,
+                              quien.nombre AS camarero, jefe.nombre AS autorizo')
+            ->join('empleados quien', 'quien.id = comandas.empleado_id', 'left')
+            ->join('empleados jefe', 'jefe.id = comandas.autorizo_id')
+            ->where('DATE(comandas.created_at) >=', $desde)
+            ->where('DATE(comandas.created_at) <=', $hasta)
+            ->orderBy('comandas.created_at', 'DESC')
+            ->findAll();
+    }
 
     /** Número correlativo diario, p. ej. C-0725-03. */
     public function generarNumero(): string

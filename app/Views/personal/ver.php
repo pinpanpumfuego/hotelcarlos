@@ -185,6 +185,62 @@ $coloresA = \App\Models\AusenciaModel::COLORES;
             </div>
         </div>
 
+        <!-- ── Acceso al TPV ── -->
+        <div class="card mb-4">
+            <div class="card-header bg-white fw-semibold"><i class="bi bi-shop me-2"></i>Restaurante (TPV)</div>
+            <form method="post" action="<?= site_url('personal/tpv/' . $empleado['id']) ?>">
+                <?= csrf_field() ?>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Qué puede hacer</label>
+                            <select name="rol_tpv" class="form-select">
+                                <?php foreach (\App\Models\EmpleadoModel::ROLES_TPV as $clave => $etiqueta): ?>
+                                    <option value="<?= $clave ?>" <?= ($empleado['rol_tpv'] ?? 'ninguno') === $clave ? 'selected' : '' ?>>
+                                        <?= esc($etiqueta) ?>
+                                    </option>
+                                <?php endforeach ?>
+                            </select>
+                            <div class="form-text">
+                                El <strong>encargado</strong> puede anular comandas y hacer descuentos grandes,
+                                y autorizar los de los camareros.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Tarjeta</label>
+                            <input type="text" name="tarjeta_uid" class="form-control" id="campoTarjeta"
+                                   maxlength="64" autocomplete="off"
+                                   value="<?= esc($empleado['tarjeta_uid'] ?? '') ?>"
+                                   placeholder="Pulsa aquí y pasa la tarjeta">
+                            <div class="form-text">
+                                Con el cursor en la casilla, pasa la tarjeta por el lector: se escribe sola.
+                                Déjala vacía para quitarla.
+                            </div>
+                        </div>
+                    </div>
+
+                    <?php if (($empleado['rol_tpv'] ?? 'ninguno') !== 'ninguno' && $empleado['pin_hash'] === null): ?>
+                        <div class="alert alert-warning py-2 small mt-3 mb-0">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Tiene acceso al TPV pero <strong>no tiene PIN</strong>, así que solo podrá entrar con
+                            tarjeta. Dale un PIN arriba.
+                        </div>
+                    <?php endif ?>
+                </div>
+                <div class="card-footer bg-white p-3">
+                    <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+            // El lector RFID «teclea» el número y un Enter: se evita que
+            // ese Enter envíe el formulario a medias.
+            document.getElementById('campoTarjeta').addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); }
+            });
+        </script>
+
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <span class="fw-semibold"><i class="bi bi-calendar-week me-2"></i>Turnos recientes</span>

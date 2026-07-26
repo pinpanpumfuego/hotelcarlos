@@ -24,20 +24,84 @@ class Pos extends BaseController
 {
     private ComandaModel $comandas;
     private ComandaLineaModel $lineas;
+    private \App\Libraries\SesionTpv $tpv;
 
     public function __construct()
     {
         $this->comandas = new ComandaModel();
         $this->lineas   = new ComandaLineaModel();
+        $this->tpv      = new \App\Libraries\SesionTpv();
     }
 
     /** Pantalla completa del TPV. */
     public function index()
     {
         return view('pos/index', [
-            'formasPago' => ComandaModel::FORMAS_PAGO,
-            'usuario'    => session()->get('usuario_nombre'),
+            'formasPago'  => ComandaModel::FORMAS_PAGO,
+            'usuario'     => session()->get('usuario_nombre'),
+            'compartido'  => $this->tpv->compartido(),
+            'bloqueoSeg'  => $this->tpv->segundosBloqueo(),
+            'camarero'    => $this->tpv->paraPantalla(),
         ]);
+    }
+
+    // ───────────────────── Identificación del camarero ─────────────────
+
+    /** Desbloquea la pantalla con el PIN de fichaje o con una tarjeta. */
+    public function identificar()
+    {
+        if (! $this->tpv->compartido()) {
+            return $this->response->setJSON(['ok' => true, 'camarero' => null]);
+        }
+
+        // Freno: un PIN de cuatro cifras se prueba entero en un rato
+        if (service('throttler')->check('tpv-' . md5($this->request->getIPAddress()), 15, MINUTE) === false) {
+            return $this->response->setStatusCode(429)
+                ->setJSON(['ok' => false, 'error' => 'Demasiados intentos. Espera un minuto.']);
+        }
+
+        $datos = $this->request->getJSON(true) ?? [];
+        $r     = $this->tpv->abrir((string) ($datos['pin'] ?? ''), (string) ($datos['tarjeta'] ?? ''));
+
+        if (! $r['ok']) {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => $r['mensaje']]);
+        }
+
+        return $this->response->setJSON([
+            'ok'       => true,
+            'mensaje'  => $r['mensaje'],
+            'camarero' => $this->tpv->paraPantalla(),
+        ]);
+    }
+
+    /** Bloquea la pantalla: por inactividad, tras cobrar o a mano. */
+    public function bloquear()
+    {
+        $this->tpv->bloquear();
+
+        return $this->response->setJSON(['ok' => true]);
+    }
+
+    /**
+     * Comprueba que hay alguien identificado antes de dejar tocar nada.
+     * Devuelve null si todo bien, o la respuesta de error si no.
+     */
+    private function exigirCamarero()
+    {
+        if (! $this->tpv->compartido() || $this->tpv->actual() !== null) {
+            return null;
+        }
+
+        return $this->response->setStatusCode(401)
+            ->setJSON(['ok' => false, 'bloqueado' => true, 'error' => 'Identifícate para seguir.']);
+    }
+
+    /** El empleado al que hay que apuntar lo que se haga ahora. */
+    private function camareroId(): ?int
+    {
+        $actual = $this->tpv->actual();
+
+        return $actual === null ? null : (int) $actual['id'];
     }
 
     // ─────────────────────────────── API ───────────────────────────────
@@ -146,13 +210,14 @@ class Pos extends BaseController
         }
 
         $id = $this->comandas->insert([
-            'numero'     => $this->comandas->generarNumero(),
-            'mesa_id'    => $mesaId,
-            'mesa'       => $mesaId !== null ? ($mesa['nombre'] ?? null) : (trim((string) ($datos['nombre'] ?? '')) ?: null),
-            'reserva_id' => $reservaId,
-            'comensales' => $comensales,
-            'estado'     => 'abierta',
-            'usuario_id' => session()->get('usuario_id'),
+            'numero'      => $this->comandas->generarNumero(),
+            'mesa_id'     => $mesaId,
+            'mesa'        => $mesaId !== null ? ($mesa['nombre'] ?? null) : (trim((string) ($datos['nombre'] ?? '')) ?: null),
+            'reserva_id'  => $reservaId,
+            'comensales'  => $comensales,
+            'estado'      => 'abierta',
+            'usuario_id'  => session()->get('usuario_id'),
+            'empleado_id' => $this->camareroId(),
         ]);
 
         return $this->response->setJSON(['ok' => true, 'comanda_id' => (int) $id]);
@@ -256,6 +321,7 @@ class Pos extends BaseController
                 'precio_unitario' => $precio,
                 'cantidad'        => $cantidad,
                 'notas'           => $notas,
+                'empleado_id'     => $this->camareroId(),
             ]);
 
             if ($elegidos !== []) {
@@ -408,6 +474,26 @@ class Pos extends BaseController
         $descuento = $tipo === 'porcentaje' ? round($bruto * min(100, max(0, $valor)) / 100) : max(0, $valor);
         $descuento = min($descuento, $bruto);
 
+        // Un camarero puede rebajar hasta cierto punto; de ahí en adelante
+        // lo tiene que autorizar un encargado con su PIN.
+        $porcentaje = $bruto > 0 ? $descuento / $bruto * 100 : 0;
+        $autorizo   = null;
+
+        if ($porcentaje > $this->tpv->descuentoLibre()) {
+            $permiso = $this->tpv->autorizar('descuento', (string) ($datos['pin_encargado'] ?? ''));
+
+            if (! $permiso['ok']) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'ok'           => false,
+                    'necesita_pin' => true,
+                    'error'        => $permiso['mensaje'] . ' (más del '
+                        . rtrim(rtrim(number_format($this->tpv->descuentoLibre(), 1, ',', '.'), '0'), ',') . ' %)',
+                ]);
+            }
+
+            $autorizo = $permiso['autorizo']['id'] ?? null;
+        }
+
         // Un descuento manual sustituye a un cupón anterior: se devuelve su uso
         if ($comanda['cupon_id'] !== null) {
             (new \App\Models\CuponModel())->devolverUso((int) $comanda['cupon_id'], ['comanda_id' => $id]);
@@ -417,6 +503,7 @@ class Pos extends BaseController
             'descuento'        => $descuento,
             'motivo_descuento' => trim((string) ($datos['motivo'] ?? '')) ?: null,
             'cupon_id'         => null,
+            'autorizo_id'      => $autorizo,
         ]);
 
         return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle($id)]);
@@ -650,12 +737,13 @@ class Pos extends BaseController
         }
 
         (new ComandaPagoModel())->insert([
-            'comanda_id' => $id,
-            'forma_pago' => $forma,
-            'valor'      => $importe,
-            'recibido'   => $recibido,
-            'cambio'     => $cambio,
-            'usuario_id' => session()->get('usuario_id'),
+            'comanda_id'  => $id,
+            'forma_pago'  => $forma,
+            'valor'       => $importe,
+            'recibido'    => $recibido,
+            'cambio'      => $cambio,
+            'empleado_id' => $this->camareroId(),
+            'usuario_id'  => session()->get('usuario_id'),
         ]);
 
         $actualizada = $this->comandaDetalle($id);
@@ -700,6 +788,14 @@ class Pos extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Indica el motivo de la anulación.']);
         }
 
+        // Anular borra una venta de los libros: siempre pasa por un encargado
+        $permiso = $this->tpv->autorizar('anular', (string) ($datos['pin_encargado'] ?? ''));
+        if (! $permiso['ok']) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'ok' => false, 'necesita_pin' => true, 'error' => $permiso['mensaje'],
+            ]);
+        }
+
         // Si llevaba cupón, se devuelve el uso: la comanda no llegó a cobrarse
         if ($comanda['cupon_id'] !== null) {
             (new \App\Models\CuponModel())->devolverUso((int) $comanda['cupon_id'], ['comanda_id' => $id]);
@@ -717,10 +813,11 @@ class Pos extends BaseController
         }
 
         $this->comandas->update($id, [
-            'estado'     => 'anulada',
-            'cerrada_en' => date('Y-m-d H:i:s'),
-            'notas'      => 'Anulada: ' . $motivo,
-            'cupon_id'   => null,
+            'estado'      => 'anulada',
+            'cerrada_en'  => date('Y-m-d H:i:s'),
+            'notas'       => 'Anulada: ' . $motivo,
+            'cupon_id'    => null,
+            'autorizo_id' => $permiso['autorizo']['id'] ?? null,
         ]);
 
         return $this->response->setJSON(['ok' => true, 'mensaje' => 'Comanda ' . $comanda['numero'] . ' anulada.']);

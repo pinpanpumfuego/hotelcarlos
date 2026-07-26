@@ -160,6 +160,35 @@ class Personal extends BaseController
     }
 
     /** Da de baja o reincorpora sin perder el historial. */
+    /** Acceso al TPV: qué puede hacer y con qué tarjeta entra. */
+    public function tpv(int $id)
+    {
+        $empleado = $this->empleados->find($id);
+        if ($empleado === null) {
+            return redirect()->to('personal')->with('error', 'El empleado no existe.');
+        }
+
+        $rol = (string) $this->request->getPost('rol_tpv');
+        if (! array_key_exists($rol, \App\Models\EmpleadoModel::ROLES_TPV)) {
+            $rol = 'ninguno';
+        }
+
+        $this->empleados->update($id, ['rol_tpv' => $rol]);
+
+        $r = $this->empleados->fijarTarjeta($id, (string) $this->request->getPost('tarjeta_uid'));
+
+        if (! $r['ok']) {
+            return redirect()->to('personal/ver/' . $id)->with('error', $r['mensaje']);
+        }
+
+        return redirect()->to('personal/ver/' . $id)->with(
+            'ok',
+            $rol === 'ninguno'
+                ? 'Sin acceso al TPV. ' . $r['mensaje']
+                : 'Acceso al TPV como ' . mb_strtolower(\App\Models\EmpleadoModel::ROLES_TPV[$rol]) . '. ' . $r['mensaje']
+        );
+    }
+
     public function alternarActivo(int $id)
     {
         $empleado = $this->empleados->find($id);

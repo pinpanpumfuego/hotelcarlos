@@ -111,6 +111,110 @@
     </div>
 </div>
 
+<!-- ═══ Restaurante: quién vendió qué ═══ -->
+<?php if (! empty($porCamarero)): ?>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-people me-2"></i>Restaurante por camarero
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Camarero</th>
+                        <th class="text-center">Comandas</th>
+                        <th class="text-center d-none d-md-table-cell">Comensales</th>
+                        <th class="text-end">Ventas</th>
+                        <th class="text-end d-none d-lg-table-cell">Ticket medio</th>
+                        <th class="text-end">Propinas</th>
+                        <th class="text-center">Anuladas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($porCamarero as $c): ?>
+                        <tr>
+                            <td>
+                                <span class="fw-semibold"><?= esc($c['nombre']) ?> <?= esc($c['apellidos']) ?></span>
+                                <?php if ($c['rol_tpv'] === 'encargado'): ?>
+                                    <span class="badge text-bg-primary ms-1">Encargado</span>
+                                <?php endif ?>
+                            </td>
+                            <td class="text-center"><?= (int) $c['comandas'] ?></td>
+                            <td class="text-center d-none d-md-table-cell text-muted"><?= (int) $c['comensales'] ?></td>
+                            <td class="text-end fw-semibold">$<?= number_format((float) $c['ventas'], 0, ',', '.') ?></td>
+                            <td class="text-end d-none d-lg-table-cell text-muted">
+                                $<?= number_format((float) $c['ticket_medio'], 0, ',', '.') ?>
+                            </td>
+                            <td class="text-end text-success">
+                                <?= (float) $c['propinas'] > 0 ? '$' . number_format((float) $c['propinas'], 0, ',', '.') : '—' ?>
+                            </td>
+                            <td class="text-center">
+                                <?php if ((int) $c['anuladas'] > 0): ?>
+                                    <span class="badge text-bg-warning"><?= (int) $c['anuladas'] ?></span>
+                                <?php else: ?>
+                                    <span class="text-muted">—</span>
+                                <?php endif ?>
+                            </td>
+                        </tr>
+                    <?php endforeach ?>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white">
+            <p class="form-text mb-0">
+                Se cuenta por quien <strong>abrió</strong> la comanda, que es quien atendió la mesa.
+                Las anuladas conviene mirarlas: son ventas que desaparecieron.
+            </p>
+        </div>
+    </div>
+<?php endif ?>
+
+<?php if (! empty($autorizaciones)): ?>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-shield-check me-2"></i>Anulaciones y descuentos autorizados
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Cuándo</th>
+                        <th>Comanda</th>
+                        <th>Camarero</th>
+                        <th>Autorizó</th>
+                        <th>Qué pasó</th>
+                        <th class="text-end">Importe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($autorizaciones as $a): ?>
+                        <tr>
+                            <td class="text-muted small"><?= date('d/m H:i', strtotime($a['created_at'])) ?></td>
+                            <td class="fw-semibold"><?= esc($a['numero']) ?></td>
+                            <td><?= esc($a['camarero'] ?? '—') ?></td>
+                            <td>
+                                <span class="badge text-bg-primary"><?= esc($a['autorizo']) ?></span>
+                            </td>
+                            <td class="small">
+                                <?php if ($a['estado'] === 'anulada'): ?>
+                                    <span class="text-danger"><?= esc($a['notas'] ?? 'Anulada') ?></span>
+                                <?php else: ?>
+                                    <?= esc($a['motivo_descuento'] ?? 'Descuento') ?>
+                                <?php endif ?>
+                            </td>
+                            <td class="text-end">
+                                <?= $a['estado'] === 'anulada'
+                                    ? '$' . number_format((float) $a['total'], 0, ',', '.')
+                                    : '−$' . number_format((float) $a['descuento'], 0, ',', '.') ?>
+                            </td>
+                        </tr>
+                    <?php endforeach ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<?php endif ?>
+
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white fw-semibold"><i class="bi bi-bar-chart me-2"></i>Ingresos cobrados por día (COP)</div>
     <div class="card-body"><canvas id="graficaIngresos" height="80"></canvas></div>

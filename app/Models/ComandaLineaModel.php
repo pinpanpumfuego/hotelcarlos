@@ -9,7 +9,8 @@ class ComandaLineaModel extends Model
     protected $table         = 'comanda_lineas';
     protected $primaryKey    = 'id';
     protected $allowedFields = ['comanda_id', 'producto_id', 'nombre_producto', 'destino', 'precio_unitario',
-        'cantidad', 'entregado', 'servido', 'listo_en', 'enviado_cocina', 'notas'];
+        'cantidad', 'entregado', 'servido', 'listo_en', 'enviado_cocina', 'notas',
+        'composicion', 'empleado_id'];
     protected $useTimestamps = true;
 
     public function deComanda(int $comandaId): array

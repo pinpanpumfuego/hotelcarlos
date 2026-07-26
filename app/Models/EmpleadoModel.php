@@ -16,6 +16,14 @@ class EmpleadoModel extends Model
         'emergencia_nombre', 'emergencia_telefono', 'emergencia_parentesco',
         'notas', 'activo',
         'pin_hash', 'pin_actualizado', 'ficha_movil', 'foto',
+        'tarjeta_uid', 'rol_tpv',
+    ];
+
+    /** Qué puede hacer cada uno en el TPV. */
+    public const ROLES_TPV = [
+        'ninguno'   => 'Sin acceso al TPV',
+        'camarero'  => 'Camarero',
+        'encargado' => 'Encargado',
     ];
     protected $useTimestamps = true;
 
@@ -77,6 +85,71 @@ class EmpleadoModel extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Busca al empleado por el número de su tarjeta.
+     *
+     * A diferencia del PIN, el número de tarjeta no se cifra: no lo elige la
+     * persona, va impreso en el plástico y hay que poder buscarlo. La tarjeta
+     * da velocidad, no seguridad — quien la preste responde por lo que se haga.
+     */
+    public function porTarjeta(string $uid): ?array
+    {
+        $uid = self::normalizarTarjeta($uid);
+
+        if ($uid === '') {
+            return null;
+        }
+
+        return $this->where('activo', 1)->where('tarjeta_uid', $uid)->first();
+    }
+
+    /** Los lectores añaden ceros a la izquierda o saltos: se limpia todo. */
+    public static function normalizarTarjeta(string $uid): string
+    {
+        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', trim($uid)));
+    }
+
+    /**
+     * Asigna una tarjeta comprobando que no la tenga otro.
+     *
+     * @return array{ok: bool, mensaje: string}
+     */
+    public function fijarTarjeta(int $empleadoId, string $uid): array
+    {
+        $uid = self::normalizarTarjeta($uid);
+
+        if ($uid === '') {
+            $this->update($empleadoId, ['tarjeta_uid' => null]);
+
+            return ['ok' => true, 'mensaje' => 'Tarjeta retirada.'];
+        }
+
+        if (strlen($uid) < 4) {
+            return ['ok' => false, 'mensaje' => 'Ese código es demasiado corto para ser una tarjeta.'];
+        }
+
+        $otro = $this->where('id !=', $empleadoId)->where('tarjeta_uid', $uid)->first();
+        if ($otro !== null) {
+            return [
+                'ok'      => false,
+                'mensaje' => 'Esa tarjeta ya es de ' . $otro['nombre'] . ' ' . $otro['apellidos'] . '.',
+            ];
+        }
+
+        $this->update($empleadoId, ['tarjeta_uid' => $uid]);
+
+        return ['ok' => true, 'mensaje' => 'Tarjeta asignada.'];
+    }
+
+    /** Quienes pueden usar el TPV. */
+    public function delTpv(): array
+    {
+        return $this->where('activo', 1)
+            ->whereIn('rol_tpv', ['camarero', 'encargado'])
+            ->orderBy('nombre')
+            ->findAll();
     }
 
     /** Empleados que aún no tienen PIN: no pueden fichar. */

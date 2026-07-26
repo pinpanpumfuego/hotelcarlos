@@ -160,8 +160,15 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     // TPV táctil a pantalla completa (API JSON)
     $routes->get('pos', 'Pos::index');
     $routes->get('pos/recibo/(:num)', 'Pos::recibo/$1');
+    // Identificación y estado: se pueden usar con la pantalla bloqueada
     $routes->group('pos/api', ['filter' => 'tokenjson'], static function ($routes) {
+        $routes->post('identificar', 'Pos::identificar');
+        $routes->post('bloquear', 'Pos::bloquear');
         $routes->get('estado', 'Pos::estado');
+    });
+
+    // El resto exige un camarero identificado cuando el TPV es compartido
+    $routes->group('pos/api', ['filter' => ['tokenjson', 'tpv']], static function ($routes) {
         $routes->post('abrir', 'Pos::abrir');
         $routes->get('comanda/(:num)', 'Pos::comanda/$1');
         $routes->post('comanda/(:num)/anadir', 'Pos::anadir/$1');
@@ -238,6 +245,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
 
     $routes->get('administracion', 'Administracion::index');
     $routes->post('administracion/hotel', 'Administracion::guardarHotel');
+    $routes->post('administracion/tpv', 'Administracion::guardarTpv');
     $routes->post('administracion/fichaje', 'Administracion::guardarFichaje');
     $routes->post('administracion/correo', 'Administracion::guardarCorreo');
     $routes->post('administracion/correo/probar', 'Administracion::probarCorreo');
@@ -338,6 +346,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->get('personal/editar/(:num)', 'Personal::editar/$1');
     $routes->post('personal/actualizar/(:num)', 'Personal::actualizar/$1');
     $routes->post('personal/estado/(:num)', 'Personal::alternarActivo/$1');
+    $routes->post('personal/tpv/(:num)', 'Personal::tpv/$1');
     $routes->post('personal/documento/(:num)', 'Personal::subirDocumento/$1');
     $routes->get('personal/documento/(:num)', 'Personal::documento/$1');
     $routes->post('personal/documento/eliminar/(:num)', 'Personal::eliminarDocumento/$1');
