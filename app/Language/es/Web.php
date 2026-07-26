@@ -68,6 +68,20 @@ return [
     'reservaDirecta'   => 'Reserva directa',
     'mejorPrecio'      => 'Mejor precio garantizado, sin intermediarios.',
 
+    // ── Aves ──
+    // El nombre científico no se traduce nunca: es el mismo en todo el mundo
+    // y es el que usan los observadores para entenderse.
+    'avesTitulo' => 'El bosque suena antes de amanecer',
+    'avesIntro'  => 'Estamos en el bosque nublado andino de los Farallones de Cali, una de las regiones con más aves del planeta. Estas son algunas de las especies que lo habitan.',
+    'avesAviso'  => 'Las aves son silvestres y libres: no se pueden garantizar avistamientos. Lo que sí garantizamos es levantarte temprano y saber dónde buscarlas.',
+    'endemica'   => 'Endémica de Colombia',
+    'ave_barranquero'       => 'Barranquero andino',
+    'ave_tangaraMulticolor' => 'Tángara multicolor',
+    'ave_tucanBarbudo'      => 'Tucán barbudo',
+    'ave_gallitoRoca'       => 'Gallito de roca andino',
+    'ave_colibri'           => 'Colibrí chillón',
+    'ave_pavaCaucana'       => 'Pava caucana',
+
     // ── Alojamientos ──
     'encuentraEspacio' => 'Encuentra tu espacio',
     'tarifasIncluyen'  => 'Todas las tarifas son por noche e incluyen el acceso al lago y los senderos.',

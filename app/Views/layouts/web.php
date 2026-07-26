@@ -124,12 +124,124 @@ $idiomaHtml = \App\Libraries\Traductor::IDIOMAS[idioma_web()]['html'];
         footer a { color: #d8e5da; }
         footer .titulo-pie { color: #fff; font-family: 'Fraunces', serif; }
 
+        /* ═══════════════════════════════════════════════════════════
+           AVES
+
+           Tres reglas para que esto quede elegante y no a página de los 2000:
+           pocas, lentas y translúcidas. Todo se mueve con `transform` y
+           `opacity`, que la tarjeta gráfica resuelve sola: cero recálculo de
+           diseño, cero tirones y sin castigar la batería del móvil.
+           ═══════════════════════════════════════════════════════════ */
+
+        .cielo { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+        .ave {
+            position: absolute; display: block;
+            will-change: transform;
+            animation: cruzar linear infinite;
+        }
+        .ave svg { display: block; width: 100%; height: auto; fill: currentColor; }
+        /* Las alas: dos dibujos que se alternan. Una silueta que solo se
+           desliza sin aletear parece un adhesivo pegado a la pantalla. */
+        .ave .arriba, .ave .abajo { position: absolute; inset: 0; }
+        .ave .arriba { animation: aletear steps(1) infinite; }
+        .ave .abajo  { animation: aletear steps(1) infinite; animation-direction: reverse; }
+
+        @keyframes cruzar {
+            /* Sale por un lado y entra por el otro, con una leve subida:
+               las aves no vuelan en línea recta perfecta */
+            from { transform: translate3d(-14vw, 0, 0); }
+            50%  { transform: translate3d(43vw, -3.2vh, 0); }
+            to   { transform: translate3d(112vw, 0, 0); }
+        }
+        @keyframes aletear { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+        /* Cuatro aves a distintas profundidades. Las de arriba son más
+           pequeñas, más pálidas y más lentas: así se lee la distancia. */
+        .hero .ave { color: #eef3ee; }
+        .ave.v1 { top: 16%; width: 52px; opacity: .30; animation-duration: 58s; }
+        .ave.v1 .arriba, .ave.v1 .abajo { animation-duration: 1.1s; }
+        .ave.v2 { top: 26%; width: 34px; opacity: .22; animation-duration: 76s; animation-delay: -22s; }
+        .ave.v2 .arriba, .ave.v2 .abajo { animation-duration: 1.35s; }
+        .ave.v3 { top: 11%; width: 24px; opacity: .16; animation-duration: 94s; animation-delay: -48s; }
+        .ave.v3 .arriba, .ave.v3 .abajo { animation-duration: 1.6s; }
+        .ave.v4 { top: 33%; width: 40px; opacity: .18; animation-duration: 67s; animation-delay: -9s; }
+        .ave.v4 .arriba, .ave.v4 .abajo { animation-duration: 1.25s; }
+
+        /* ── El colibrí ──
+           Entra volando, se queda suspendido junto al botón de reservar y se
+           va. Una sola vez por visita: en bucle sería un mosquito. */
+        .colibri {
+            position: absolute; z-index: 3; width: 46px; color: #f0e2bd;
+            opacity: 0; pointer-events: none;
+            animation: colibri-visita 13s ease-in-out 3.5s 1 forwards;
+        }
+        .colibri svg { display: block; width: 100%; height: auto; fill: currentColor; }
+        .colibri .cuerpo { animation: suspender 1.9s ease-in-out infinite; transform-origin: 60% 60%; }
+        @keyframes colibri-visita {
+            0%   { opacity: 0; transform: translate3d(26vw, 8vh, 0) scale(.7); }
+            14%  { opacity: .9; }
+            /* Se para junto al botón, que es donde interesa que mire el ojo */
+            30%, 62% { opacity: .92; transform: translate3d(0, 0, 0) scale(1); }
+            78%  { opacity: .85; transform: translate3d(-6vw, -3vh, 0) scale(.95); }
+            100% { opacity: 0; transform: translate3d(-24vw, -12vh, 0) scale(.75); }
+        }
+        /* Suspendido no quiere decir quieto: el colibrí vibra */
+        @keyframes suspender {
+            0%, 100% { transform: translateY(0) rotate(-3deg); }
+            50%      { transform: translateY(-3px) rotate(2deg); }
+        }
+
+        /* ── Sección de especies ── */
+        .aves { position: relative; overflow: hidden; background: #f4f1e8; }
+        .aves-fondo { position: absolute; inset: 0; pointer-events: none; }
+        .ave-fondo { position: absolute; display: block; color: var(--bosque); }
+        .ave-fondo svg { display: block; width: 100%; height: auto; fill: currentColor; }
+        .ave-fondo.a1 { top: 12%; width: 66px; opacity: .07; animation: cruzar 84s linear infinite; }
+        .ave-fondo.a2 { top: 68%; width: 44px; opacity: .05; animation: cruzar 112s linear infinite -40s; }
+
+        .ficha-ave {
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            background: #fff; border-radius: 1rem; padding: 1.1rem .7rem 1rem; margin: 0;
+            box-shadow: 0 4px 18px rgba(31, 77, 54, .07);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .ficha-ave:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(31, 77, 54, .14); }
+        .ficha-ave .silueta { width: 76px; height: 76px; margin-bottom: .7rem; }
+        .ficha-ave .silueta svg { width: 100%; height: 100%; fill: var(--tinte); opacity: .9; }
+        .ficha-ave:hover .silueta svg { opacity: 1; }
+        .ficha-ave .nombre { display: block; font-weight: 600; font-size: .92rem; line-height: 1.25; }
+        .ficha-ave .cientifico {
+            display: block; font-style: italic; font-size: .78rem;
+            color: var(--texto-suave, #6d7a72); margin-top: .2rem;
+        }
+        .ficha-ave .endemica {
+            display: inline-block; margin-top: .5rem; font-size: .68rem; font-weight: 600;
+            letter-spacing: .04em; text-transform: uppercase;
+            background: rgba(185, 138, 74, .16); color: #8a6427;
+            border-radius: 99px; padding: .15rem .55rem;
+        }
+
         /* ── Animación de aparición ── */
         .reveal { opacity: 0; transform: translateY(16px); transition: opacity .55s ease, transform .55s ease; }
         .reveal.visible { opacity: 1; transform: none; }
         @media (prefers-reduced-motion: reduce) {
             .reveal { opacity: 1; transform: none; transition: none; }
             .tarjeta-tipo, .tarjeta-tipo:hover { transform: none; transition: none; }
+
+            /* A quien le sienta mal el movimiento, las aves se le quedan
+               quietas. No se esconden: se posan. La silueta sigue ahí, que
+               es lo que da ambiente; lo que desaparece es el vaivén. */
+            .ave, .ave-fondo, .colibri, .colibri .cuerpo,
+            .ave .arriba, .ave .abajo { animation: none !important; }
+            .ave .arriba { opacity: 0; }
+            .colibri { opacity: .85; transform: none; }
+            .ficha-ave, .ficha-ave:hover { transform: none; transition: none; }
+        }
+
+        /* En pantallas pequeñas, menos aves: ocupan más y la batería importa */
+        @media (max-width: 575.98px) {
+            .ave.v3, .ave.v4 { display: none; }
+            .colibri { width: 36px; }
         }
     </style>
 </head>

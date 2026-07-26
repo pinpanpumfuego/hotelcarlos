@@ -59,6 +59,18 @@ return [
     'reservaDirecta'   => 'Book direct',
     'mejorPrecio'      => 'Best price guaranteed, straight from us.',
 
+    // ── Birds ──
+    'avesTitulo' => 'The forest wakes before you do',
+    'avesIntro'  => 'We are in the Andean cloud forest of the Farallones de Cali, one of the richest bird regions on Earth. These are some of the species that live here.',
+    'avesAviso'  => 'These are wild, free birds: sightings cannot be guaranteed. What we can guarantee is an early start and people who know where to look.',
+    'endemica'   => 'Endemic to Colombia',
+    'ave_barranquero'       => 'Andean Motmot',
+    'ave_tangaraMulticolor' => 'Multicoloured Tanager',
+    'ave_tucanBarbudo'      => 'Toucan Barbet',
+    'ave_gallitoRoca'       => 'Andean Cock-of-the-rock',
+    'ave_colibri'           => 'Sparkling Violetear',
+    'ave_pavaCaucana'       => 'Cauca Guan',
+
     // ── Cabins ──
     'encuentraEspacio' => 'Find your place',
     'tarifasIncluyen'  => 'All rates are per night and include access to the lake and the trails.',

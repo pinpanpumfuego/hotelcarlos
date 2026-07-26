@@ -59,6 +59,20 @@ return [
     'reservaDirecta'   => 'Réservation directe',
     'mejorPrecio'      => 'Meilleur prix garanti, sans intermédiaire.',
 
+    // ── Oiseaux ──
+    // Noms communs français à faire vérifier par un ornithologue : le nom
+    // scientifique, lui, est universel et ne change pas.
+    'avesTitulo' => 'La forêt s’éveille avant vous',
+    'avesIntro'  => 'Nous sommes dans la forêt de nuages andine des Farallones de Cali, l’une des régions les plus riches en oiseaux de la planète. Voici quelques-unes des espèces qui y vivent.',
+    'avesAviso'  => 'Ce sont des oiseaux sauvages et libres : les observations ne peuvent être garanties. Ce que nous garantissons, c’est un lever tôt et des gens qui savent où chercher.',
+    'endemica'   => 'Endémique de Colombie',
+    'ave_barranquero'       => 'Motmot d’Équateur',
+    'ave_tangaraMulticolor' => 'Calliste multicolore',
+    'ave_tucanBarbudo'      => 'Cabézon toucan',
+    'ave_gallitoRoca'       => 'Coq-de-roche péruvien',
+    'ave_colibri'           => 'Colibri anaïs',
+    'ave_pavaCaucana'       => 'Pénélope du Cauca',
+
     // ── Cabanes ──
     'encuentraEspacio' => 'Trouvez votre coin',
     'tarifasIncluyen'  => 'Tous les tarifs sont par nuit et comprennent l’accès au lac et aux sentiers.',

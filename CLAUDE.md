@@ -428,6 +428,32 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       como no traducido (se borra la fila) en vez de contar como traducido.
       · Verificado: las 6 páginas × 4 idiomas responden con su título, el flujo de reserva completo
       va en alemán de principio a fin, y un idioma no configurado (`/pt/`) da 404 limpio.
+- [x] **Aves volando por la web** (a petición de Javier, tras enseñar el logo).
+      El logo destapó lo que no sabía: **es un hotel de avistamiento de aves** («AVES Y NATURALEZA»,
+      Cali). Tres piezas, en `_siluetas.php` y `_aves.php`.
+      · **Siluetas dibujadas a mano en SVG, no ilustraciones a color.** Una ilustración realista mal
+      hecha canta muchísimo; una silueta bien proporcionada es elegante siempre. Cada especie se
+      reconoce por su forma: la cola de raqueta del barranquero, el pico del tucán barbudo, la cresta
+      del gallito de roca, el pico larguísimo del colibrí.
+      · **Cuatro aves cruzando la portada** a distintas alturas, tamaños, velocidades y opacidades:
+      es la profundidad lo que hace que parezcan de verdad. Aletean alternando **dos dibujos**; una
+      silueta que solo se desliza parece un adhesivo pegado a la pantalla. La trayectoria sube y baja
+      (verificado muestreando la animación: y va 0 → −26 → 0).
+      · **El colibrí** entra, se queda suspendido junto al botón de reservar y se va. **Una vez por
+      visita**, no en bucle: en bucle sería un mosquito. Verificado que **no bloquea el botón**
+      (`pointer-events: none` + `elementFromPoint` devuelve el botón).
+      · **«El bosque suena antes de amanecer»**: sección con seis especies reales del bosque nublado
+      de los Farallones, con **nombre científico siempre visible** (es el que usan los observadores en
+      todo el mundo) y distintivo de **endémica de Colombia** en la tángara multicolor y la pava
+      caucana. **No es decoración, es contenido**: quien viaja a ver aves elige alojamiento por la
+      lista de especies.
+      · **No se promete nada**: «especies que habitan el bosque», nunca «las verás». Un observador
+      comprueba las listas, y prometer de más es la forma más rápida de perder a ese público.
+      · **`prefers-reduced-motion`**: las aves **se posan**, no se esconden. La silueta sigue dando
+      ambiente; lo que desaparece es el vaivén. En móvil se ocultan dos aves (batería y espacio).
+      · Todo con `transform` y `opacity`, que compone la tarjeta gráfica: sin recálculo de diseño.
+      **Pendiente de Javier**: hacer verificar los nombres comunes en francés y alemán por alguien
+      que sepa de aves. El científico no falla; los comunes sí, y ese público es quisquilloso.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

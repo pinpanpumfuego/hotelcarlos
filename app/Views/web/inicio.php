@@ -21,6 +21,20 @@ function escenaParaTipo(string $nombre): string
     </video>
     <div class="velo" aria-hidden="true"></div>
 
+    <?php // Las siluetas se declaran una vez y se reutilizan con <use> ?>
+    <?= view('web/_siluetas') ?>
+
+    <?php // Aves lejanas cruzando el cielo. Cuatro, a distintas alturas y
+          // velocidades: es la profundidad lo que hace que parezcan de verdad. ?>
+    <div class="cielo" aria-hidden="true">
+        <?php for ($v = 1; $v <= 4; $v++): ?>
+            <span class="ave v<?= $v ?>">
+                <svg viewBox="0 0 100 44" class="abajo"><use href="#ave-abajo"></use></svg>
+                <svg viewBox="0 0 100 44" class="arriba"><use href="#ave-arriba"></use></svg>
+            </span>
+        <?php endfor ?>
+    </div>
+
     <div class="container contenido text-center">
         <?php
         // El logo va dentro del <h1>: lleva el nombre del hotel dibujado, así que
@@ -43,7 +57,12 @@ function escenaParaTipo(string $nombre): string
         <p class="eslogan mb-4">
             <?= esc(lang('Web.eslogan1')) ?><br class="d-sm-none"> <?= esc(lang('Web.eslogan2')) ?>
         </p>
-        <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <div class="d-flex gap-3 justify-content-center flex-wrap position-relative">
+            <?php // El colibrí del logo: viene, se queda suspendido junto al
+                  // botón de reservar y se va. Una sola vez, no en bucle. ?>
+            <span class="colibri" aria-hidden="true">
+                <svg viewBox="0 0 120 120" class="cuerpo"><use href="#perfil-colibri"></use></svg>
+            </span>
             <a class="btn btn-reserva btn-lg" href="<?= url_web('reservar') ?>">
                 <i class="bi bi-calendar-check me-1"></i><?= esc(lang('Web.reservarAhora')) ?>
             </a>
@@ -64,6 +83,11 @@ function escenaParaTipo(string $nombre): string
         </div>
     </div>
 </section>
+
+<!-- ═══════════ Las aves ═══════════ -->
+<?php // Va aquí, antes de las cabañas: quien viene a observar aves quiere
+      // saber qué se ve antes que dónde va a dormir. ?>
+<?= view('web/_aves') ?>
 
 <!-- ═══════════ Alojamientos ═══════════ -->
 <section class="seccion pt-0">

@@ -59,6 +59,20 @@ return [
     'reservaDirecta'   => 'Direkt buchen',
     'mejorPrecio'      => 'Bestpreis garantiert, ohne Zwischenhändler.',
 
+    // ── Vögel ──
+    // Deutsche Trivialnamen von einem Ornithologen prüfen lassen; der
+    // wissenschaftliche Name ist universell und ändert sich nicht.
+    'avesTitulo' => 'Der Wald wacht vor Ihnen auf',
+    'avesIntro'  => 'Wir liegen im andinen Nebelwald der Farallones de Cali, einer der vogelreichsten Regionen der Erde. Dies sind einige der Arten, die hier leben.',
+    'avesAviso'  => 'Es sind wilde, freie Vögel: Sichtungen lassen sich nicht garantieren. Garantieren können wir frühes Aufstehen und Leute, die wissen, wo man suchen muss.',
+    'endemica'   => 'Endemisch in Kolumbien',
+    'ave_barranquero'       => 'Andenmotmot',
+    'ave_tangaraMulticolor' => 'Vielfarbentangare',
+    'ave_tucanBarbudo'      => 'Tukanbartvogel',
+    'ave_gallitoRoca'       => 'Andenklippenvogel',
+    'ave_colibri'           => 'Glanzveilchenohr',
+    'ave_pavaCaucana'       => 'Cauca-Guan',
+
     // ── Hütten ──
     'encuentraEspacio' => 'Finden Sie Ihren Platz',
     'tarifasIncluyen'  => 'Alle Preise gelten pro Nacht und beinhalten den Zugang zum See und zu den Wanderwegen.',
