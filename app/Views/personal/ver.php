@@ -120,6 +120,71 @@ $coloresA = \App\Models\AusenciaModel::COLORES;
             </div>
         <?php endif ?>
 
+        <!-- ── Fichaje ── -->
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="fw-semibold"><i class="bi bi-clock-history me-2"></i>Fichaje</span>
+                <?php if ($empleado['pin_hash'] !== null): ?>
+                    <a href="<?= site_url('fichajes/empleado/' . $empleado['id']) ?>" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-calendar3 me-1"></i>Ver sus horas
+                    </a>
+                <?php endif ?>
+            </div>
+            <div class="card-body">
+                <?php if ($empleado['pin_hash'] === null): ?>
+                    <div class="alert alert-warning py-2 small mb-3">
+                        <i class="bi bi-key me-1"></i>
+                        <strong>Sin PIN.</strong> Esta persona todavía no puede fichar.
+                    </div>
+                <?php else: ?>
+                    <p class="small text-muted mb-3">
+                        <i class="bi bi-check-circle text-success me-1"></i>
+                        Tiene PIN desde el <?= date('d/m/Y', strtotime($empleado['pin_actualizado'])) ?>.
+                        Por seguridad no se puede consultar: si lo olvida, genera uno nuevo.
+                    </p>
+                <?php endif ?>
+
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <form method="post" action="<?= site_url('fichajes/pin/' . $empleado['id']) ?>"
+                              class="d-flex gap-2 flex-wrap">
+                            <?= csrf_field() ?>
+                            <input type="text" name="pin" class="form-control" inputmode="numeric"
+                                   maxlength="<?= \App\Models\EmpleadoModel::LONGITUD_PIN ?>"
+                                   pattern="\d{<?= \App\Models\EmpleadoModel::LONGITUD_PIN ?>}"
+                                   placeholder="PIN de <?= \App\Models\EmpleadoModel::LONGITUD_PIN ?> cifras"
+                                   style="flex:1; min-width:130px;" autocomplete="off">
+                            <button class="btn btn-primary">
+                                <i class="bi bi-key me-1"></i><?= $empleado['pin_hash'] === null ? 'Dar PIN' : 'Cambiar' ?>
+                            </button>
+                        </form>
+                        <div class="form-text">Déjalo vacío y pulsa el botón para que el sistema genere uno al azar.</div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <form method="post" action="<?= site_url('fichajes/movil/' . $empleado['id']) ?>">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-outline-<?= (int) $empleado['ficha_movil'] === 1 ? 'success' : 'secondary' ?> w-100">
+                                <i class="bi <?= (int) $empleado['ficha_movil'] === 1 ? 'bi-phone' : 'bi-phone-flip' ?> me-1"></i>
+                                <?= (int) $empleado['ficha_movil'] === 1 ? 'Puede fichar en su móvil' : 'Solo en el terminal' ?>
+                            </button>
+                        </form>
+                        <div class="form-text">Pulsa para cambiarlo.</div>
+                    </div>
+                </div>
+
+                <?php if ($empleado['pin_hash'] !== null): ?>
+                    <form method="post" action="<?= site_url('fichajes/pin/quitar/' . $empleado['id']) ?>" class="mt-3"
+                          onsubmit="return confirm('¿Retirar el PIN? Dejará de poder fichar.');">
+                        <?= csrf_field() ?>
+                        <button class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-key me-1"></i>Retirar el PIN
+                        </button>
+                    </form>
+                <?php endif ?>
+            </div>
+        </div>
+
         <div class="card mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <span class="fw-semibold"><i class="bi bi-calendar-week me-2"></i>Turnos recientes</span>

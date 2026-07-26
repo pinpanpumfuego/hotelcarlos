@@ -15,8 +15,75 @@ class EmpleadoModel extends Model
         'eps', 'arl', 'fondo_pension', 'caja_compensacion', 'banco', 'cuenta_bancaria',
         'emergencia_nombre', 'emergencia_telefono', 'emergencia_parentesco',
         'notas', 'activo',
+        'pin_hash', 'pin_actualizado', 'ficha_movil', 'foto',
     ];
     protected $useTimestamps = true;
+
+    /** Longitud del PIN de fichaje. Cuatro dígitos es lo que la gente recuerda. */
+    public const LONGITUD_PIN = 4;
+
+    /**
+     * Guarda el PIN de fichaje, siempre cifrado.
+     *
+     * Como el terminal identifica al empleado solo por el PIN, dos personas no
+     * pueden compartirlo: se comprueba contra todos antes de guardarlo.
+     *
+     * @return array{ok: bool, mensaje: string}
+     */
+    public function fijarPin(int $empleadoId, string $pin): array
+    {
+        $pin = trim($pin);
+
+        if (! preg_match('/^\d{' . self::LONGITUD_PIN . '}$/', $pin)) {
+            return ['ok' => false, 'mensaje' => 'El PIN debe tener exactamente ' . self::LONGITUD_PIN . ' dígitos.'];
+        }
+
+        // Un PIN demasiado obvio se adivina en tres intentos
+        if (in_array($pin, ['0000', '1111', '1234', '4321', '2222', '9999'], true)) {
+            return ['ok' => false, 'mensaje' => 'Ese PIN es demasiado fácil de adivinar. Elige otro.'];
+        }
+
+        foreach ($this->where('id !=', $empleadoId)->where('pin_hash IS NOT NULL')->findAll() as $otro) {
+            if (password_verify($pin, $otro['pin_hash'])) {
+                return ['ok' => false, 'mensaje' => 'Ese PIN ya lo usa otra persona. Elige otro.'];
+            }
+        }
+
+        $this->update($empleadoId, [
+            'pin_hash'        => password_hash($pin, PASSWORD_DEFAULT),
+            'pin_actualizado' => date('Y-m-d H:i:s'),
+        ]);
+
+        return ['ok' => true, 'mensaje' => 'PIN guardado. Anótalo y entrégaselo en mano al trabajador.'];
+    }
+
+    /**
+     * Busca al empleado activo que tiene ese PIN.
+     *
+     * Recorre a todos porque el hash es distinto para cada uno; con una
+     * plantilla pequeña el coste es despreciable y a cambio el PIN nunca
+     * se guarda en claro.
+     */
+    public function porPin(string $pin): ?array
+    {
+        if (! preg_match('/^\d{' . self::LONGITUD_PIN . '}$/', trim($pin))) {
+            return null;
+        }
+
+        foreach ($this->where('activo', 1)->where('pin_hash IS NOT NULL')->findAll() as $empleado) {
+            if (password_verify(trim($pin), $empleado['pin_hash'])) {
+                return $empleado;
+            }
+        }
+
+        return null;
+    }
+
+    /** Empleados que aún no tienen PIN: no pueden fichar. */
+    public function sinPin(): array
+    {
+        return $this->where('activo', 1)->where('pin_hash IS NULL')->orderBy('apellidos')->findAll();
+    }
 
     public const AREAS = [
         'recepcion'      => 'Recepción',

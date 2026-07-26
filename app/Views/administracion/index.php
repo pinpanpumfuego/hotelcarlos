@@ -44,6 +44,89 @@
         </div>
     </div>
 
+    <!-- ═══ Control de jornada ═══ -->
+    <div class="col-lg-6" id="fichaje">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-clock-history me-2 text-primary"></i>Control de jornada
+            </div>
+            <form method="post" action="<?= site_url('administracion/fichaje') ?>">
+                <?= csrf_field() ?>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="terminal" id="fTerminal"
+                               <?= $fichaje['terminal'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="fTerminal">
+                            <strong>Terminal encendido</strong>
+                            <span class="d-block form-text">
+                                La pantalla de <a href="<?= site_url('fichar') ?>" target="_blank" rel="noopener">fichar</a>
+                                que se deja en recepción. Apágalo si no lo usas.
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="foto" id="fFoto"
+                               <?= $fichaje['foto'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="fFoto">
+                            <strong>Tomar foto al fichar en el terminal</strong>
+                            <span class="d-block form-text">
+                                Disuade de fichar por un compañero. Si la cámara falla, el fichaje se registra
+                                igual pero queda señalado. Avísale al personal: es un dato personal suyo.
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="movil" id="fMovil"
+                               <?= $fichaje['movil'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="fMovil">
+                            <strong>Permitir fichar desde el móvil</strong>
+                            <span class="d-block form-text">
+                                Con el portal del empleado. Puedes quitárselo a alguien en concreto desde su ficha.
+                            </span>
+                        </label>
+                    </div>
+
+                    <hr>
+                    <p class="form-text mb-2">
+                        <strong>Ubicación del hotel.</strong> Si la pones, cada fichaje desde el móvil anota
+                        a cuántos metros se hizo. Sácala de Google Maps: pulsa largo sobre el punto y copia las
+                        dos cifras que aparecen.
+                    </p>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label small mb-1">Latitud</label>
+                            <input type="text" name="latitud" class="form-control form-control-sm"
+                                   value="<?= esc($fichaje['latitud']) ?>" placeholder="6.1234567">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small mb-1">Longitud</label>
+                            <input type="text" name="longitud" class="form-control form-control-sm"
+                                   value="<?= esc($fichaje['longitud']) ?>" placeholder="-75.1234567">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small mb-1">Radio</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" name="radio" class="form-control" min="0" step="50"
+                                       value="<?= (int) $fichaje['radio'] ?>">
+                                <span class="input-group-text">m</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="form-text mb-0">
+                        Fichar fuera del radio <strong>no se bloquea</strong>: se anota y lo ves en el
+                        <a href="<?= site_url('fichajes') ?>">control de jornada</a>. Puede haber mala señal,
+                        o alguien haciendo de verdad un recado del hotel.
+                    </p>
+                </div>
+                <div class="card-footer bg-white p-3">
+                    <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ═══ Correo saliente ═══ -->
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100">

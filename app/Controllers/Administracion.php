@@ -42,6 +42,16 @@ class Administracion extends BaseController
                 'clave_guardada'   => $this->config->existe('correo_clave'),
             ],
 
+            // Control de jornada
+            'fichaje' => [
+                'terminal' => $this->config->obtener('fichaje_terminal', '1') === '1',
+                'foto'     => $this->config->obtener('fichaje_foto', '1') === '1',
+                'movil'    => $this->config->obtener('fichaje_movil', '1') === '1',
+                'radio'    => (int) $this->config->obtener('fichaje_radio_m', '0'),
+                'latitud'  => $this->config->obtener('hotel_latitud', ''),
+                'longitud' => $this->config->obtener('hotel_longitud', ''),
+            ],
+
             // Registro de correos enviados
             'correosLog'   => (new \App\Models\CorreoLogModel())->ultimos(20),
             'tiposCorreo'  => \App\Models\CorreoLogModel::TIPOS,
@@ -90,6 +100,23 @@ class Administracion extends BaseController
         ]);
 
         return redirect()->to('administracion')->with('ok', 'Datos del hotel guardados: la web pública y el panel ya los muestran.');
+    }
+
+    /** Ajustes del control de jornada. */
+    public function guardarFichaje()
+    {
+        $radio = max(0, (int) $this->request->getPost('radio'));
+
+        $this->config->guardarPares([
+            'fichaje_terminal' => $this->request->getPost('terminal') !== null ? '1' : '0',
+            'fichaje_foto'     => $this->request->getPost('foto') !== null ? '1' : '0',
+            'fichaje_movil'    => $this->request->getPost('movil') !== null ? '1' : '0',
+            'fichaje_radio_m'  => (string) $radio,
+            'hotel_latitud'    => trim((string) $this->request->getPost('latitud')),
+            'hotel_longitud'   => trim((string) $this->request->getPost('longitud')),
+        ]);
+
+        return redirect()->to('administracion#fichaje')->with('ok', 'Ajustes de fichaje guardados.');
     }
 
     public function guardarCorreo()

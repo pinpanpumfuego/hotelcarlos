@@ -26,6 +26,23 @@ $routes->post('registro/(:segment)/documento', 'Registro::subirDocumento/$1');
 $routes->post('registro/(:segment)/documento/eliminar/(:num)', 'Registro::eliminarDocumento/$1/$2');
 $routes->post('registro/(:segment)/enviar', 'Registro::enviar/$1');
 
+// ── Terminal de fichaje (quiosco del hotel, sin sesión) ─────────────
+// No pide usuario a propósito: el PIN identifica a la persona. Lleva freno
+// de intentos y se puede apagar desde Administración.
+$routes->get('fichar', 'Fichar::index');
+$routes->group('fichar', ['filter' => 'tokenjson'], static function ($routes) {
+    $routes->post('identificar', 'Fichar::identificar');
+    $routes->post('marcar', 'Fichar::marcar');
+});
+
+// ── Portal del empleado (PWA instalable en el móvil) ────────────────
+$routes->get('empleado', 'Empleado::index');
+$routes->post('empleado/entrar', 'Empleado::entrar');
+$routes->post('empleado/salir', 'Empleado::salir');
+$routes->get('empleado/historial', 'Empleado::historial');
+$routes->get('empleado/manifest.webmanifest', 'Empleado::manifiesto');
+$routes->post('empleado/fichar', 'Empleado::fichar', ['filter' => 'tokenjson']);
+
 // ── Acceso ──────────────────────────────────────────────────────────
 $routes->get('login', 'Login::index');
 $routes->post('login/entrar', 'Login::entrar');
@@ -207,6 +224,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
 
     $routes->get('administracion', 'Administracion::index');
     $routes->post('administracion/hotel', 'Administracion::guardarHotel');
+    $routes->post('administracion/fichaje', 'Administracion::guardarFichaje');
     $routes->post('administracion/correo', 'Administracion::guardarCorreo');
     $routes->post('administracion/correo/probar', 'Administracion::probarCorreo');
     $routes->post('administracion/wompi', 'Administracion::guardarWompi');
@@ -289,6 +307,16 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->post('personal/documento/(:num)', 'Personal::subirDocumento/$1');
     $routes->get('personal/documento/(:num)', 'Personal::documento/$1');
     $routes->post('personal/documento/eliminar/(:num)', 'Personal::eliminarDocumento/$1');
+
+    // Control de jornada
+    $routes->get('fichajes', 'Fichajes::index');
+    $routes->get('fichajes/empleado/(:num)', 'Fichajes::empleado/$1');
+    $routes->get('fichajes/foto/(:num)', 'Fichajes::foto/$1');
+    $routes->post('fichajes/anadir', 'Fichajes::anadir');
+    $routes->post('fichajes/anular/(:num)', 'Fichajes::anular/$1');
+    $routes->post('fichajes/pin/(:num)', 'Fichajes::pin/$1');
+    $routes->post('fichajes/pin/quitar/(:num)', 'Fichajes::quitarPin/$1');
+    $routes->post('fichajes/movil/(:num)', 'Fichajes::alternarMovil/$1');
 
     $routes->get('turnos', 'Turnos::index');
     $routes->post('turnos/guardar', 'Turnos::guardar');

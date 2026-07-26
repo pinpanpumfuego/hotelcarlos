@@ -277,6 +277,7 @@ $grupos['Operación'] = ['icono' => 'bi-tools', 'enlaces' => [
 if ($rol === 'gerencia') {
     $grupos['Equipo'] = ['icono' => 'bi-people-fill', 'enlaces' => [
         ['personal', 'personal', 'bi-person-badge', 'Fichas del personal', 0],
+        ['fichajes', 'fichajes', 'bi-clock-history', 'Control de jornada', 0],
         ['turnos', 'turnos', 'bi-calendar-week', 'Turnos', 0],
         ['ausencias', 'ausencias', 'bi-calendar-x', 'Ausencias', 0],
     ]];

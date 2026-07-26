@@ -196,6 +196,35 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       El desglose también se ve en la web pública (paso 2 y 3 del motor de reservas) y en la ficha
       de la reserva. **Verificado**: temporada +35 % × fin de semana +20 % × tope máximo × suplemento
       por adulto adicional dan el mismo total en simulador, calendario y web.
+- [x] **Control de jornada / fichaje** (`FichajeModel`, `App\Libraries\Fichaje`, controladores
+      `Fichar` (terminal), `Empleado` (PWA) y `Fichajes` (gerencia); tabla `fichajes`;
+      columnas nuevas en `empleados`: `pin_hash`, `pin_actualizado`, `ficha_movil`, `foto`).
+      · **Terminal quiosco** en `/fichar`: pantalla completa con teclado numérico, reloj y foto de
+      la webcam. **Sin sesión a propósito** — quien limpia no tiene usuario del sistema — con freno
+      de 12 intentos/minuto por IP, se apaga desde Administración y todo queda en el log.
+      El PIN de 4 cifras se guarda con `password_hash`; como identifica a la persona, `fijarPin()`
+      **impide que dos empleados compartan PIN** y rechaza los obvios (1234, 0000…).
+      **Decisión importante: si la cámara falla, el fichaje se registra igual** con la observación
+      «Sin foto», visible para gerencia. Nadie puede quedarse sin registrar su jornada porque un
+      cacharro se estropeó — eso sería un problema del hotel, no del trabajador.
+      · **Portal del empleado como PWA** en `/empleado`: manifiesto + `public/sw.js` + iconos
+      generados. Entra con documento + PIN (sesión propia, separada de la del panel), ficha con
+      geolocalización, ve sus horas de la semana y del mes y sus próximos turnos.
+      El service worker **no cachea las páginas del fichaje** a propósito: una pantalla servida de
+      caché mostraría un estado viejo y el trabajador creería haber marcado sin hacerlo.
+      · **Coherencia**: `siguienteTipo()` / `accionesPosibles()` impiden dos entradas seguidas, y se
+      rechaza una segunda marca en menos de 60 s (doble toque). `jornadas()` empareja entradas con
+      salidas, descuenta pausas y señala los días que quedaron sin cerrar.
+      · **El registro es prueba, no hoja de cálculo**: las marcas **no se borran**, se anulan con
+      motivo y queda quién lo hizo; las añadidas a mano se marcan como `manual` con su motivo.
+      · **Ubicación**: si se configuran las coordenadas del hotel se calcula la distancia (haversine).
+      Fichar fuera del radio **no se bloquea**: se anota y gerencia lo ve — puede ser mala señal o
+      un recado real del hotel.
+      · **Datos personales** (Ley 1581/2012): las fotos van a `writable/uploads/fichajes/`, se sirven
+      solo a gerencia con `no-store` y cada consulta queda en el log; el terminal avisa al trabajador.
+      **Verificado**: PIN → identificación → entrada; el sistema reconoce el estado y solo ofrece
+      pausa/salida; salida desde el móvil cerrando 3 h 1 min; anulación con motivo que devuelve el
+      día a «sin cerrar».
 - [x] **Ficha completa de las cabañas** (`MedioModel`, `ServicioModel`, `InventarioItemModel`,
       `RevisionInventarioModel`, `App\Libraries\Galeria`, controladores `Unidades`, `Catalogos` y
       ampliación de `Tipos`; tablas `medios`, `servicios`, `tipo_servicios`, `unidad_servicios`,
