@@ -401,6 +401,33 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       · Riesgo conocido: `recibido` es palabra común y podría dispararse en una conversación. La
       confirmación se canta y se ve en verde, así que un error se nota al momento. Si molesta en la
       práctica, restringir a las frases que lleven «cocina».
+- [x] **Web pública en cuatro idiomas: español, inglés, francés y alemán** (a petición de Javier).
+      **Solo la web pública.** El panel, el TPV, la cocina, el comandero y el portal del empleado
+      siguen en español: los usa el equipo del hotel, no los clientes.
+      · **Interfaz** con `app/Language/{es,en,fr,de}/Web.php`. El español es el original; añadir una
+      frase obliga a añadirla en los cuatro o esos idiomas enseñan la clave en crudo.
+      · **Contenido del hotel** en una tabla única `traducciones` (tabla, registro_id, campo, idioma),
+      no en columnas `nombre_en`, `nombre_fr`… repartidas por siete tablas: con cuatro idiomas serían
+      decenas de columnas y añadir un quinto obligaría a migrar todo. **Si falta una traducción se
+      enseña el español**, nunca un hueco.
+      · **Una dirección por idioma** (`/en/alojamientos`) con `hreflang` + `x-default`, que es lo que
+      permite a Google indexar las cuatro versiones sin tomarlas por duplicadas. El selector lleva a
+      **la misma página**, no a la portada.
+      · **`{locale}` de CodeIgniter NO se usa, y es importante**: se convierte en `[^/]+` y coincide
+      con *cualquier* segmento. Con él, `/login`, `/panel` y **todo el sistema caían en la portada
+      pública**. Los prefijos son literales (`en`, `fr`, `de`) y el idioma lo fija el filtro `idioma`.
+      · `web_helper.php` se carga en `BaseController::$helpers`, no en la plantilla: en CodeIgniter
+      **la vista hija se ejecuta antes que el layout**, así que cargarlo allí llegaba tarde.
+      · **Los nombres de los platos no se traducen** (`Traductor::CAMPOS` no incluye
+      `carta_productos.nombre`). «Sancocho de gallina» es un nombre propio: traducirlo da resultados
+      ridículos y le quita al plato lo que lo hace interesante para un extranjero. Sí la descripción.
+      · **Plurales con ICU** (`{0, plural, ...}`): en alemán «1 Nacht» y «2 Nächte» no se resuelven
+      añadiendo una «s», así que no vale concatenar.
+      · Pantalla **Gerencia → Traducciones**: el español a la izquierda para copiarlo, un campo por
+      idioma, etiqueta «Falta» en lo vacío y barra de avance por idioma. Vaciar un campo lo marca
+      como no traducido (se borra la fila) en vez de contar como traducido.
+      · Verificado: las 6 páginas × 4 idiomas responden con su título, el flujo de reserva completo
+      va en alemán de principio a fin, y un idioma no configurado (`/pt/`) da 404 limpio.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

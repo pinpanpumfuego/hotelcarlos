@@ -20,8 +20,8 @@ if (! function_exists('fechaLarga')) {
 
 <div class="container seccion" style="max-width: 820px;">
     <div class="text-center mb-4 reveal visible">
-        <p class="etiqueta">Paso 3 de 3</p>
-        <h1 class="titulo-seccion">Tus datos</h1>
+        <p class="etiqueta"><?= esc(lang('Web.paso3de3')) ?></p>
+        <h1 class="titulo-seccion"><?= esc(lang('Web.tusDatos')) ?></h1>
     </div>
 
     <?php if (session()->getFlashdata('error')): ?>
@@ -32,7 +32,7 @@ if (! function_exists('fechaLarga')) {
         <div class="col-md-7">
             <div class="card tarjeta-tipo">
                 <div class="card-body p-4">
-                    <form method="post" action="<?= site_url('reservar/confirmar') ?>">
+                    <form method="post" action="<?= url_web('reservar/confirmar') ?>">
                         <?= csrf_field() ?>
                         <input type="hidden" name="entrada" value="<?= esc($busqueda['entrada']) ?>">
                         <input type="hidden" name="salida" value="<?= esc($busqueda['salida']) ?>">
@@ -43,7 +43,7 @@ if (! function_exists('fechaLarga')) {
                         <?php if (! empty($experiencias)): ?>
                             <!-- ── Venta cruzada: se ofrece antes de pedir los datos ── -->
                             <div class="bloque-experiencias">
-                                <p class="etiqueta mb-1">Añade a tu estancia</p>
+                                <p class="etiqueta mb-1"><?= esc(lang('Web.anadeEstancia')) ?></p>
                                 <p class="text-muted small mb-3">
                                     Opcional. No se cobra ahora: confirmamos el cupo y lo pagas en el hotel.
                                 </p>
@@ -86,7 +86,7 @@ if (! function_exists('fechaLarga')) {
                                         </label>
 
                                         <div class="cuando">
-                                            <label class="form-label small mb-1" for="cuando<?= $id ?>">¿Qué día?</label>
+                                            <label class="form-label small mb-1" for="cuando<?= $id ?>"><?= esc(lang('Web.queDia')) ?></label>
                                             <select name="experiencia_fecha[<?= $id ?>]" class="form-select form-select-sm" id="cuando<?= $id ?>">
                                                 <?php foreach ($x['fechas'] as $f): ?>
                                                     <option value="<?= esc($f['fecha'] . '|' . ($f['hora'] ?? '')) ?>"><?= ucfirst(fechaLarga($f['fecha'])) . ($f['hora'] !== null ? ' · ' . substr($f['hora'], 0, 5) : '') ?></option>
@@ -103,53 +103,53 @@ if (! function_exists('fechaLarga')) {
 
                         <div class="row g-3">
                             <div class="col-6">
-                                <label class="form-label">Nombre</label>
+                                <label class="form-label"><?= esc(lang('Web.nombre')) ?></label>
                                 <input type="text" name="nombre" class="form-control" required value="<?= esc(old('nombre', '')) ?>">
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Apellidos</label>
+                                <label class="form-label"><?= esc(lang('Web.apellidos')) ?></label>
                                 <input type="text" name="apellidos" class="form-control" required value="<?= esc(old('apellidos', '')) ?>">
                             </div>
                             <div class="col-5">
-                                <label class="form-label">Tipo de documento</label>
+                                <label class="form-label"><?= esc(lang('Web.tipoDocumento')) ?></label>
                                 <select name="tipo_documento" class="form-select">
-                                    <option value="CC">Cédula</option>
-                                    <option value="CE">Cédula de extranjería</option>
-                                    <option value="PASAPORTE">Pasaporte</option>
-                                    <option value="OTRO">Otro</option>
+                                    <option value="CC"><?= esc(lang('Web.docCC')) ?></option>
+                                    <option value="CE"><?= esc(lang('Web.docCE')) ?></option>
+                                    <option value="PASAPORTE"><?= esc(lang('Web.docPasaporte')) ?></option>
+                                    <option value="OTRO"><?= esc(lang('Web.docOtro')) ?></option>
                                 </select>
                             </div>
                             <div class="col-7">
-                                <label class="form-label">Número de documento</label>
+                                <label class="form-label"><?= esc(lang('Web.numDocumento')) ?></label>
                                 <input type="text" name="num_documento" class="form-control" required value="<?= esc(old('num_documento', '')) ?>">
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Teléfono / WhatsApp</label>
+                                <label class="form-label"><?= esc(lang('Web.telefonoWsp')) ?></label>
                                 <input type="tel" name="telefono" class="form-control" required placeholder="+57 300 000 0000" value="<?= esc(old('telefono', '')) ?>">
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Correo electrónico</label>
+                                <label class="form-label"><?= esc(lang('Web.correo')) ?></label>
                                 <input type="email" name="email" class="form-control" required value="<?= esc(old('email', '')) ?>">
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Comentarios (opcional)</label>
-                                <textarea name="comentarios" class="form-control" rows="2" placeholder="Hora estimada de llegada, alergias, ocasión especial..."><?= esc(old('comentarios', '')) ?></textarea>
+                                <label class="form-label"><?= esc(lang('Web.comentariosOpc')) ?></label>
+                                <textarea name="comentarios" class="form-control" rows="2" placeholder="<?= esc(lang('Web.comentariosPista')) ?>"><?= esc(old('comentarios', '')) ?></textarea>
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="acepta" value="1" id="chkAcepta" required>
                                     <label class="form-check-label small" for="chkAcepta">
-                                        Acepto el tratamiento de mis datos para gestionar la reserva y las políticas del ecolodge.
+                                        <?= esc(lang('Web.aceptoDatos')) ?>
                                     </label>
                                 </div>
                             </div>
                         </div>
 
                         <button class="btn btn-reserva btn-lg w-100 mt-4">
-                            <i class="bi bi-check2-circle me-1"></i>Confirmar reserva
+                            <i class="bi bi-check2-circle me-1"></i><?= esc(lang('Web.confirmarReserva')) ?>
                         </button>
                         <p class="small text-muted text-center mt-2 mb-0">
-                            No se te cobrará nada ahora: te contactaremos para coordinar el pago.
+                            <?= esc(lang('Web.noSeCobraAhora')) ?>
                         </p>
                     </form>
                 </div>
@@ -159,7 +159,7 @@ if (! function_exists('fechaLarga')) {
         <div class="col-md-5">
             <div class="card tarjeta-tipo" style="background: var(--bosque); color: #eef3ee;">
                 <div class="card-body p-4">
-                    <h2 class="h5 mb-3">Resumen de tu reserva</h2>
+                    <h2 class="h5 mb-3"><?= esc(lang('Web.resumenReserva')) ?></h2>
                     <p class="mb-2"><i class="bi bi-house-heart me-2"></i><?= esc($tipo['nombre']) ?></p>
                     <p class="mb-2"><i class="bi bi-calendar3 me-2"></i><?= esc(date('d/m/Y', strtotime($busqueda['entrada']))) ?> → <?= esc(date('d/m/Y', strtotime($busqueda['salida']))) ?></p>
                     <p class="mb-2"><i class="bi bi-moon me-2"></i><?= esc($noches) ?> noche<?= $noches > 1 ? 's' : '' ?></p>
@@ -187,11 +187,11 @@ if (! function_exists('fechaLarga')) {
                     <?php $descuentoCupon = (float) ($descuento ?? 0); ?>
                     <?php if ($descuentoCupon > 0): ?>
                         <div class="d-flex justify-content-between small">
-                            <span>Alojamiento</span>
+                            <span><?= esc(lang('Web.alojamiento')) ?></span>
                             <span>$<?= number_format($total, 0, ',', '.') ?></span>
                         </div>
                         <div class="d-flex justify-content-between small">
-                            <span><i class="bi bi-ticket-perforated me-1"></i>Cupón <?= esc($cupon ?? '') ?></span>
+                            <span><i class="bi bi-ticket-perforated me-1"></i><?= esc(lang('Web.cupon')) ?> <?= esc($cupon ?? '') ?></span>
                             <span>−$<?= number_format($descuentoCupon, 0, ',', '.') ?></span>
                         </div>
                         <hr class="border-light opacity-25">
@@ -204,7 +204,7 @@ if (! function_exists('fechaLarga')) {
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center">
-                        <span>Total</span>
+                        <span><?= esc(lang('Web.total')) ?></span>
                         <span class="fs-4 fw-bold" id="total-general"
                               data-base="<?= (int) ($total - $descuentoCupon) ?>">$<?= number_format($total - $descuentoCupon, 0, ',', '.') ?> COP</span>
                     </div>
@@ -228,17 +228,17 @@ if (! function_exists('fechaLarga')) {
                             </div>
                         </div>
                     <?php else: ?>
-                        <form method="post" action="<?= site_url('reservar/datos') ?>">
+                        <form method="post" action="<?= url_web('reservar/datos') ?>">
                             <?= csrf_field() ?>
                             <input type="hidden" name="entrada" value="<?= esc($busqueda['entrada']) ?>">
                             <input type="hidden" name="salida" value="<?= esc($busqueda['salida']) ?>">
                             <input type="hidden" name="adultos" value="<?= esc($busqueda['adultos']) ?>">
                             <input type="hidden" name="ninos" value="<?= esc($busqueda['ninos']) ?>">
                             <input type="hidden" name="tipo_id" value="<?= esc($tipo['id']) ?>">
-                            <label class="form-label small mb-1">¿Tienes un cupón de descuento?</label>
+                            <label class="form-label small mb-1"><?= esc(lang('Web.tienesCupon')) ?></label>
                             <div class="d-flex gap-2">
-                                <input type="text" name="cupon" class="form-control text-uppercase" placeholder="CÓDIGO" autocomplete="off">
-                                <button class="btn btn-outline-secondary rounded-pill px-3">Aplicar</button>
+                                <input type="text" name="cupon" class="form-control text-uppercase" placeholder="<?= esc(lang('Web.codigo')) ?>" autocomplete="off">
+                                <button class="btn btn-outline-secondary rounded-pill px-3"><?= esc(lang('Web.aplicar')) ?></button>
                             </div>
                             <?php if (! empty($cuponError)): ?>
                                 <div class="small text-danger mt-2"><i class="bi bi-x-circle me-1"></i><?= esc($cuponError) ?></div>

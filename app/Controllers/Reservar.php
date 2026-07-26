@@ -11,11 +11,15 @@ class Reservar extends BaseController
 {
     private ReservaModel $reservas;
     private TipoUnidadModel $tipos;
+    private \App\Libraries\Traductor $t;
 
     public function __construct()
     {
         $this->reservas = new ReservaModel();
         $this->tipos    = new TipoUnidadModel();
+        // El motor de reservas es parte de la web pública, así que también
+        // traduce el contenido: es justo donde un extranjero decide si paga
+        $this->t = new \App\Libraries\Traductor();
     }
 
     /** Paso 1: elegir fechas y personas. */
@@ -23,7 +27,7 @@ class Reservar extends BaseController
     {
         return view('web/reservar', [
             'hotel'        => config('Hotel'),
-            'tituloPagina' => 'Reservar',
+            'tituloPagina' => lang('Web.reservar'),
             'paginaActiva' => 'reservar',
             'descripcion'  => 'Consulta disponibilidad y reserva tu cabaña en línea.',
         ]);
@@ -52,20 +56,24 @@ class Reservar extends BaseController
             if ($libres !== []) {
                 $cotizacion = $motor->cotizar((int) $tipo['id'], $datos['entrada'], $datos['salida'], $datos['adultos'], $datos['ninos']);
                 $opciones[] = [
-                    'tipo'       => $tipo,
+                    'tipo'       => $this->t->filas('tipos_unidad', [$tipo], ['nombre', 'descripcion'])[0],
                     'libres'     => count($libres),
                     'total'      => $cotizacion['total'],
                     'porNoche'   => $cotizacion['media_noche'],
                     'cotizacion' => $cotizacion,
                     'galeria'    => $this->galeriaDelTipo((int) $tipo['id'], $libres),
-                    'servicios'  => (new \App\Models\ServicioModel())->fichaDeTipo((int) $tipo['id']),
+                    'servicios'  => $this->t->filas(
+                        'servicios',
+                        (new \App\Models\ServicioModel())->fichaDeTipo((int) $tipo['id']),
+                        ['nombre']
+                    ),
                 ];
             }
         }
 
         return view('web/reservar_opciones', [
             'hotel'        => config('Hotel'),
-            'tituloPagina' => 'Disponibilidad',
+            'tituloPagina' => lang('Web.disponibilidad'),
             'paginaActiva' => 'reservar',
             'busqueda'     => $datos,
             'noches'       => $noches,
@@ -108,7 +116,7 @@ class Reservar extends BaseController
 
         return view('web/reservar_datos', [
             'hotel'        => config('Hotel'),
-            'tituloPagina' => 'Tus datos',
+            'tituloPagina' => lang('Web.tusDatos'),
             'paginaActiva' => 'reservar',
             'busqueda'     => $datos,
             'tipo'         => $tipo,
@@ -280,7 +288,7 @@ class Reservar extends BaseController
 
         return view('web/reservar_exito', [
             'hotel'        => config('Hotel'),
-            'tituloPagina' => 'Reserva recibida',
+            'tituloPagina' => lang('Web.reservaRecibida'),
             'paginaActiva' => 'reservar',
             'reserva'      => $reserva,
             'descuento'    => (new \App\Models\FolioModel())->totalDescuentos((int) $reserva['id']),
@@ -363,7 +371,11 @@ class Reservar extends BaseController
      */
     private function experienciasDisponibles(array $busqueda): array
     {
-        $experiencias = (new \App\Models\ExperienciaModel())->publicas();
+        $experiencias = $this->t->filas(
+            'experiencias',
+            (new \App\Models\ExperienciaModel())->publicas(),
+            ['nombre', 'descripcion', 'incluye']
+        );
         if ($experiencias === []) {
             return [];
         }

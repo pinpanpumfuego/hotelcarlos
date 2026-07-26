@@ -3,15 +3,18 @@
 
 <div class="container seccion" style="max-width: 860px;">
     <div class="text-center mb-4 reveal visible">
-        <p class="etiqueta">Paso 2 de 3</p>
-        <h1 class="titulo-seccion">Disponibilidad</h1>
+        <p class="etiqueta"><?= esc(lang('Web.paso2de3')) ?></p>
+        <h1 class="titulo-seccion"><?= esc(lang('Web.disponibilidad')) ?></h1>
         <p class="text-muted mt-2">
             <i class="bi bi-calendar3 me-1"></i>
-            Del <strong><?= esc(date('d/m/Y', strtotime($busqueda['entrada']))) ?></strong>
-            al <strong><?= esc(date('d/m/Y', strtotime($busqueda['salida']))) ?></strong>
-            · <?= esc($noches) ?> noche<?= $noches > 1 ? 's' : '' ?>
-            · <?= esc($busqueda['adultos']) ?> adulto<?= $busqueda['adultos'] > 1 ? 's' : '' ?><?= $busqueda['ninos'] > 0 ? ' y ' . esc($busqueda['ninos']) . ' niño' . ($busqueda['ninos'] > 1 ? 's' : '') : '' ?>
-            &nbsp;<a href="<?= site_url('reservar') ?>" class="small">Cambiar</a>
+            <?= esc(lang('Web.del')) ?> <strong><?= esc(date('d/m/Y', strtotime($busqueda['entrada']))) ?></strong>
+            <?= esc(lang('Web.al')) ?> <strong><?= esc(date('d/m/Y', strtotime($busqueda['salida']))) ?></strong>
+            <?php // El plural se resuelve en cada idioma: en alemán «1 Nacht» y
+                  // «2 Nächte» no se hacen añadiendo una «s» al final ?>
+            · <?= esc(lang('Web.nochesN', [$noches])) ?>
+            · <?= esc(lang('Web.adultosN', [(int) $busqueda['adultos']])) ?><?php
+                if ((int) $busqueda['ninos'] > 0): ?> · <?= esc(lang('Web.ninosN', [(int) $busqueda['ninos']])) ?><?php endif ?>
+            &nbsp;<a href="<?= url_web('reservar') ?>" class="small"><?= esc(lang('Web.cambiar')) ?></a>
         </p>
     </div>
 
@@ -19,10 +22,10 @@
         <div class="card tarjeta-tipo text-center">
             <div class="card-body p-5">
                 <i class="bi bi-emoji-frown fs-1 text-muted"></i>
-                <h2 class="h5 mt-3">No hay cabañas disponibles en esas fechas</h2>
-                <p class="text-muted">Prueba con otras fechas, o escríbenos y buscamos una alternativa contigo.</p>
+                <h2 class="h5 mt-3"><?= esc(lang('Web.sinDisponibilidad')) ?></h2>
+                <p class="text-muted"><?= esc(lang('Web.pruebaOtrasFechas')) ?></p>
                 <div class="d-flex gap-2 justify-content-center flex-wrap">
-                    <a href="<?= site_url('reservar') ?>" class="btn btn-reserva">Probar otras fechas</a>
+                    <a href="<?= url_web('reservar') ?>" class="btn btn-reserva"><?= esc(lang('Web.probarOtrasFechas')) ?></a>
                     <a href="https://wa.me/<?= esc($hotel->whatsapp) ?>" target="_blank" rel="noopener" class="btn btn-outline-secondary rounded-pill">
                         <i class="bi bi-whatsapp me-1"></i>WhatsApp
                     </a>
@@ -47,15 +50,18 @@
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                             <h2 class="h4 mb-1"><?= esc($op['tipo']['nombre']) ?></h2>
                             <?php if ($op['libres'] <= 2): ?>
-                                <span class="badge text-bg-warning">¡Solo <?= esc($op['libres']) ?> disponible<?= $op['libres'] > 1 ? 's' : '' ?>!</span>
+                                <span class="badge text-bg-warning"><?= esc(lang('Web.soloQuedanN', [(int) $op['libres']])) ?></span>
                             <?php else: ?>
-                                <span class="badge text-bg-success"><?= esc($op['libres']) ?> disponibles</span>
+                                <span class="badge text-bg-success"><?= esc(lang('Web.disponiblesN', [(int) $op['libres']])) ?></span>
                             <?php endif ?>
                         </div>
                         <p class="text-muted small mb-3"><?= esc($op['tipo']['descripcion'] ?? '') ?></p>
                         <div class="d-flex flex-wrap gap-2 mb-3">
-                            <span class="chip"><i class="bi bi-people me-1"></i>Hasta <?= esc($op['tipo']['capacidad']) ?> personas</span>
-                            <span class="chip"><i class="bi bi-moon me-1"></i><?= esc($noches) ?> noche<?= $noches > 1 ? 's' : '' ?></span>
+                            <span class="chip">
+                                <i class="bi bi-people me-1"></i><?= esc(lang('Web.hasta')) ?>
+                                <?= esc($op['tipo']['capacidad']) ?> <?= esc(lang('Web.personas')) ?>
+                            </span>
+                            <span class="chip"><i class="bi bi-moon me-1"></i><?= esc(lang('Web.nochesN', [$noches])) ?></span>
                             <?php foreach (array_slice($op['servicios'] ?? [], 0, 6) as $s): ?>
                                 <span class="chip"><i class="bi <?= esc($s['icono']) ?> me-1"></i><?= esc($s['nombre']) ?></span>
                             <?php endforeach ?>
@@ -64,23 +70,24 @@
                             <div>
                                 <div class="precio-desde fs-4">$<?= number_format($op['total'], 0, ',', '.') ?> COP</div>
                                 <div class="small text-muted">
-                                    total de la estancia · $<?= number_format($op['porNoche'], 0, ',', '.') ?> por noche de media
+                                    <?= esc(lang('Web.totalEstancia')) ?> ·
+                                    $<?= number_format($op['porNoche'], 0, ',', '.') ?> <?= esc(lang('Web.porNocheMedia')) ?>
                                 </div>
                                 <?php if (! empty($op['cotizacion']['suplementos'])): ?>
-                                    <div class="small text-muted">incluye suplemento por personas adicionales</div>
+                                    <div class="small text-muted"><?= esc(lang('Web.incluyeSuplemento')) ?></div>
                                 <?php endif ?>
                                 <a class="small" data-bs-toggle="collapse" href="#detalle<?= esc($op['tipo']['id']) ?>" role="button">
-                                    Ver el detalle por noche
+                                    <?= esc(lang('Web.verDetalleNoche')) ?>
                                 </a>
                             </div>
-                            <form method="post" action="<?= site_url('reservar/datos') ?>">
+                            <form method="post" action="<?= url_web('reservar/datos') ?>">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="entrada" value="<?= esc($busqueda['entrada']) ?>">
                                 <input type="hidden" name="salida" value="<?= esc($busqueda['salida']) ?>">
                                 <input type="hidden" name="adultos" value="<?= esc($busqueda['adultos']) ?>">
                                 <input type="hidden" name="ninos" value="<?= esc($busqueda['ninos']) ?>">
                                 <input type="hidden" name="tipo_id" value="<?= esc($op['tipo']['id']) ?>">
-                                <button class="btn btn-reserva">Elegir<i class="bi bi-arrow-right ms-1"></i></button>
+                                <button class="btn btn-reserva"><?= esc(lang('Web.elegir')) ?><i class="bi bi-arrow-right ms-1"></i></button>
                             </form>
                         </div>
 
@@ -106,7 +113,7 @@
                                     </div>
                                 <?php endforeach ?>
                                 <div class="linea total">
-                                    <span>Total</span>
+                                    <span><?= esc(lang('Web.total')) ?></span>
                                     <span>$<?= number_format($op['total'], 0, ',', '.') ?></span>
                                 </div>
                             </div>
@@ -119,8 +126,7 @@
 
     <?php if (! empty($opciones)): ?>
         <p class="text-center text-muted small">
-            Precios en pesos colombianos, impuestos incluidos. El precio de cada noche varía según la temporada,
-            el día de la semana y la ocupación; se congela en cuanto envías la reserva.
+            <?= esc(lang('Web.notaPrecios')) ?>
         </p>
     <?php endif ?>
 </div>

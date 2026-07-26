@@ -32,7 +32,7 @@ class Web extends BaseController
         return view('web/inicio', [
             'hotel'        => config('Hotel'),
             'tipos'        => $this->t->filas('tipos_unidad', $tipos, ['nombre', 'descripcion']),
-            'tituloPagina' => 'Cabañas junto al lago en Colombia',
+            'tituloPagina' => lang('Web.refugio'),
             'paginaActiva' => 'inicio',
         ]);
     }
@@ -79,7 +79,7 @@ class Web extends BaseController
             'tipos'        => $this->t->filas('tipos_unidad', $tipos, ['nombre', 'descripcion']),
             'galerias'     => $galerias,
             'servicios'    => $chips,
-            'tituloPagina' => 'Alojamientos',
+            'tituloPagina' => lang('Web.alojamientos'),
             'paginaActiva' => 'alojamientos',
             'descripcion'  => 'Habitaciones, cabañas y glamping. Tarifas por noche y capacidad.',
         ]);
@@ -100,7 +100,7 @@ class Web extends BaseController
             'hotel'         => config('Hotel'),
             'experiencias'  => $this->t->filas('experiencias', $lista, ['nombre', 'descripcion', 'incluye']),
             'galerias'      => $galerias,
-            'tituloPagina'  => 'Experiencias',
+            'tituloPagina'  => lang('Web.experiencias'),
             'paginaActiva'  => 'experiencias',
             'descripcion'   => 'Cabalgatas, paseos en lancha y actividades en la naturaleza durante tu estancia.',
         ]);
@@ -138,7 +138,7 @@ class Web extends BaseController
             'alergenos'    => \App\Models\CartaProductoModel::ALERGENOS,
             // La propina se anuncia también aquí: la ley pide informarla en la carta
             'propinaSugerida' => (float) (new \App\Models\ConfiguracionModel())->obtener('tpv_propina_sugerida', '10'),
-            'tituloPagina' => 'Restaurante',
+            'tituloPagina' => lang('Web.restaurante'),
             'paginaActiva' => 'carta',
             'descripcion'  => 'Nuestra carta: cocina local con productos de la región. Consulta alérgenos y opciones veganas.',
         ]);
@@ -148,7 +148,7 @@ class Web extends BaseController
     {
         return view('web/contacto', [
             'hotel'        => config('Hotel'),
-            'tituloPagina' => 'Contacto',
+            'tituloPagina' => lang('Web.contacto'),
             'paginaActiva' => 'contacto',
             'descripcion'  => 'Cómo llegar, teléfono, WhatsApp y correo del hotel.',
         ]);
