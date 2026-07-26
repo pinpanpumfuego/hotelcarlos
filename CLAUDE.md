@@ -212,8 +212,16 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       cobra lo que de verdad ocurrió, así una cancelación no necesita revertir nada.
       · Un `<select>` de plazas libres se refresca por AJAX; lleva **numeración de peticiones** para
       que, al cambiar rápido de fecha, una respuesta lenta no pinte la disponibilidad de otro día.
+      · **Venta cruzada en el motor de reservas** (paso 3): se ofrecen solo las experiencias que
+      **caben de verdad** durante esa estancia — se comprueba día a día `seHace()` y `plazasLibres()`
+      para el número de personas de la reserva, y el `<select>` de día solo lista salidas con sitio.
+      Al marcar una, el resumen de la derecha suma el importe al instante. Quedan como
+      **`solicitada`**, no como venta cerrada: aparecen en el aviso «sin confirmar» de la agenda.
+      El cupo **se vuelve a comprobar al confirmar** (entre ver la página y enviar pudo entrar otro);
+      lo que ya no cabe no se apunta y se le dice al huésped en la pantalla de confirmación.
       **Verificado**: margen 62,5 % calculado en vivo; 4 adultos + 1 niño = $560.000; rechazo por
-      día no operativo y por cupo insuficiente («solo quedan 1 plaza»); cargo al folio al realizarla.
+      día no operativo y por cupo insuficiente («solo quedan 1 plaza»); cargo al folio al realizarla;
+      y reserva web de $1.190.000 que pasa a **$1.610.000** al añadir cabalgata y paseo en lancha.
 - [x] **Control de jornada / fichaje** (`FichajeModel`, `App\Libraries\Fichaje`, controladores
       `Fichar` (terminal), `Empleado` (PWA) y `Fichajes` (gerencia); tabla `fichajes`;
       columnas nuevas en `empleados`: `pin_hash`, `pin_actualizado`, `ficha_movil`, `foto`).

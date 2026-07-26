@@ -118,6 +118,7 @@ class Reservar extends BaseController
             'cupon'        => $cupon,
             'descuento'    => $descuento,
             'cuponError'   => $cuponError,
+            'experiencias' => $this->experienciasDisponibles($datos),
         ]);
     }
 
@@ -210,6 +211,10 @@ class Reservar extends BaseController
             'notas'           => 'Reserva creada desde la web. ' . trim((string) $this->request->getPost('comentarios')),
         ]);
 
+        // Experiencias pedidas: quedan como solicitudes, no como venta cerrada.
+        // El hotel confirma el cupo y solo se cobra cuando se hacen.
+        $pedidas = $this->guardarExperiencias((int) $reservaId, (int) $huespedId, $busqueda);
+
         // Cupón: se descuenta en el folio, no en el precio del alojamiento,
         // para que quede claro cuánto valía la estancia y cuánto se rebajó.
         $cupon = trim((string) $this->request->getPost('cupon'));
@@ -255,7 +260,8 @@ class Reservar extends BaseController
             (new \App\Libraries\Correo())->avisoReservaWeb($completa);
         }
 
-        return redirect()->to('reservar/exito/' . $codigo);
+        return redirect()->to('reservar/exito/' . $codigo)
+            ->with('experiencias', $pedidas);
     }
 
     /** Confirmación final con el código de reserva. */
@@ -278,7 +284,140 @@ class Reservar extends BaseController
             'paginaActiva' => 'reservar',
             'reserva'      => $reserva,
             'descuento'    => (new \App\Models\FolioModel())->totalDescuentos((int) $reserva['id']),
+            'actividades'  => (new \App\Models\ExperienciaReservaModel())->deReserva((int) $reserva['id']),
+            'pedidas'      => session()->getFlashdata('experiencias'),
         ]);
+    }
+
+    /**
+     * Apunta las experiencias que marcó el huésped.
+     *
+     * Se vuelve a comprobar el cupo aquí: entre que vio la página y confirmó
+     * pudo entrar otro. Lo que ya no cabe simplemente no se apunta, y se le dice.
+     *
+     * @return array{apuntadas: list<string>, sin_sitio: list<string>}
+     */
+    private function guardarExperiencias(int $reservaId, int $huespedId, array $busqueda): array
+    {
+        $marcadas = (array) $this->request->getPost('experiencia');
+        if ($marcadas === []) {
+            return ['apuntadas' => [], 'sin_sitio' => []];
+        }
+
+        $modelo  = new \App\Models\ExperienciaModel();
+        $salidas = new \App\Models\ExperienciaReservaModel();
+        $cuando  = (array) $this->request->getPost('experiencia_fecha');
+
+        $apuntadas = [];
+        $sinSitio  = [];
+        $personas  = $busqueda['adultos'] + $busqueda['ninos'];
+
+        foreach ($marcadas as $expId) {
+            $exp = $modelo->find((int) $expId);
+            if ($exp === null || (int) $exp['activa'] !== 1 || (int) $exp['publicada'] !== 1) {
+                continue;
+            }
+
+            // El valor viene como «2026-08-14|06:00» o «2026-08-14|»
+            [$fecha, $hora] = array_pad(explode('|', (string) ($cuando[$expId] ?? '')), 2, '');
+            $hora = $hora !== '' ? $hora : null;
+
+            if (strtotime($fecha) === false
+                || $fecha < $busqueda['entrada'] || $fecha > $busqueda['salida']
+                || ! \App\Models\ExperienciaModel::seHace($exp, $fecha)) {
+                $sinSitio[] = $exp['nombre'];
+
+                continue;
+            }
+
+            if ($salidas->plazasLibres($exp, $fecha, $hora) < $personas) {
+                $sinSitio[] = $exp['nombre'];
+
+                continue;
+            }
+
+            $salidas->insert([
+                'experiencia_id'  => (int) $exp['id'],
+                'reserva_id'      => $reservaId,
+                'huesped_id'      => $huespedId,
+                'fecha'           => $fecha,
+                'hora'            => $hora,
+                'adultos'         => $busqueda['adultos'],
+                'ninos'           => $busqueda['ninos'],
+                'precio_unitario' => (float) $exp['precio'],
+                'precio_nino'     => $exp['precio_nino'],
+                'total'           => \App\Models\ExperienciaModel::calcularTotal($exp, $busqueda['adultos'], $busqueda['ninos']),
+                'estado'          => 'solicitada',
+                'notas'           => 'Pedida al reservar en línea',
+            ]);
+
+            $apuntadas[] = $exp['nombre'];
+        }
+
+        return ['apuntadas' => $apuntadas, 'sin_sitio' => $sinSitio];
+    }
+
+    /**
+     * Experiencias que se pueden hacer durante la estancia, con los días
+     * concretos en que hay sitio. Solo se ofrece lo que de verdad cabe.
+     */
+    private function experienciasDisponibles(array $busqueda): array
+    {
+        $experiencias = (new \App\Models\ExperienciaModel())->publicas();
+        if ($experiencias === []) {
+            return [];
+        }
+
+        $salidas  = new \App\Models\ExperienciaReservaModel();
+        $medios   = new \App\Models\MedioModel();
+        $personas = $busqueda['adultos'] + $busqueda['ninos'];
+
+        // Se ofrecen los días de la estancia, incluido el de salida
+        $dias = [];
+        for ($d = $busqueda['entrada']; $d <= $busqueda['salida']; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+            $dias[] = $d;
+        }
+
+        $disponibles = [];
+
+        foreach ($experiencias as $e) {
+            $fechas = [];
+
+            foreach ($dias as $dia) {
+                if (! \App\Models\ExperienciaModel::seHace($e, $dia)) {
+                    continue;
+                }
+
+                $horas = \App\Models\ExperienciaModel::horariosDe($e);
+                foreach ($horas ?: [null] as $hora) {
+                    if ($salidas->plazasLibres($e, $dia, $hora) >= $personas) {
+                        $fechas[] = ['fecha' => $dia, 'hora' => $hora];
+                    }
+                }
+            }
+
+            if ($fechas === []) {
+                continue;
+            }
+
+            $galeria = $medios->deExperiencia((int) $e['id']);
+            $foto    = null;
+            foreach ($galeria as $m) {
+                if ($m['tipo'] === 'foto') {
+                    $foto = $m;
+                    break;
+                }
+            }
+
+            $disponibles[] = [
+                'experiencia' => $e,
+                'fechas'      => $fechas,
+                'foto'        => $foto,
+                'total'       => \App\Models\ExperienciaModel::calcularTotal($e, $busqueda['adultos'], $busqueda['ninos']),
+            ];
+        }
+
+        return $disponibles;
     }
 
     /**

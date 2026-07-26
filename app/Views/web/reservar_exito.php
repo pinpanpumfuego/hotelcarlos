@@ -18,6 +18,32 @@
                     <p class="mb-2"><i class="bi bi-ticket-perforated me-2 text-success"></i>Descuento del cupón: −$<?= number_format((float) $descuento, 0, ',', '.') ?> COP</p>
                     <p class="mb-2 fw-semibold"><i class="bi bi-check2 me-2 text-success"></i>A pagar: $<?= number_format((float) $reserva['total'] - (float) $descuento, 0, ',', '.') ?> COP</p>
                 <?php endif ?>
+                <?php if (! empty($actividades)): ?>
+                    <hr class="my-3">
+                    <p class="mb-2 fw-semibold"><i class="bi bi-compass me-2 text-success"></i>Experiencias pedidas</p>
+                    <?php foreach ($actividades as $a): ?>
+                        <p class="mb-1 ms-4 small">
+                            <?= esc($a['experiencia']) ?> ·
+                            <?= date('d/m', strtotime($a['fecha'])) ?>
+                            <?= $a['hora'] !== null ? 'a las ' . substr($a['hora'], 0, 5) : '' ?>
+                            · $<?= number_format((float) $a['total'], 0, ',', '.') ?>
+                        </p>
+                    <?php endforeach ?>
+                    <p class="mb-0 ms-4 small text-muted">
+                        Te confirmamos el cupo al responderte. Se pagan en el hotel.
+                    </p>
+                <?php endif ?>
+
+                <?php if (! empty($pedidas['sin_sitio'])): ?>
+                    <hr class="my-3">
+                    <p class="mb-0 small text-warning-emphasis">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <?= esc(implode(' y ', $pedidas['sin_sitio'])) ?>
+                        se llenó justo antes de que confirmaras. Te buscamos otro día al contactarte.
+                    </p>
+                <?php endif ?>
+
+                <hr class="my-3">
                 <p class="mb-0"><i class="bi bi-envelope me-2 text-success"></i>Te contactaremos en <strong><?= esc($reserva['huesped_email']) ?></strong> para confirmar y coordinar el pago.</p>
             </div>
             <hr class="my-4">
