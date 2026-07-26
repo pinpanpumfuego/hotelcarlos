@@ -32,7 +32,7 @@ class Tipos extends BaseController
 
     public function guardar()
     {
-        $datos = $this->request->getPost(['nombre', 'descripcion', 'capacidad', 'tarifa_base']);
+        $datos = $this->recogerDatos();
 
         if (! $this->tipos->insert($datos)) {
             return redirect()->back()->withInput()->with('errores', $this->tipos->errors());
@@ -61,13 +61,35 @@ class Tipos extends BaseController
             return redirect()->to('tipos')->with('error', 'El tipo no existe.');
         }
 
-        $datos = $this->request->getPost(['nombre', 'descripcion', 'capacidad', 'tarifa_base']);
+        $datos = $this->recogerDatos();
 
         if (! $this->tipos->update($id, $datos)) {
             return redirect()->back()->withInput()->with('errores', $this->tipos->errors());
         }
 
         return redirect()->to('tipos')->with('ok', 'Tipo de alojamiento actualizado.');
+    }
+
+    /** Campos del formulario; los topes vacíos se guardan como «sin límite». */
+    private function recogerDatos(): array
+    {
+        $datos = $this->request->getPost([
+            'nombre', 'descripcion', 'capacidad', 'tarifa_base',
+            'precio_minimo', 'precio_maximo', 'personas_incluidas',
+            'suplemento_adulto', 'suplemento_nino',
+        ]);
+
+        foreach (['precio_minimo', 'precio_maximo'] as $campo) {
+            if (trim((string) ($datos[$campo] ?? '')) === '') {
+                $datos[$campo] = null;
+            }
+        }
+
+        $datos['personas_incluidas'] = max(1, (int) ($datos['personas_incluidas'] ?? 2));
+        $datos['suplemento_adulto']  = (float) ($datos['suplemento_adulto'] ?? 0);
+        $datos['suplemento_nino']    = (float) ($datos['suplemento_nino'] ?? 0);
+
+        return $datos;
     }
 
     public function eliminar(int $id)

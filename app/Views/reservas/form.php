@@ -108,9 +108,28 @@
                 <i class="bi bi-calculator mt-1"></i>
                 <div>
                     <strong>El total se calcula solo</strong>
-                    <span class="d-block small">Noches × tarifa de la cabaña. Los consumos del restaurante y otros cargos se añaden después al folio.</span>
+                    <span class="d-block small">
+                        Lo pone el <a href="<?= site_url('tarifas') ?>">motor de tarifas</a>: temporada, día de la semana,
+                        ocupación y topes. Los consumos del restaurante se añaden después al folio.
+                    </span>
+                    <a href="<?= site_url('tarifas/simulador') ?>" class="small">Ver el precio antes de guardar</a>
                 </div>
             </div>
+
+            <?php if ($editando): ?>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="recalcular" id="recalcular">
+                            <label class="form-check-label fw-semibold" for="recalcular">Recalcular el precio con las tarifas de hoy</label>
+                            <div class="form-text">
+                                Ahora está en <strong>$<?= number_format((float) $reserva['total'], 0, ',', '.') ?></strong>.
+                                Si cambias fechas, cabaña u ocupantes se recalcula igualmente.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif ?>
         </div>
     </div>
 

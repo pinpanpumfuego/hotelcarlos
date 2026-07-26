@@ -200,6 +200,21 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
 
     $routes->post('unidades/eliminar/(:num)', 'Unidades::eliminar/$1');
 
+    // Motor de tarifas: temporadas, reglas, calendario y simulador
+    $routes->get('tarifas', 'Tarifas::index');
+    $routes->get('tarifas/calendario', 'Tarifas::calendario');
+    $routes->get('tarifas/simulador', 'Tarifas::simulador');
+    $routes->get('tarifas/temporada/(:num)', 'Tarifas::temporada/$1');
+    $routes->post('tarifas/temporada/guardar', 'Tarifas::guardarTemporada');
+    $routes->post('tarifas/temporada/actualizar/(:num)', 'Tarifas::actualizarTemporada/$1');
+    $routes->post('tarifas/temporada/precios/(:num)', 'Tarifas::guardarPrecios/$1');
+    $routes->post('tarifas/temporada/estado/(:num)', 'Tarifas::alternarTemporada/$1');
+    $routes->post('tarifas/temporada/eliminar/(:num)', 'Tarifas::eliminarTemporada/$1');
+    $routes->post('tarifas/regla/guardar', 'Tarifas::guardarRegla');
+    $routes->post('tarifas/regla/actualizar/(:num)', 'Tarifas::actualizarRegla/$1');
+    $routes->post('tarifas/regla/estado/(:num)', 'Tarifas::alternarRegla/$1');
+    $routes->post('tarifas/regla/eliminar/(:num)', 'Tarifas::eliminarRegla/$1');
+
     $routes->get('tipos', 'Tipos::index');
     $routes->get('tipos/nuevo', 'Tipos::nuevo');
     $routes->post('tipos/guardar', 'Tipos::guardar');

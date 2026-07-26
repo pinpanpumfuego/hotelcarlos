@@ -8,13 +8,22 @@ class TipoUnidadModel extends Model
 {
     protected $table         = 'tipos_unidad';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['nombre', 'descripcion', 'capacidad', 'tarifa_base'];
+    protected $allowedFields = [
+        'nombre', 'descripcion', 'capacidad', 'tarifa_base',
+        'precio_minimo', 'precio_maximo', 'personas_incluidas',
+        'suplemento_adulto', 'suplemento_nino',
+    ];
     protected $useTimestamps = true;
 
     protected $validationRules = [
         'nombre'      => 'required|min_length[3]|max_length[100]',
         'capacidad'   => 'required|is_natural_no_zero',
         'tarifa_base' => 'required|decimal',
+        'precio_minimo'      => 'permit_empty|decimal',
+        'precio_maximo'      => 'permit_empty|decimal',
+        'personas_incluidas' => 'permit_empty|is_natural_no_zero',
+        'suplemento_adulto'  => 'permit_empty|decimal',
+        'suplemento_nino'    => 'permit_empty|decimal',
     ];
 
     protected $validationMessages = [

@@ -283,6 +283,7 @@ if ($rol === 'gerencia') {
     $grupos['Gerencia'] = ['icono' => 'bi-briefcase', 'enlaces' => [
         ['reportes', 'reportes', 'bi-graph-up', 'Reportes', 0],
         ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0],
+        ['tarifas', 'tarifas', 'bi-tags', 'Tarifas', 0],
         ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento', 0],
         ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0],
         ['administracion', 'administracion', 'bi-gear', 'Administración', 0],

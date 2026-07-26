@@ -124,6 +124,57 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
                     <p class="small text-muted mb-0"><i class="bi bi-sticky me-2"></i><?= esc($reserva['notas']) ?></p>
                 <?php endif ?>
             </div>
+
+            <?php $desglose = \App\Libraries\MotorTarifas::leerResumen($reserva['desglose_precio'] ?? null); ?>
+            <div class="card-footer bg-white p-0">
+                <button class="btn btn-link w-100 text-decoration-none text-start px-3 py-2 small collapsed"
+                        data-bs-toggle="collapse" data-bs-target="#desglosePrecio">
+                    <i class="bi bi-receipt me-2"></i>Cómo se calculó el precio
+                    <span class="fw-semibold ms-1">$<?= number_format((float) $reserva['total'], 0, ',', '.') ?></span>
+                </button>
+                <div class="collapse" id="desglosePrecio">
+                    <div class="px-3 pb-3">
+                        <?php if ($desglose === null): ?>
+                            <p class="small text-muted mb-0">
+                                Esta reserva se creó antes del motor de tarifas, o su precio se puso a mano.
+                                El total guardado es el que manda.
+                            </p>
+                        <?php else: ?>
+                            <table class="table table-sm align-middle mb-2">
+                                <tbody>
+                                    <?php foreach ($desglose['noches'] as $n): ?>
+                                        <tr>
+                                            <td class="ps-0">
+                                                <div class="small fw-semibold"><?= date('d/m', strtotime($n['f'])) ?></div>
+                                                <?php foreach ($n['a'] as $a): ?>
+                                                    <div class="text-muted" style="font-size: .76rem;">
+                                                        <?= esc($a[0]) ?> <span class="opacity-75">(<?= esc($a[1]) ?>)</span>
+                                                        <?= $a[2] >= 0 ? '+' : '−' ?>$<?= number_format(abs((float) $a[2]), 0, ',', '.') ?>
+                                                    </div>
+                                                <?php endforeach ?>
+                                            </td>
+                                            <td class="text-end pe-0 small">$<?= number_format((float) $n['p'], 0, ',', '.') ?></td>
+                                        </tr>
+                                    <?php endforeach ?>
+                                    <?php foreach ($desglose['suplementos'] as $s): ?>
+                                        <tr>
+                                            <td class="ps-0 small"><?= esc($s['concepto']) ?></td>
+                                            <td class="text-end pe-0 small">$<?= number_format((float) $s['importe'], 0, ',', '.') ?></td>
+                                        </tr>
+                                    <?php endforeach ?>
+                                    <tr class="border-top">
+                                        <td class="ps-0 fw-semibold small">Total alojamiento</td>
+                                        <td class="text-end pe-0 fw-semibold small">$<?= number_format((float) $desglose['total'], 0, ',', '.') ?></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="text-muted mb-0" style="font-size: .76rem;">
+                                Precio congelado el <?= date('d/m/Y \a \l\a\s H:i', strtotime($desglose['calculado'])) ?>.
+                            </p>
+                        <?php endif ?>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

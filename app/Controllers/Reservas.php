@@ -76,8 +76,18 @@ class Reservas extends BaseController
             return redirect()->back()->withInput()->with('errores', ['La unidad no está disponible en esas fechas: ya existe otra reserva que se cruza.']);
         }
 
-        $datos['codigo'] = $this->reservas->generarCodigo();
-        $datos['total']  = $this->reservas->calcularTotal((int) $datos['unidad_id'], $datos['fecha_entrada'], $datos['fecha_salida']);
+        $motor      = new \App\Libraries\MotorTarifas();
+        $cotizacion = $motor->cotizarUnidad(
+            (int) $datos['unidad_id'],
+            $datos['fecha_entrada'],
+            $datos['fecha_salida'],
+            max(1, (int) $datos['adultos']),
+            max(0, (int) $datos['ninos'])
+        );
+
+        $datos['codigo']          = $this->reservas->generarCodigo();
+        $datos['total']           = $cotizacion['total'];
+        $datos['desglose_precio'] = $motor->resumenParaGuardar($cotizacion);
 
         if (! $this->reservas->insert($datos)) {
             return redirect()->back()->withInput()->with('errores', $this->reservas->errors());
@@ -120,13 +130,40 @@ class Reservas extends BaseController
             return redirect()->back()->withInput()->with('errores', ['La unidad no está disponible en esas fechas: ya existe otra reserva que se cruza.']);
         }
 
-        $datos['total'] = $this->reservas->calcularTotal((int) $datos['unidad_id'], $datos['fecha_entrada'], $datos['fecha_salida']);
+        // El precio solo se recalcula si cambia algo que lo afecta, o si se pide
+        // expresamente. Así una corrección de notas no altera lo pactado.
+        $cambioPrecio = (int) $datos['unidad_id'] !== (int) $reserva['unidad_id']
+            || $datos['fecha_entrada'] !== $reserva['fecha_entrada']
+            || $datos['fecha_salida'] !== $reserva['fecha_salida']
+            || (int) $datos['adultos'] !== (int) $reserva['adultos']
+            || (int) $datos['ninos'] !== (int) $reserva['ninos'];
+
+        $recalcular = $cambioPrecio || $this->request->getPost('recalcular') !== null;
+
+        if ($recalcular) {
+            $motor      = new \App\Libraries\MotorTarifas();
+            $cotizacion = $motor->cotizarUnidad(
+                (int) $datos['unidad_id'],
+                $datos['fecha_entrada'],
+                $datos['fecha_salida'],
+                max(1, (int) $datos['adultos']),
+                max(0, (int) $datos['ninos']),
+                $id
+            );
+            $datos['total']           = $cotizacion['total'];
+            $datos['desglose_precio'] = $motor->resumenParaGuardar($cotizacion);
+        }
 
         if (! $this->reservas->update($id, $datos)) {
             return redirect()->back()->withInput()->with('errores', $this->reservas->errors());
         }
 
-        return redirect()->to('reservas')->with('ok', 'Reserva actualizada. Total recalculado: $' . number_format($datos['total'], 0, ',', '.') . ' COP.');
+        return redirect()->to('reservas')->with(
+            'ok',
+            $recalcular
+                ? 'Reserva actualizada. Total recalculado: $' . number_format($datos['total'], 0, ',', '.') . ' COP.'
+                : 'Reserva actualizada. El precio se mantiene en $' . number_format((float) $reserva['total'], 0, ',', '.') . ' COP.'
+        );
     }
 
     /** Ficha completa de la reserva con su folio. */

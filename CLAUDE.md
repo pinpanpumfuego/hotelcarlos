@@ -174,6 +174,28 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       efectos fiscales). Se guarda copia local con número, **CUFE** y enlace público.
       **Pendiente de probar contra una cuenta real:** el cuerpo exacto de `/v1/invoices` está
       implementado según la estructura documentada, pero no se ha podido validar contra Siigo.
+- [x] **Motor de tarifas dinámicas** (`App\Libraries\MotorTarifas`, controlador `Tarifas`,
+      tablas `temporadas`, `reglas_precio`, `tarifas_temporada`; columnas nuevas en `tipos_unidad`:
+      `precio_minimo`, `precio_maximo`, `personas_incluidas`, `suplemento_adulto`, `suplemento_nino`;
+      columna `reservas.desglose_precio`). El precio se calcula **noche a noche** apilando en orden:
+      **1.** tarifa base del tipo → **2.** temporada que cubre la fecha (precio cerrado por tipo en
+      `tarifas_temporada`, o ajuste en porcentaje / valor; si se solapan gana la de mayor `prioridad`)
+      → **3.** reglas activas por prioridad (`dia_semana` con días "5,6"; `ocupacion` en % calculada
+      con las reservas activas sobre las unidades no bloqueadas; `anticipacion` en días hasta la
+      llegada; `duracion` en noches) → **4.** topes mínimo y máximo del tipo → **5.** suplementos
+      por personas que superan `personas_incluidas`. **Siempre devuelve el desglose**: cada ajuste
+      con su concepto, su texto ("+20 %") y su importe en pesos.
+      El desglose se **congela en la reserva** (`desglose_precio`, JSON v1) al crearla: si mañana
+      cambian las reglas, la reserva sigue explicándose con lo que se le cobró al huésped. Al editar
+      una reserva solo se recalcula si cambian fechas, cabaña u ocupantes, o si se marca la casilla
+      "recalcular"; una corrección de notas no altera el precio pactado.
+      Pantallas: `/tarifas` (temporadas y reglas con modales, atajos de temporada, activar/desactivar),
+      `/tarifas/temporada/:id` (precio cerrado por tipo), `/tarifas/calendario` (rejilla del mes con
+      precio, ocupación, color de temporada y desglose en el tooltip; medias, mínimo, máximo e ingreso
+      potencial) y `/tarifas/simulador` (cotización completa con el porqué de cada peso).
+      El desglose también se ve en la web pública (paso 2 y 3 del motor de reservas) y en la ficha
+      de la reserva. **Verificado**: temporada +35 % × fin de semana +20 % × tope máximo × suplemento
+      por adulto adicional dan el mismo total en simulador, calendario y web.
 - [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
 - [ ] Combos / menús cerrados (producto compuesto de otros productos) — propuesto, no elegido aún
 - [x] **Registro en línea del huésped / autocheck-in** (tablas `registros`, `registro_acompanantes`,

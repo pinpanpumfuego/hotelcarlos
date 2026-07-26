@@ -55,7 +55,15 @@
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
                                 <div class="precio-desde fs-4">$<?= number_format($op['total'], 0, ',', '.') ?> COP</div>
-                                <div class="small text-muted">total de la estancia · $<?= number_format((float) $op['tipo']['tarifa_base'], 0, ',', '.') ?> por noche</div>
+                                <div class="small text-muted">
+                                    total de la estancia · $<?= number_format($op['porNoche'], 0, ',', '.') ?> por noche de media
+                                </div>
+                                <?php if (! empty($op['cotizacion']['suplementos'])): ?>
+                                    <div class="small text-muted">incluye suplemento por personas adicionales</div>
+                                <?php endif ?>
+                                <a class="small" data-bs-toggle="collapse" href="#detalle<?= esc($op['tipo']['id']) ?>" role="button">
+                                    Ver el detalle por noche
+                                </a>
                             </div>
                             <form method="post" action="<?= site_url('reservar/datos') ?>">
                                 <?= csrf_field() ?>
@@ -67,11 +75,55 @@
                                 <button class="btn btn-reserva">Elegir<i class="bi bi-arrow-right ms-1"></i></button>
                             </form>
                         </div>
+
+                        <div class="collapse mt-3" id="detalle<?= esc($op['tipo']['id']) ?>">
+                            <div class="detalle-precio">
+                                <?php foreach ($op['cotizacion']['noches'] as $n): ?>
+                                    <div class="linea">
+                                        <span>
+                                            <?= esc($n['dia']) ?> <?= date('d/m', strtotime($n['fecha'])) ?>
+                                            <?php foreach ($n['ajustes'] as $a): ?>
+                                                <?php if ($a['importe'] < 0): ?>
+                                                    <span class="etiqueta-desc"><?= esc($a['concepto']) ?></span>
+                                                <?php endif ?>
+                                            <?php endforeach ?>
+                                        </span>
+                                        <span>$<?= number_format($n['precio'], 0, ',', '.') ?></span>
+                                    </div>
+                                <?php endforeach ?>
+                                <?php foreach ($op['cotizacion']['suplementos'] as $s): ?>
+                                    <div class="linea">
+                                        <span><?= esc($s['concepto']) ?> <span class="text-muted">· <?= esc($s['detalle']) ?></span></span>
+                                        <span>$<?= number_format($s['importe'], 0, ',', '.') ?></span>
+                                    </div>
+                                <?php endforeach ?>
+                                <div class="linea total">
+                                    <span>Total</span>
+                                    <span>$<?= number_format($op['total'], 0, ',', '.') ?></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     <?php endforeach ?>
+
+    <?php if (! empty($opciones)): ?>
+        <p class="text-center text-muted small">
+            Precios en pesos colombianos, impuestos incluidos. El precio de cada noche varía según la temporada,
+            el día de la semana y la ocupación; se congela en cuanto envías la reserva.
+        </p>
+    <?php endif ?>
 </div>
+
+<style>
+    .detalle-precio { border-top: 1px solid rgba(0,0,0,.08); padding-top: .6rem; font-size: .86rem; }
+    .detalle-precio .linea { display: flex; justify-content: space-between; gap: 1rem; padding: .18rem 0; color: #5a6660; }
+    .detalle-precio .linea.total { border-top: 1px solid rgba(0,0,0,.08); margin-top: .35rem;
+                                   padding-top: .45rem; font-weight: 600; color: inherit; }
+    .etiqueta-desc { display: inline-block; font-size: .72rem; padding: .05rem .4rem; border-radius: 99px;
+                     background: #e9f4ee; color: #1c5c3c; margin-left: .25rem; }
+</style>
 
 <?= $this->endSection() ?>

@@ -8,7 +8,7 @@ class ReservaModel extends Model
 {
     protected $table         = 'reservas';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['codigo', 'huesped_id', 'unidad_id', 'fecha_entrada', 'fecha_salida', 'adultos', 'ninos', 'estado', 'total', 'notas'];
+    protected $allowedFields = ['codigo', 'huesped_id', 'unidad_id', 'fecha_entrada', 'fecha_salida', 'adultos', 'ninos', 'estado', 'total', 'desglose_precio', 'notas'];
     protected $useTimestamps = true;
 
     protected $validationRules = [
@@ -111,18 +111,19 @@ class ReservaModel extends Model
         ));
     }
 
-    /** Calcula el total: noches × tarifa base del tipo de la unidad. */
-    public function calcularTotal(int $unidadId, string $entrada, string $salida): float
+    /**
+     * Cotización completa de la estancia con el motor de tarifas:
+     * precio noche a noche, ajustes aplicados y suplementos.
+     */
+    public function cotizar(int $unidadId, string $entrada, string $salida, int $adultos = 2, int $ninos = 0, ?int $excluirReservaId = null): array
     {
-        $noches = (new \DateTime($entrada))->diff(new \DateTime($salida))->days;
+        return (new \App\Libraries\MotorTarifas())
+            ->cotizarUnidad($unidadId, $entrada, $salida, $adultos, $ninos, $excluirReservaId);
+    }
 
-        $fila = $this->db->table('unidades')
-            ->select('tipos_unidad.tarifa_base')
-            ->join('tipos_unidad', 'tipos_unidad.id = unidades.tipo_id')
-            ->where('unidades.id', $unidadId)
-            ->get()
-            ->getRowArray();
-
-        return $noches * (float) ($fila['tarifa_base'] ?? 0);
+    /** Total de la estancia según el motor de tarifas (temporadas, reglas y topes). */
+    public function calcularTotal(int $unidadId, string $entrada, string $salida, int $adultos = 2, int $ninos = 0, ?int $excluirReservaId = null): float
+    {
+        return (float) $this->cotizar($unidadId, $entrada, $salida, $adultos, $ninos, $excluirReservaId)['total'];
     }
 }

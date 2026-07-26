@@ -89,11 +89,32 @@
                     <p class="mb-2"><i class="bi bi-moon me-2"></i><?= esc($noches) ?> noche<?= $noches > 1 ? 's' : '' ?></p>
                     <p class="mb-3"><i class="bi bi-people me-2"></i><?= esc($busqueda['adultos']) ?> adulto<?= $busqueda['adultos'] > 1 ? 's' : '' ?><?= $busqueda['ninos'] > 0 ? ' y ' . esc($busqueda['ninos']) . ' niño' . ($busqueda['ninos'] > 1 ? 's' : '') : '' ?></p>
                     <hr class="border-light opacity-25">
+
+                    <?php if (isset($cotizacion)): ?>
+                        <div class="small opacity-75 mb-2">
+                            <?php foreach ($cotizacion['noches'] as $n): ?>
+                                <div class="d-flex justify-content-between">
+                                    <span><?= esc($n['dia']) ?> <?= date('d/m', strtotime($n['fecha'])) ?></span>
+                                    <span>$<?= number_format($n['precio'], 0, ',', '.') ?></span>
+                                </div>
+                            <?php endforeach ?>
+                            <?php foreach ($cotizacion['suplementos'] as $s): ?>
+                                <div class="d-flex justify-content-between">
+                                    <span><?= esc($s['concepto']) ?></span>
+                                    <span>$<?= number_format($s['importe'], 0, ',', '.') ?></span>
+                                </div>
+                            <?php endforeach ?>
+                        </div>
+                        <hr class="border-light opacity-25">
+                    <?php endif ?>
+
                     <div class="d-flex justify-content-between align-items-center">
                         <span>Total</span>
                         <span class="fs-4 fw-bold">$<?= number_format($total, 0, ',', '.') ?> COP</span>
                     </div>
-                    <div class="small opacity-75 text-end">$<?= number_format((float) $tipo['tarifa_base'], 0, ',', '.') ?> / noche</div>
+                    <div class="small opacity-75 text-end">
+                        $<?= number_format(isset($cotizacion) ? $cotizacion['media_noche'] : (float) $tipo['tarifa_base'], 0, ',', '.') ?> / noche de media
+                    </div>
                 </div>
             </div>
         </div>

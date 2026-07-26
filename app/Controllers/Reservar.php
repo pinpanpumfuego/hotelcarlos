@@ -41,17 +41,22 @@ class Reservar extends BaseController
         $noches   = (new \DateTime($datos['entrada']))->diff(new \DateTime($datos['salida']))->days;
         $personas = $datos['adultos'] + $datos['ninos'];
 
+        $motor    = new \App\Libraries\MotorTarifas();
         $opciones = [];
+
         foreach ($this->tipos->findAll() as $tipo) {
             if ((int) $tipo['capacidad'] < $personas) {
                 continue;
             }
             $libres = $this->reservas->unidadesLibresDelTipo((int) $tipo['id'], $datos['entrada'], $datos['salida']);
             if ($libres !== []) {
+                $cotizacion = $motor->cotizar((int) $tipo['id'], $datos['entrada'], $datos['salida'], $datos['adultos'], $datos['ninos']);
                 $opciones[] = [
-                    'tipo'   => $tipo,
-                    'libres' => count($libres),
-                    'total'  => $noches * (float) $tipo['tarifa_base'],
+                    'tipo'       => $tipo,
+                    'libres'     => count($libres),
+                    'total'      => $cotizacion['total'],
+                    'porNoche'   => $cotizacion['media_noche'],
+                    'cotizacion' => $cotizacion,
                 ];
             }
         }
@@ -80,7 +85,9 @@ class Reservar extends BaseController
             return redirect()->to('reservar')->with('error', 'El tipo de alojamiento no existe.');
         }
 
-        $noches = (new \DateTime($datos['entrada']))->diff(new \DateTime($datos['salida']))->days;
+        $noches     = (new \DateTime($datos['entrada']))->diff(new \DateTime($datos['salida']))->days;
+        $cotizacion = (new \App\Libraries\MotorTarifas())
+            ->cotizar((int) $tipo['id'], $datos['entrada'], $datos['salida'], $datos['adultos'], $datos['ninos']);
 
         return view('web/reservar_datos', [
             'hotel'        => config('Hotel'),
@@ -89,7 +96,8 @@ class Reservar extends BaseController
             'busqueda'     => $datos,
             'tipo'         => $tipo,
             'noches'       => $noches,
-            'total'        => $noches * (float) $tipo['tarifa_base'],
+            'total'        => $cotizacion['total'],
+            'cotizacion'   => $cotizacion,
         ]);
     }
 
@@ -156,20 +164,30 @@ class Reservar extends BaseController
             $huespedes->update($huespedId, $datosHuesped);
         }
 
-        $noches = (new \DateTime($busqueda['entrada']))->diff(new \DateTime($busqueda['salida']))->days;
         $codigo = $this->reservas->generarCodigo();
+        $motor  = new \App\Libraries\MotorTarifas();
+
+        // El precio se congela aquí: si mañana cambian las reglas, esta reserva no cambia
+        $cotizacion = $motor->cotizar(
+            (int) $tipo['id'],
+            $busqueda['entrada'],
+            $busqueda['salida'],
+            $busqueda['adultos'],
+            $busqueda['ninos']
+        );
 
         $reservaId = $this->reservas->insert([
-            'codigo'        => $codigo,
-            'huesped_id'    => $huespedId,
-            'unidad_id'     => $libres[0]['id'],
-            'fecha_entrada' => $busqueda['entrada'],
-            'fecha_salida'  => $busqueda['salida'],
-            'adultos'       => $busqueda['adultos'],
-            'ninos'         => $busqueda['ninos'],
-            'estado'        => 'pendiente',
-            'total'         => $noches * (float) $tipo['tarifa_base'],
-            'notas'         => 'Reserva creada desde la web. ' . trim((string) $this->request->getPost('comentarios')),
+            'codigo'          => $codigo,
+            'huesped_id'      => $huespedId,
+            'unidad_id'       => $libres[0]['id'],
+            'fecha_entrada'   => $busqueda['entrada'],
+            'fecha_salida'    => $busqueda['salida'],
+            'adultos'         => $busqueda['adultos'],
+            'ninos'           => $busqueda['ninos'],
+            'estado'          => 'pendiente',
+            'total'           => $cotizacion['total'],
+            'desglose_precio' => $motor->resumenParaGuardar($cotizacion),
+            'notas'           => 'Reserva creada desde la web. ' . trim((string) $this->request->getPost('comentarios')),
         ]);
 
         // Aviso interno: el hotel debe saber que hay una reserva por confirmar
