@@ -402,6 +402,7 @@ if ($rol === 'gerencia') {
         ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0],
         ['tarifas', 'tarifas', 'bi-tags', 'Tarifas', 0],
         ['canales', 'canales', 'bi-diagram-3', 'Portales y canales', 0],
+        ['traducciones', 'traducciones', 'bi-translate', 'Traducciones', 0],
         ['cupones', 'cupones', 'bi-ticket-perforated', 'Cupones', 0],
         ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento', 0],
         ['servicios', 'servicios', 'bi-stars', 'Servicios', 0],

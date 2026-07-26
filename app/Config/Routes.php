@@ -5,18 +5,39 @@ use CodeIgniter\Router\RouteCollection;
 /** @var RouteCollection $routes */
 
 // ── Web pública (sin autenticación) ─────────────────────────────────
-$routes->get('/', 'Web::inicio');
-$routes->get('alojamientos', 'Web::alojamientos');
-$routes->get('experiencias-actividades', 'Web::experiencias');
-$routes->get('restaurante', 'Web::carta');
-$routes->get('contacto', 'Web::contacto');
+//
+// Cada idioma tiene su propia dirección: `/alojamientos` es la española y
+// `/en/alojamientos` la inglesa. Es lo que permite que Google indexe las
+// cuatro versiones por separado y que un enlace compartido lleve siempre al
+// mismo idioma. El español va sin prefijo porque es el mercado principal y
+// así las direcciones que ya circulan siguen funcionando.
+$paginasPublicas = static function ($routes) {
+    $routes->get('/', 'Web::inicio');
+    $routes->get('alojamientos', 'Web::alojamientos');
+    $routes->get('experiencias-actividades', 'Web::experiencias');
+    $routes->get('restaurante', 'Web::carta');
+    $routes->get('contacto', 'Web::contacto');
 
-// Motor de reservas online
-$routes->get('reservar', 'Reservar::index');
-$routes->post('reservar/disponibilidad', 'Reservar::disponibilidad');
-$routes->post('reservar/datos', 'Reservar::datos');
-$routes->post('reservar/confirmar', 'Reservar::confirmar');
-$routes->get('reservar/exito/(:segment)', 'Reservar::exito/$1');
+    // Motor de reservas online
+    $routes->get('reservar', 'Reservar::index');
+    $routes->post('reservar/disponibilidad', 'Reservar::disponibilidad');
+    $routes->post('reservar/datos', 'Reservar::datos');
+    $routes->post('reservar/confirmar', 'Reservar::confirmar');
+    $routes->get('reservar/exito/(:segment)', 'Reservar::exito/$1');
+};
+
+// Español, en la raíz
+$paginasPublicas($routes);
+
+// Los demás idiomas, con prefijo literal.
+//
+// **No se usa `{locale}` a propósito.** CodeIgniter lo convierte en `[^/]+`,
+// que coincide con *cualquier* segmento: con él, `/login`, `/panel` y todo el
+// resto del sistema caían en la portada pública. Con `en`, `fr` y `de` escritos
+// tal cual no hay ambigüedad posible.
+foreach (['en', 'fr', 'de'] as $idiomaWeb) {
+    $routes->group($idiomaWeb, ['filter' => 'idioma:' . $idiomaWeb], $paginasPublicas);
+}
 
 // ── Registro en línea del huésped (enlace con token, sin cuenta) ────
 $routes->get('registro/(:segment)', 'Registro::index/$1');
@@ -220,6 +241,10 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
 
 // ── Configuración: solo gerencia ────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($routes) {
+    // Traducciones del contenido de la web pública
+    $routes->get('traducciones', 'Traducciones::index');
+    $routes->post('traducciones/guardar', 'Traducciones::guardar');
+
     // Liquidación de propinas (Ley 1935 de 2018)
     $routes->get('propinas', 'Propinas::index');
     $routes->get('propinas/preparar', 'Propinas::preparar');

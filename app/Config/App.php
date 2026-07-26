@@ -104,7 +104,12 @@ class App extends BaseConfig
      * strings (like currency markers, numbers, etc), that your program
      * should run under for this request.
      */
-    public string $defaultLocale = 'en';
+    /**
+     * El español es el original de la web: es el mercado principal y lo que
+     * escribe el hotel. Los demás idiomas cuelgan de él y, si falta una
+     * traducción, se enseña el español antes que un hueco.
+     */
+    public string $defaultLocale = 'es';
 
     /**
      * --------------------------------------------------------------------------
@@ -115,6 +120,14 @@ class App extends BaseConfig
      * language to use based on the value of the Accept-Language header.
      *
      * If false, no automatic detection will be performed.
+     */
+    /**
+     * Se mira el idioma del navegador, pero solo para **sugerir**: la dirección
+     * manda siempre. Un visitante alemán que abre `/alojamientos` ve español,
+     * porque esa dirección es la española; lo que hace la detección es ofrecerle
+     * cambiar a `/de/alojamientos`. Si el idioma del navegador cambiara la
+     * página sin más, dos personas verían cosas distintas en el mismo enlace y
+     * los buscadores no sabrían qué indexar.
      */
     public bool $negotiateLocale = false;
 
@@ -131,7 +144,7 @@ class App extends BaseConfig
      *
      * @var list<string>
      */
-    public array $supportedLocales = ['en'];
+    public array $supportedLocales = ['es', 'en', 'fr', 'de'];
 
     /**
      * --------------------------------------------------------------------------

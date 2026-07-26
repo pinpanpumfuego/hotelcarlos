@@ -1,10 +1,22 @@
+<?php
+$idiomas   = idiomas_web();
+$idiomaHtml = \App\Libraries\Traductor::IDIOMAS[idioma_web()]['html'];
+?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= esc($idiomaHtml) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($tituloPagina ?? $hotel->nombre) ?> · <?= esc($hotel->nombre) ?></title>
-    <meta name="description" content="<?= esc($descripcion ?? $hotel->eslogan . '. Reserva directa sin comisiones.') ?>">
+    <meta name="description" content="<?= esc($descripcion ?? $hotel->eslogan) ?>">
+
+    <?php // Le dice a Google que estas cuatro páginas son la misma en distinto
+          // idioma, no contenido duplicado. Sin esto, las versiones traducidas
+          // compiten entre sí en los resultados. ?>
+    <?php foreach ($idiomas as $i): ?>
+        <link rel="alternate" hreflang="<?= esc($i['html']) ?>" href="<?= esc($i['url']) ?>">
+    <?php endforeach ?>
+    <link rel="alternate" hreflang="x-default" href="<?= esc(url_web(ruta_actual_web(), 'es')) ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -110,22 +122,42 @@
 <body>
 <nav class="navbar navbar-expand-md navbar-web sticky-top">
     <div class="container">
-        <a class="navbar-brand" href="<?= site_url('/') ?>">
+        <a class="navbar-brand" href="<?= url_web() ?>">
             <i class="bi bi-tree me-1"></i><?= esc($hotel->nombre) ?>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuWeb" aria-label="Abrir menú">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuWeb"
+                aria-label="<?= esc(lang('Web.abrirMenu')) ?>">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="menuWeb">
             <ul class="navbar-nav ms-auto align-items-md-center gap-md-3">
-                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'inicio' ? 'active' : '' ?>" href="<?= site_url('/') ?>">Inicio</a></li>
-                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'alojamientos' ? 'active' : '' ?>" href="<?= site_url('alojamientos') ?>">Alojamientos</a></li>
-                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'experiencias' ? 'active' : '' ?>" href="<?= site_url('experiencias-actividades') ?>">Experiencias</a></li>
-                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'carta' ? 'active' : '' ?>" href="<?= site_url('restaurante') ?>">Restaurante</a></li>
-                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'contacto' ? 'active' : '' ?>" href="<?= site_url('contacto') ?>">Contacto</a></li>
+                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'inicio' ? 'active' : '' ?>" href="<?= url_web() ?>"><?= esc(lang('Web.inicio')) ?></a></li>
+                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'alojamientos' ? 'active' : '' ?>" href="<?= url_web('alojamientos') ?>"><?= esc(lang('Web.alojamientos')) ?></a></li>
+                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'experiencias' ? 'active' : '' ?>" href="<?= url_web('experiencias-actividades') ?>"><?= esc(lang('Web.experiencias')) ?></a></li>
+                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'carta' ? 'active' : '' ?>" href="<?= url_web('restaurante') ?>"><?= esc(lang('Web.restaurante')) ?></a></li>
+                <li class="nav-item"><a class="nav-link <?= ($paginaActiva ?? '') === 'contacto' ? 'active' : '' ?>" href="<?= url_web('contacto') ?>"><?= esc(lang('Web.contacto')) ?></a></li>
+
+                <?php // Selector de idioma: lleva a la misma página, no a la portada ?>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                       aria-label="<?= esc(lang('Web.cambiarIdioma')) ?>">
+                        <i class="bi bi-translate me-1"></i><?= strtoupper(idioma_web()) ?>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <?php foreach ($idiomas as $i): ?>
+                            <li>
+                                <a class="dropdown-item <?= $i['activo'] ? 'active' : '' ?>" href="<?= esc($i['url']) ?>"
+                                   hreflang="<?= esc($i['html']) ?>" lang="<?= esc($i['html']) ?>">
+                                    <span class="me-2"><?= $i['bandera'] ?></span><?= esc($i['nombre']) ?>
+                                </a>
+                            </li>
+                        <?php endforeach ?>
+                    </ul>
+                </li>
+
                 <li class="nav-item ms-md-2">
-                    <a class="btn btn-reserva btn-sm px-3 py-2" href="<?= site_url('reservar') ?>">
-                        <i class="bi bi-calendar-check me-1"></i>Reservar
+                    <a class="btn btn-reserva btn-sm px-3 py-2" href="<?= url_web('reservar') ?>">
+                        <i class="bi bi-calendar-check me-1"></i><?= esc(lang('Web.reservar')) ?>
                     </a>
                 </li>
             </ul>
@@ -143,21 +175,24 @@
                 <p class="small mb-0"><?= esc($hotel->eslogan) ?></p>
             </div>
             <div class="col-md-4">
-                <h2 class="h6 mb-3 titulo-pie">Contacto</h2>
+                <h2 class="h6 mb-3 titulo-pie"><?= esc(lang('Web.contacto')) ?></h2>
                 <p class="small mb-1"><i class="bi bi-geo-alt me-1"></i><?= esc($hotel->direccion) ?></p>
                 <p class="small mb-1"><i class="bi bi-telephone me-1"></i><a href="tel:<?= esc($hotel->telefono) ?>"><?= esc($hotel->telefono) ?></a></p>
                 <p class="small mb-0"><i class="bi bi-envelope me-1"></i><a href="mailto:<?= esc($hotel->email) ?>"><?= esc($hotel->email) ?></a></p>
             </div>
             <div class="col-md-4">
-                <h2 class="h6 mb-3 titulo-pie">Reservas</h2>
-                <p class="small mb-2">Reserva directa, sin comisiones de intermediarios.</p>
-                <a class="btn btn-reserva btn-sm px-3" href="<?= site_url('reservar') ?>">
-                    <i class="bi bi-calendar-check me-1"></i>Reservar en línea
+                <h2 class="h6 mb-3 titulo-pie"><?= esc(lang('Web.pieReservas')) ?></h2>
+                <p class="small mb-2"><?= esc(lang('Web.pieSinComisiones')) ?></p>
+                <a class="btn btn-reserva btn-sm px-3" href="<?= url_web('reservar') ?>">
+                    <i class="bi bi-calendar-check me-1"></i><?= esc(lang('Web.reservarEnLinea')) ?>
                 </a>
             </div>
         </div>
         <hr class="border-secondary mt-4">
-        <p class="small text-center mb-0">&copy; <?= date('Y') ?> <?= esc($hotel->nombre) ?> · <a href="<?= site_url('login') ?>">Acceso personal</a></p>
+        <p class="small text-center mb-0">
+            &copy; <?= date('Y') ?> <?= esc($hotel->nombre) ?> ·
+            <a href="<?= site_url('login') ?>"><?= esc(lang('Web.accesoPersonal')) ?></a>
+        </p>
     </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

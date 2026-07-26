@@ -2,16 +2,36 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Traductor;
 use App\Models\TipoUnidadModel;
 
-/** Web pública del hotel: accesible sin iniciar sesión. */
+/**
+ * Web pública del hotel: accesible sin iniciar sesión.
+ *
+ * Es la única parte del sistema traducida (español, inglés, francés y alemán).
+ * El panel, el TPV, la cocina y el portal del empleado siguen en español: los
+ * usa el equipo del hotel, no los clientes.
+ *
+ * Los textos de la interfaz salen de `app/Language`; los que escribe el hotel
+ * (cabañas, experiencias, carta) pasan por el `Traductor`, que devuelve el
+ * español cuando falta la traducción.
+ */
 class Web extends BaseController
 {
+    private Traductor $t;
+
+    public function __construct()
+    {
+        $this->t = new Traductor();
+    }
+
     public function inicio()
     {
+        $tipos = (new TipoUnidadModel())->orderBy('tarifa_base')->findAll();
+
         return view('web/inicio', [
             'hotel'        => config('Hotel'),
-            'tipos'        => (new TipoUnidadModel())->orderBy('tarifa_base')->findAll(),
+            'tipos'        => $this->t->filas('tipos_unidad', $tipos, ['nombre', 'descripcion']),
             'tituloPagina' => 'Cabañas junto al lago en Colombia',
             'paginaActiva' => 'inicio',
         ]);
@@ -45,12 +65,18 @@ class Web extends BaseController
             }
 
             $galerias[$t['id']] = $galeria;
-            $chips[$t['id']]    = $servicios->fichaDeTipo((int) $t['id']);
+            // Los servicios son etiquetas cortas («Wifi», «Chimenea») y también
+            // se traducen: son de lo primero que mira quien elige alojamiento
+            $chips[$t['id']]    = $this->t->filas(
+                'servicios',
+                $servicios->fichaDeTipo((int) $t['id']),
+                ['nombre']
+            );
         }
 
         return view('web/alojamientos', [
             'hotel'        => config('Hotel'),
-            'tipos'        => $tipos,
+            'tipos'        => $this->t->filas('tipos_unidad', $tipos, ['nombre', 'descripcion']),
             'galerias'     => $galerias,
             'servicios'    => $chips,
             'tituloPagina' => 'Alojamientos',
@@ -72,7 +98,7 @@ class Web extends BaseController
 
         return view('web/experiencias', [
             'hotel'         => config('Hotel'),
-            'experiencias'  => $lista,
+            'experiencias'  => $this->t->filas('experiencias', $lista, ['nombre', 'descripcion', 'incluye']),
             'galerias'      => $galerias,
             'tituloPagina'  => 'Experiencias',
             'paginaActiva'  => 'experiencias',
@@ -85,10 +111,24 @@ class Web extends BaseController
     {
         $productos = (new \App\Models\CartaProductoModel())->conCategoria(true);
 
+        // Solo la descripción: el nombre del plato se queda como está.
+        // «Sancocho de gallina» es un nombre propio, no una frase; traducirlo
+        // da resultados ridículos y le quita al plato justo lo que lo hace
+        // interesante para un extranjero. Se explica al lado, que es lo útil.
+        $productos = $this->t->filas('carta_productos', $productos, ['descripcion']);
+
+        $categorias = $this->t->filas(
+            'carta_categorias',
+            (new \App\Models\CartaCategoriaModel())->ordenadas(),
+            ['nombre']
+        );
+        $nombreCategoria = array_column($categorias, 'nombre', 'id');
+
         $porCategoria = [];
         foreach ($productos as $p) {
             $p['alergenos_lista'] = \App\Models\CartaProductoModel::alergenosDe($p['alergenos'] ?? null);
-            $porCategoria[$p['categoria_nombre']][] = $p;
+            $titulo = $nombreCategoria[$p['categoria_id']] ?? $p['categoria_nombre'];
+            $porCategoria[$titulo][] = $p;
         }
 
         return view('web/carta', [
