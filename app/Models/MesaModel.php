@@ -37,6 +37,8 @@ class MesaModel extends Model
             $porMesa[$c['mesa_id']] = $c;
         }
 
+        $borradores = (new ComanderoBorradorModel())->porMesa();
+
         foreach ($mesas as &$m) {
             $comanda           = $porMesa[$m['id']] ?? null;
             $m['comanda_id']   = $comanda['id'] ?? null;
@@ -49,6 +51,9 @@ class MesaModel extends Model
             // tiene usuario del sistema, solo empleado
             $m['origen'] = $comanda !== null && $comanda['usuario_id'] === null && $comanda['empleado_id'] !== null
                 ? 'movil' : 'pantalla';
+            // Lo que un camarero está apuntando ahora mismo en su móvil y
+            // todavía no ha enviado. Puede haberlo en una mesa aún «libre».
+            $m['tomando'] = $borradores[(int) $m['id']] ?? null;
         }
 
         return $mesas;

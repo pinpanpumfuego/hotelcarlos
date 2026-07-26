@@ -9,6 +9,7 @@ use App\Models\CartaProductoModel;
 use App\Models\ComandaLineaModel;
 use App\Models\ComandaModel;
 use App\Models\ComandaPagoModel;
+use App\Models\ComanderoBorradorModel;
 use App\Models\FolioModel;
 use App\Models\LineaModificadorModel;
 use App\Models\MesaModel;
@@ -957,6 +958,15 @@ class Pos extends BaseController
         }
         $comanda['camareros']       = $manos;
         $comanda['varias_manos']    = count($manos) > 1;
+
+        // Lo que alguien esté apuntando ahora en el móvil para esta mesa y no
+        // haya enviado todavía. Va aparte de las líneas a propósito: no suma
+        // al total ni se puede cobrar, porque aún no existe.
+        $comanda['tomando'] = (new ComanderoBorradorModel())
+            ->deMesaOComanda(
+                $comanda['mesa_id'] !== null ? (int) $comanda['mesa_id'] : null,
+                (int) $comanda['id']
+            );
 
         // Etiqueta del cliente para la interfaz
         if ($comanda['reserva_id'] !== null) {

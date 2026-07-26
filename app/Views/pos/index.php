@@ -140,6 +140,20 @@
         .linea .quien { display: block; font-size: .74rem; color: var(--texto-suave); margin-top: 2px; }
         .linea .quien i { font-size: .7rem; }
         .mesa .camarero-mesa { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+        /* Se está tomando nota ahora mismo desde un móvil.
+           En azul y con borde discontinuo: el ámbar ya significa «ocupada» y
+           el discontinuo dice «esto todavía no es firme». */
+        .mesa .tomando { display: flex; align-items: center; gap: 4px; margin-top: 2px; color: var(--azul); }
+        .mesa.tomandose { border-color: var(--azul); border-style: dashed; }
+        .tomandose-bloque {
+            margin: 8px 6px; padding: 10px 12px; border: 1px dashed var(--azul);
+            border-radius: 10px; background: rgba(46,111,142,.07);
+        }
+        .tomandose-bloque .tl-cab { font-size: .8rem; font-weight: 600; color: var(--azul); margin-bottom: 6px; }
+        .tomandose-bloque .tl { display: flex; gap: 8px; font-size: .85rem; padding: 3px 0; opacity: .85; }
+        .tomandose-bloque .tl span:nth-child(1) { min-width: 20px; font-weight: 600; }
+        .tomandose-bloque .tl span:nth-child(2) { flex: 1; }
+        .tomandose-bloque .tl-pie { font-size: .72rem; color: var(--texto-suave); margin-top: 6px; }
         .lineas { flex: 1; overflow-y: auto; padding: 6px; }
         .linea {
             width: 100%; text-align: left; background: transparent; border-radius: 10px;
@@ -972,6 +986,14 @@
             zonas[zona].forEach((m) => {
                 const b = document.createElement('button');
                 b.className = 'mesa ' + (m.ocupada ? 'ocupada' : 'libre');
+                // Alguien está apuntando ahora mismo en su móvil, sin enviar
+                const tomando = m.tomando
+                    ? '<div class="dato tomando"><i class="bi bi-pencil"></i> '
+                        + escaparHtml(m.tomando.camarero || 'Alguien') + ' está tomando nota · '
+                        + m.tomando.unidades + (m.tomando.unidades === 1 ? ' plato' : ' platos') + '</div>'
+                    : '';
+                if (m.tomando) { b.classList.add('tomandose'); }
+
                 if (m.ocupada) {
                     // Quién la lleva, y si la comanda entró desde un móvil
                     const quien = m.camarero
@@ -981,12 +1003,13 @@
                         : '';
                     b.innerHTML = '<div><div class="nombre">' + escaparHtml(m.nombre) + '</div>'
                         + '<div class="dato"><i class="bi bi-clock"></i> ' + m.abierta_hace + ' min</div>'
-                        + quien + '</div>'
+                        + quien + tomando + '</div>'
                         + '<div class="total">' + pesos(m.total) + '</div>';
                 } else {
                     b.innerHTML = '<div><div class="nombre">' + escaparHtml(m.nombre) + '</div>'
-                        + '<div class="dato">' + m.capacidad + ' personas</div></div>'
-                        + '<div class="estado">Libre</div>';
+                        + '<div class="dato">' + m.capacidad + ' personas</div>'
+                        + tomando + '</div>'
+                        + '<div class="estado">' + (m.tomando ? 'Atendiéndose' : 'Libre') + '</div>';
                 }
                 b.onclick = () => abrirMesa(m);
                 rej.appendChild(b);
@@ -1100,7 +1123,7 @@
 
         const cont = $('#tk-lineas');
         cont.innerHTML = '';
-        if (!comanda.lineas.length) {
+        if (!comanda.lineas.length && !(comanda.tomando || []).length) {
             cont.innerHTML = '<p class="vacio">Toca un producto de la carta para empezar.</p>';
         }
         const textoEstado = {
@@ -1128,6 +1151,27 @@
                 + '<span class="imp">' + pesos(l.subtotal) + '</span>';
             b.onclick = () => { lineaSel = (lineaSel === l.id ? null : l.id); pintarComanda(); };
             cont.appendChild(b);
+        });
+
+        // ── Lo que alguien está apuntando ahora en su móvil ──
+        // Va al final y en otro color: todavía no existe, no se puede tocar
+        // desde aquí y no entra en el total. Cobrar sin esto sería cobrar de
+        // menos, así que se avisa en vez de dejar la mesa aparentemente lista.
+        (comanda.tomando || []).forEach((t) => {
+            const caja = document.createElement('div');
+            caja.className = 'tomandose-bloque';
+            const platos = (t.lineas || []).map((l) =>
+                '<div class="tl"><span>' + l.cantidad + '</span>'
+                + '<span>' + escaparHtml(l.nombre) + '</span>'
+                + '<span>' + pesos(l.importe * l.cantidad) + '</span></div>'
+            ).join('');
+
+            caja.innerHTML = '<div class="tl-cab"><i class="bi bi-pencil"></i> '
+                + escaparHtml(t.camarero || 'Alguien') + ' está tomando nota'
+                + (t.hace_min > 0 ? ' · hace ' + t.hace_min + ' min' : '')
+                + '</div>' + platos
+                + '<div class="tl-pie">Sin enviar a cocina · no entra en el total todavía</div>';
+            cont.appendChild(caja);
         });
 
         // Aviso de platos que cocina ya terminó
@@ -1821,8 +1865,10 @@
     reloj();
     setInterval(reloj, 30000);
 
-    // Refresca el mapa de mesas mientras no haya comanda abierta
-    setInterval(() => { if (!comanda) cargarEstado(); }, 30000);
+    // Refresca el mapa de mesas mientras no haya comanda abierta.
+    // Cada 12 s y no cada 30: con el comandero, ver que una mesa se está
+    // atendiendo tiene que notarse en el momento, no medio minuto después.
+    setInterval(() => { if (!comanda) cargarEstado(); }, 12000);
 
     // Con una comanda abierta, consulta a cocina para avisar de los platos listos
     let listosPrevios = 0;

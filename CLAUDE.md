@@ -316,6 +316,26 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       camarero repetir su nombre en cada plato es ruido y ya está en la cabecera.
       · `origen` se deduce de `usuario_id IS NULL && empleado_id IS NOT NULL`: la pantalla fija
       siempre graba usuario, el móvil nunca.
+- [x] **El TPV ve en vivo lo que se está tomando en el móvil** (`comandero_borradores`).
+      Javier lo pidió con un caso concreto: cargó una comanda en la Mesa 4 desde el teléfono y en el
+      TPV no se veía nada. **No era un fallo**: el comandero acumula la ronda en el teléfono hasta
+      que se pulsa «Enviar a cocina», que es justo lo que le permite funcionar sin señal. Lo que
+      faltaba era enseñar el borrador.
+      · El teléfono **empuja lo que lleva apuntado con 1,5 s de retardo** desde `guardarBorradores()`,
+      que es el único sitio por el que pasan todos los cambios (engancharlo botón a botón sería
+      olvidarse en uno). Sin señal no se manda nada y no pasa nada: **es un extra para quien está en
+      la caja, no el camino por el que viaja la comanda**.
+      · **No son líneas de comanda y no deben serlo.** Si lo fueran saldrían en cocina y sumarían al
+      total antes de tiempo. Verificado: con el borrador visible, el total sigue en $0 y **Cobrar
+      sigue bloqueado**. El bloque lo dice: «Sin enviar a cocina · no entra en el total todavía».
+      · **Caduca solo** a los `VIGENCIA_MIN` (8 min). Si el teléfono se apaga o se queda sin batería,
+      mejor no enseñar nada que enseñar algo de hace media hora como si estuviera pasando ahora.
+      Verificado con un borrador de 20 minutos: no aparece.
+      · Se borra al enviar la ronda, tanto por `comanda_id` como por la `clave` del teléfono.
+      · El refresco del mapa de mesas bajó de 30 s a **12 s**: ver que una mesa se está atendiendo
+      tiene que notarse en el momento.
+      · En azul y con borde discontinuo. El ámbar ya significa «ocupada» y el discontinuo dice que
+      esto todavía no es firme.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

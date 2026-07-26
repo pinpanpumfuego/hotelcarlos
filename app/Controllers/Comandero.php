@@ -7,6 +7,7 @@ use App\Models\CartaCategoriaModel;
 use App\Models\CartaProductoModel;
 use App\Models\ComandaLineaModel;
 use App\Models\ComandaModel;
+use App\Models\ComanderoBorradorModel;
 use App\Models\EmpleadoModel;
 use App\Models\LineaModificadorModel;
 use App\Models\MesaModel;
@@ -288,6 +289,14 @@ class Comandero extends BaseController
             $tomada = (int) ($datos['tomada_en'] ?? 0);
             $demora = $tomada > 0 ? max(0, time() - $tomada) : 0;
 
+            // Lo apuntado ya es real: el borrador de esa mesa sobra y hay que
+            // quitarlo, o el TPV seguiría diciendo que se está tomando nota
+            $borradores = new ComanderoBorradorModel();
+            $borradores->borrarDeComanda($comandaId);
+            if (! empty($datos['clave'])) {
+                $borradores->borrar($this->empleadoId(), (string) $datos['clave']);
+            }
+
             $envios->insert([
                 'uuid'        => $uuid,
                 'comanda_id'  => $comandaId,
@@ -449,6 +458,29 @@ class Comandero extends BaseController
         }
 
         return null;
+    }
+
+    /**
+     * Guarda lo que el camarero lleva apuntado sin enviar.
+     *
+     * Existe para que quien está en el TPV vea la mesa atendiéndose en vivo,
+     * en vez de esperar a que se pulse «Enviar a cocina». Es informativo: ni
+     * va a cocina, ni suma al total, ni se factura. Si no hay señal no llega
+     * nada y el TPV simplemente no lo enseña; lo apuntado sigue a salvo en el
+     * teléfono, que es lo que no puede fallar.
+     */
+    public function borrador()
+    {
+        $datos = $this->request->getJSON(true) ?? [];
+        $clave = trim((string) ($datos['clave'] ?? ''));
+
+        if ($clave === '' || mb_strlen($clave) > 60) {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Destino no válido.']);
+        }
+
+        (new ComanderoBorradorModel())->guardar($this->empleadoId(), $clave, $datos);
+
+        return $this->response->setJSON(['ok' => true]);
     }
 
     /** La comanda con sus líneas, para pintarla en el teléfono. */

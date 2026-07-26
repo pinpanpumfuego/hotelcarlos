@@ -61,6 +61,7 @@ $routes->group('comandero/api', ['filter' => ['tokenjson', 'comandero']], static
     $routes->get('pulso', 'Comandero::pulso');
     $routes->get('comanda/(:num)', 'Comandero::comanda/$1');
     $routes->post('enviar', 'Comandero::enviar');
+    $routes->post('borrador', 'Comandero::borrador');
     $routes->post('servir/(:num)', 'Comandero::servir/$1');
 });
 

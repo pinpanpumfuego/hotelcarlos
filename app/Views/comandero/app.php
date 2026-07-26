@@ -357,8 +357,13 @@
     let filtro      = '';
     let enviando    = false;
 
-    const guardarBorradores = () => Almacen.guardar('borradores', borradores);
-    const guardarCola       = () => Almacen.guardar('cola', cola);
+    // Todo cambio pasa por aquí, así que es el sitio para avisar al TPV de lo
+    // que se lleva apuntado. Engancharlo en cada botón sería olvidarse en uno.
+    const guardarBorradores = () => {
+        Almacen.guardar('borradores', borradores);
+        if (claveActual) { avisarAlTpv(claveActual); }
+    };
+    const guardarCola = () => Almacen.guardar('cola', cola);
 
     function uuid() {
         if (window.crypto && crypto.randomUUID) { return crypto.randomUUID(); }
@@ -643,6 +648,37 @@
         pintarComanda();
     }
 
+    /**
+     * Avisa al TPV de lo que se lleva apuntado, sin haberlo enviado aún.
+     *
+     * Va con retardo a propósito: si se mandara en cada toque, añadir seis
+     * platos serían seis peticiones seguidas. Y si no hay señal no pasa nada:
+     * esto es un extra para el que está en la caja, no el camino por el que
+     * viaja la comanda. Lo apuntado sigue a salvo en el teléfono.
+     */
+    let avisoTpv = null;
+    function avisarAlTpv(clave) {
+        clearTimeout(avisoTpv);
+        avisoTpv = setTimeout(async () => {
+            const b = borrador(clave);
+            if (!b || !navigator.onLine) { return; }
+            try {
+                await api('/borrador', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        clave: b.clave,
+                        mesa_id: b.mesa_id,
+                        comanda_id: b.comanda_id,
+                        destino: b.nombre,
+                        lineas: b.lineas.map((l) => ({
+                            nombre: l.nombre, cantidad: l.cantidad, importe: l.precio,
+                        })),
+                    }),
+                });
+            } catch (e) { /* que el TPV no se entere no rompe nada aquí */ }
+        }, 1500);
+    }
+
     function cambiarCantidad(tmp, delta) {
         const b = borrador(claveActual);
         const l = b.lineas.find((x) => x.tmp === tmp);
@@ -663,6 +699,7 @@
             clave: b.clave,
             payload: {
                 uuid: null,   // se rellena justo debajo
+                clave: b.clave,
                 comanda_id: b.comanda_id,
                 mesa_id: b.mesa_id,
                 reserva_id: b.reserva_id,
