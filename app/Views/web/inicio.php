@@ -41,13 +41,21 @@ function escenaParaTipo(string $nombre): string
         // repetirlo debajo como texto sería redundante y quedaría de aficionado.
         // Con el `alt` puesto, los buscadores y los lectores de pantalla siguen
         // leyendo el nombre igual que si fuera texto.
+        //
+        // El original de Javier (santocio1.png) son 1024 px y 2,3 MB: demasiado
+        // para lo primero que carga la portada. Se sirven versiones de 760 px
+        // (el doble de lo que se ve, para pantallas de alta densidad); el WebP
+        // pesa 190 KB y el PNG queda de respaldo para navegadores viejos.
         $logo = FCPATH . 'assets/img/logo.png';
         ?>
         <?php if (is_file($logo)): ?>
             <h1 class="mb-3">
-                <img src="<?= base_url('assets/img/logo.png') ?>" class="logo-hero"
-                     alt="<?= esc($hotel->nombre) ?> · <?= esc(lang('Web.avesNaturaleza')) ?>"
-                     width="1024" height="1024" fetchpriority="high">
+                <picture>
+                    <source srcset="<?= base_url('assets/img/logo.webp') ?>" type="image/webp">
+                    <img src="<?= base_url('assets/img/logo.png') ?>" class="logo-hero"
+                         alt="<?= esc($hotel->nombre) ?> · <?= esc(lang('Web.avesNaturaleza')) ?>"
+                         width="760" height="760" fetchpriority="high">
+                </picture>
             </h1>
         <?php else: ?>
             <?php // Mientras no esté el archivo, la portada sigue funcionando ?>
