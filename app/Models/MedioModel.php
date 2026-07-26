@@ -20,14 +20,15 @@ class MedioModel extends Model
     protected $table         = 'medios';
     protected $primaryKey    = 'id';
     protected $allowedFields = [
-        'tipo_unidad_id', 'unidad_id', 'publico', 'tipo', 'archivo', 'miniatura',
+        'tipo_unidad_id', 'unidad_id', 'experiencia_id', 'publico', 'tipo', 'archivo', 'miniatura',
         'url', 'titulo', 'alt', 'orden', 'portada', 'usuario_id',
     ];
     protected $useTimestamps = true;
 
-    public const CARPETA_TIPOS   = 'medios/tipos';
-    public const CARPETA_CABANAS = 'medios/cabanas';
-    public const CARPETA_PRIVADA = 'unidades';
+    public const CARPETA_TIPOS        = 'medios/tipos';
+    public const CARPETA_CABANAS      = 'medios/cabanas';
+    public const CARPETA_EXPERIENCIAS = 'medios/experiencias';
+    public const CARPETA_PRIVADA      = 'unidades';
 
     /** Galería de un tipo de alojamiento, la portada primero. */
     public function deTipo(int $tipoId): array
@@ -146,10 +147,17 @@ class MedioModel extends Model
     }
 
     /** Siguiente posición libre en la galería. */
-    public function siguienteOrden(?int $tipoId, ?int $unidadId): int
+    public function siguienteOrden(?int $tipoId, ?int $unidadId, ?int $experienciaId = null): int
     {
         $builder = $this->selectMax('orden');
-        $tipoId !== null ? $builder->where('tipo_unidad_id', $tipoId) : $builder->where('unidad_id', $unidadId);
+
+        if ($experienciaId !== null) {
+            $builder->where('experiencia_id', $experienciaId);
+        } elseif ($tipoId !== null) {
+            $builder->where('tipo_unidad_id', $tipoId);
+        } else {
+            $builder->where('unidad_id', $unidadId);
+        }
 
         return (int) ($builder->first()['orden'] ?? 0) + 1;
     }
@@ -157,7 +165,38 @@ class MedioModel extends Model
     /** Carpeta relativa dentro de public/ donde vive un medio publicado. */
     public static function carpetaDe(array $medio): string
     {
+        if (($medio['experiencia_id'] ?? null) !== null) {
+            return self::CARPETA_EXPERIENCIAS;
+        }
+
         return $medio['tipo_unidad_id'] !== null ? self::CARPETA_TIPOS : self::CARPETA_CABANAS;
+    }
+
+    /** Galería de una experiencia, la portada primero. */
+    public function deExperiencia(int $experienciaId): array
+    {
+        return $this->where('experiencia_id', $experienciaId)
+            ->orderBy('portada', 'DESC')
+            ->orderBy('orden')
+            ->orderBy('id')
+            ->findAll();
+    }
+
+    /** Portada de cada experiencia, indexada. */
+    public function portadasPorExperiencia(): array
+    {
+        $filas = $this->where('experiencia_id IS NOT NULL')
+            ->where('tipo', 'foto')
+            ->orderBy('portada', 'DESC')
+            ->orderBy('orden')
+            ->findAll();
+
+        $portadas = [];
+        foreach ($filas as $f) {
+            $portadas[(int) $f['experiencia_id']] ??= $f;
+        }
+
+        return $portadas;
     }
 
     /** URL de la imagen grande; si es vídeo, su enlace. */

@@ -248,6 +248,7 @@ if ($puedeVender) {
         ['reservas', 'reservas', 'bi-calendar-check', 'Reservas', 0],
         ['huespedes', 'huespedes', 'bi-people', 'Huéspedes', 0],
         ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada', $porRevisar],
+        ['experiencias', 'experiencias', 'bi-compass', 'Experiencias', 0],
         ['caja', 'caja', 'bi-cash-coin', 'Caja', 0],
         ['bonos', 'bonos', 'bi-gift', 'Bonos regalo', 0],
     ]];

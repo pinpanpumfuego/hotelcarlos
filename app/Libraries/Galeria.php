@@ -36,8 +36,14 @@ class Galeria
      *
      * @return array{ok: bool, mensaje: string}
      */
-    public function subirFoto(?UploadedFile $archivo, ?int $tipoId, ?int $unidadId, string $alt = '', bool $publico = true): array
-    {
+    public function subirFoto(
+        ?UploadedFile $archivo,
+        ?int $tipoId,
+        ?int $unidadId,
+        string $alt = '',
+        bool $publico = true,
+        ?int $experienciaId = null
+    ): array {
         if ($archivo === null || ! $archivo->isValid()) {
             $motivo = $archivo === null ? 'No llegó ningún archivo.' : $archivo->getErrorString();
 
@@ -52,7 +58,7 @@ class Galeria
             return ['ok' => false, 'mensaje' => 'La foto pesa más de 12 MB. Hazla más pequeña e inténtalo otra vez.'];
         }
 
-        $carpeta = $this->carpeta($tipoId, $publico);
+        $carpeta = $this->carpeta($tipoId, $publico, $experienciaId);
         if (! is_dir($carpeta) && ! @mkdir($carpeta, 0755, true) && ! is_dir($carpeta)) {
             return ['ok' => false, 'mensaje' => 'No se pudo crear la carpeta de las fotos. Revisa los permisos.'];
         }
@@ -82,17 +88,24 @@ class Galeria
         $this->medios->insert([
             'tipo_unidad_id' => $tipoId,
             'unidad_id'      => $unidadId,
+            'experiencia_id' => $experienciaId,
             'publico'        => $publico ? 1 : 0,
             'tipo'           => 'foto',
             'archivo'        => $nombre,
             'miniatura'      => $mini,
             'alt'            => trim($alt) !== '' ? trim($alt) : null,
-            'orden'          => $this->medios->siguienteOrden($tipoId, $unidadId),
-            'portada'        => $publico && $this->galeriaVacia($tipoId, $unidadId) ? 1 : 0,
+            'orden'          => $this->medios->siguienteOrden($tipoId, $unidadId, $experienciaId),
+            'portada'        => $publico && $this->galeriaVacia($tipoId, $unidadId, $experienciaId) ? 1 : 0,
             'usuario_id'     => session()->get('usuario_id'),
         ]);
 
         return ['ok' => true, 'mensaje' => 'Foto añadida a la galería.'];
+    }
+
+    /** Foto de una experiencia: siempre pública, es material de venta. */
+    public function subirFotoExperiencia(?UploadedFile $archivo, int $experienciaId, string $alt = ''): array
+    {
+        return $this->subirFoto($archivo, null, null, $alt, true, $experienciaId);
     }
 
     /** Añade un vídeo de YouTube o Vimeo (no se sube el archivo: pesaría demasiado). */
@@ -120,12 +133,17 @@ class Galeria
     }
 
     /** ¿Es el primer elemento publicable de esta galería? Entonces será la portada. */
-    private function galeriaVacia(?int $tipoId, ?int $unidadId): bool
+    private function galeriaVacia(?int $tipoId, ?int $unidadId, ?int $experienciaId = null): bool
     {
         $medios = new MedioModel();
-        $tipoId !== null
-            ? $medios->where('tipo_unidad_id', $tipoId)
-            : $medios->where('unidad_id', $unidadId);
+
+        if ($experienciaId !== null) {
+            $medios->where('experiencia_id', $experienciaId);
+        } elseif ($tipoId !== null) {
+            $medios->where('tipo_unidad_id', $tipoId);
+        } else {
+            $medios->where('unidad_id', $unidadId);
+        }
 
         return $medios->where('publico', 1)->countAllResults() === 0;
     }
@@ -141,7 +159,8 @@ class Galeria
         if ($medio['tipo'] === 'foto') {
             $carpeta = $this->carpeta(
                 $medio['tipo_unidad_id'] !== null ? (int) $medio['tipo_unidad_id'] : null,
-                (int) $medio['publico'] === 1
+                (int) $medio['publico'] === 1,
+                $medio['experiencia_id'] !== null ? (int) $medio['experiencia_id'] : null
             );
             foreach ([$medio['archivo'], $medio['miniatura']] as $nombre) {
                 if ($nombre !== null && is_file($carpeta . $nombre)) {
@@ -239,17 +258,24 @@ class Galeria
 
     /**
      * Dónde va el archivo:
-     *  · público de un tipo   → public/medios/tipos/
-     *  · público de una cabaña → public/medios/cabanas/
-     *  · interno              → writable/uploads/unidades/ (fuera del navegador)
+     *  · público de un tipo        → public/medios/tipos/
+     *  · público de una cabaña     → public/medios/cabanas/
+     *  · público de una experiencia → public/medios/experiencias/
+     *  · interno                   → writable/uploads/unidades/ (fuera del navegador)
      */
-    private function carpeta(?int $tipoId, bool $publico): string
+    private function carpeta(?int $tipoId, bool $publico, ?int $experienciaId = null): string
     {
         if (! $publico) {
             return WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . MedioModel::CARPETA_PRIVADA . DIRECTORY_SEPARATOR;
         }
 
-        $sub = $tipoId !== null ? MedioModel::CARPETA_TIPOS : MedioModel::CARPETA_CABANAS;
+        if ($experienciaId !== null) {
+            $sub = MedioModel::CARPETA_EXPERIENCIAS;
+        } elseif ($tipoId !== null) {
+            $sub = MedioModel::CARPETA_TIPOS;
+        } else {
+            $sub = MedioModel::CARPETA_CABANAS;
+        }
 
         return FCPATH . str_replace('/', DIRECTORY_SEPARATOR, $sub) . DIRECTORY_SEPARATOR;
     }

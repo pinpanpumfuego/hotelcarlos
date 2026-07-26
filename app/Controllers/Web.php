@@ -59,6 +59,27 @@ class Web extends BaseController
         ]);
     }
 
+    /** Escaparate de experiencias y actividades. */
+    public function experiencias()
+    {
+        $lista  = (new \App\Models\ExperienciaModel())->publicas();
+        $medios = new \App\Models\MedioModel();
+
+        $galerias = [];
+        foreach ($lista as $e) {
+            $galerias[$e['id']] = $medios->deExperiencia((int) $e['id']);
+        }
+
+        return view('web/experiencias', [
+            'hotel'         => config('Hotel'),
+            'experiencias'  => $lista,
+            'galerias'      => $galerias,
+            'tituloPagina'  => 'Experiencias',
+            'paginaActiva'  => 'experiencias',
+            'descripcion'   => 'Cabalgatas, paseos en lancha y actividades en la naturaleza durante tu estancia.',
+        ]);
+    }
+
     /** Carta pública del restaurante con alérgenos y dietas. */
     public function carta()
     {

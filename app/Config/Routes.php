@@ -7,6 +7,7 @@ use CodeIgniter\Router\RouteCollection;
 // ── Web pública (sin autenticación) ─────────────────────────────────
 $routes->get('/', 'Web::inicio');
 $routes->get('alojamientos', 'Web::alojamientos');
+$routes->get('experiencias-actividades', 'Web::experiencias');
 $routes->get('restaurante', 'Web::carta');
 $routes->get('contacto', 'Web::contacto');
 
@@ -89,6 +90,14 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
 // ── Venta y recepción: gerencia + recepción ─────────────────────────
 $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static function ($routes) {
     $routes->get('calendario', 'Calendario::index');
+
+    // Experiencias: la agenda y la venta las lleva recepción
+    $routes->get('experiencias', 'Experiencias::index');
+    $routes->get('experiencias/catalogo', 'Experiencias::catalogo');
+    $routes->get('experiencias/ficha/(:num)', 'Experiencias::ficha/$1');
+    $routes->get('experiencias/disponibilidad', 'Experiencias::disponibilidad');
+    $routes->post('experiencias/reservar', 'Experiencias::reservar');
+    $routes->post('experiencias/estado/(:num)', 'Experiencias::estado/$1');
 
     $routes->get('huespedes', 'Huespedes::index');
     $routes->get('huespedes/nuevo', 'Huespedes::nuevo');
@@ -248,6 +257,17 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->post('cupones/actualizar/(:num)', 'Cupones::actualizar/$1');
     $routes->post('cupones/estado/(:num)', 'Cupones::alternar/$1');
     $routes->post('cupones/eliminar/(:num)', 'Cupones::eliminar/$1');
+
+    // Catálogo de experiencias: lo mantiene gerencia
+    $routes->get('experiencias/nueva', 'Experiencias::nueva');
+    $routes->post('experiencias/guardar', 'Experiencias::guardar');
+    $routes->get('experiencias/editar/(:num)', 'Experiencias::editar/$1');
+    $routes->post('experiencias/actualizar/(:num)', 'Experiencias::actualizar/$1');
+    $routes->post('experiencias/eliminar/(:num)', 'Experiencias::eliminar/$1');
+    $routes->post('experiencias/foto/(:num)', 'Experiencias::subirFoto/$1');
+    $routes->post('experiencias/video/(:num)', 'Experiencias::anadirVideo/$1');
+    $routes->post('experiencias/foto/portada/(:num)', 'Experiencias::portadaFoto/$1');
+    $routes->post('experiencias/foto/eliminar/(:num)', 'Experiencias::eliminarFoto/$1');
 
     // Motor de tarifas: temporadas, reglas, calendario y simulador
     $routes->get('tarifas', 'Tarifas::index');

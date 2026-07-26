@@ -180,6 +180,52 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
 
     <!-- Columna derecha: folio -->
     <div class="col-lg-7">
+        <!-- ── Experiencias contratadas ── -->
+        <?php if ($experiencias !== [] && ! in_array($reserva['estado'], ['cancelada'], true)): ?>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span class="fw-semibold"><i class="bi bi-compass me-2"></i>Experiencias</span>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalVender">
+                        <i class="bi bi-plus-lg me-1"></i>Apuntar
+                    </button>
+                </div>
+                <?php if ($actividades === []): ?>
+                    <div class="card-body text-muted small text-center py-3">
+                        Todavía no ha contratado ninguna actividad.
+                        <span class="d-block">Es el momento de ofrecerle la cabalgata o el paseo en lancha.</span>
+                    </div>
+                <?php else: ?>
+                    <ul class="list-group list-group-flush">
+                        <?php foreach ($actividades as $a): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center gap-2 <?= in_array($a['estado'], ['cancelada', 'no_show'], true) ? 'opacity-50' : '' ?>">
+                                <div>
+                                    <span class="fw-semibold"><?= esc($a['experiencia']) ?></span>
+                                    <div class="text-muted small">
+                                        <?= date('d/m/Y', strtotime($a['fecha'])) ?>
+                                        <?= $a['hora'] !== null ? ' a las ' . substr($a['hora'], 0, 5) : '' ?>
+                                        · <?= (int) $a['adultos'] + (int) $a['ninos'] ?> pers.
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-semibold">$<?= number_format((float) $a['total'], 0, ',', '.') ?></div>
+                                    <span class="badge text-bg-<?= \App\Models\ExperienciaReservaModel::COLORES[$a['estado']] ?>">
+                                        <?= \App\Models\ExperienciaReservaModel::ESTADOS[$a['estado']] ?>
+                                    </span>
+                                </div>
+                            </li>
+                        <?php endforeach ?>
+                    </ul>
+                <?php endif ?>
+            </div>
+
+            <?= view('experiencias/_modal_vender', [
+                'catalogo' => $experiencias,
+                'fecha'    => max(date('Y-m-d'), $reserva['fecha_entrada']),
+                'reserva'  => $reserva,
+                'alojados' => [],
+            ]) ?>
+        <?php endif ?>
+
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <span class="fw-semibold"><i class="bi bi-receipt me-2"></i>Folio de la cuenta</span>

@@ -198,6 +198,8 @@ class Reservas extends BaseController
             // El bono no se elige a mano: se canjea con su código, más abajo
             'metodos'     => array_diff_key(FolioModel::METODOS, ['bono' => '']),
             'registro'    => (new \App\Models\RegistroModel())->where('reserva_id', $id)->first(),
+            'actividades' => (new \App\Models\ExperienciaReservaModel())->deReserva($id),
+            'experiencias' => (new \App\Models\ExperienciaModel())->activas(),
         ]);
     }
 

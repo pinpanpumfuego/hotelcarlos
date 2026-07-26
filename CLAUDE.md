@@ -196,6 +196,24 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       El desglose también se ve en la web pública (paso 2 y 3 del motor de reservas) y en la ficha
       de la reserva. **Verificado**: temporada +35 % × fin de semana +20 % × tope máximo × suplemento
       por adulto adicional dan el mismo total en simulador, calendario y web.
+- [x] **Experiencias y actividades** (`ExperienciaModel`, `ExperienciaReservaModel`, controlador
+      `Experiencias`; tablas `experiencias` y `experiencia_reservas`; `medios.experiencia_id`).
+      Venta de mayor margen que la habitación, ofrecida en tres sitios: la web pública
+      (`/experiencias-actividades`), la ficha de la reserva y la agenda del mostrador.
+      · **Catálogo**: precio **por persona o cerrado por grupo**, precio de niño, **coste** para ver
+      el margen en vivo mientras se escribe, duración, cupo por salida, mínimo para que salga,
+      edad mínima, días de la semana, horas de salida (`08:00,15:00`), punto de encuentro,
+      proveedor externo y aviso previo. Galería propia reutilizando `medios` + `Galeria`.
+      · **Agenda** (`/experiencias`): tira de la semana con marca en los días con salida, y el día
+      abierto agrupado por hora con quién va, de qué cabaña y cuántas plazas quedan.
+      · **El cupo es real**: `plazasLibres()` bloquea la sobreventa y `seHace()` impide apuntar en un
+      día en que no se hace. Ambas se validan **en el servidor**, no solo en el formulario.
+      · **Cobro**: se carga al folio al marcar la salida como **realizada**, no al apuntarla — se
+      cobra lo que de verdad ocurrió, así una cancelación no necesita revertir nada.
+      · Un `<select>` de plazas libres se refresca por AJAX; lleva **numeración de peticiones** para
+      que, al cambiar rápido de fecha, una respuesta lenta no pinte la disponibilidad de otro día.
+      **Verificado**: margen 62,5 % calculado en vivo; 4 adultos + 1 niño = $560.000; rechazo por
+      día no operativo y por cupo insuficiente («solo quedan 1 plaza»); cargo al folio al realizarla.
 - [x] **Control de jornada / fichaje** (`FichajeModel`, `App\Libraries\Fichaje`, controladores
       `Fichar` (terminal), `Empleado` (PWA) y `Fichajes` (gerencia); tabla `fichajes`;
       columnas nuevas en `empleados`: `pin_hash`, `pin_actualizado`, `ficha_movil`, `foto`).
