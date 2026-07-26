@@ -106,6 +106,21 @@
             animation: latido 1.6s ease-in-out infinite;
         }
         .aviso-voz.ver { display: flex; }
+
+        /* ── Escucha ──
+           El micrófono encendido tiene que verse siempre: nadie debe dudar de
+           si le están oyendo o no. */
+        .btn-cab.escuchando { background: #1f6b8c; color: #fff; border-color: #1f6b8c; }
+        .btn-cab.escuchando i { animation: pulso 1.4s ease-in-out infinite; }
+        @keyframes pulso { 50% { opacity: .35; } }
+        .oido {
+            position: fixed; left: 50%; transform: translateX(-50%); bottom: 22px; z-index: 19;
+            background: rgba(30,43,36,.92); color: #fff; border-radius: 12px;
+            padding: 10px 18px; font-size: .95rem; display: none; align-items: center; gap: 8px;
+            max-width: 90vw;
+        }
+        .oido.ver { display: flex; }
+        .oido.acertado { background: var(--verde); }
     </style>
 </head>
 <body>
@@ -117,6 +132,9 @@
         <span class="sub" id="actualizado"></span>
         <button class="btn-cab" id="btn-voz" title="Leer las comandas en voz alta">
             <i class="bi bi-volume-up" id="ico-voz"></i>
+        </button>
+        <button class="btn-cab" id="btn-escucha" title="Decir «oído cocina» para marcar recibida">
+            <i class="bi bi-mic-mute" id="ico-escucha"></i>
         </button>
         <a class="btn-cab" href="<?= site_url($otraZona['ruta']) ?>">
             <i class="bi <?= esc($otraZona['icono']) ?>"></i> <?= esc($otraZona['titulo']) ?>
@@ -131,6 +149,8 @@
 <button class="aviso-voz" id="aviso-voz">
     <i class="bi bi-volume-up-fill"></i> Toca para activar la voz
 </button>
+
+<div class="oido" id="oido"><i class="bi bi-mic-fill"></i> <span id="oido-txt"></span></div>
 
 <script>
 (function () {
@@ -253,6 +273,16 @@
         vozPermitida = datos.voz !== false;
         pintarBotonVoz();
 
+        escuchaPermitida = datos.escucha === true;
+        pintarBotonEscucha();
+        // Si gerencia la enciende y esta pantalla la quería, arranca sola
+        if (escuchaActiva() && !oyendo) { arrancarEscucha(); }
+        if (!escuchaPermitida && oyendo && reconocedor) {
+            try { reconocedor.stop(); } catch (e) { /* nada */ }
+        }
+
+        ultimasComandas = datos.comandas;
+
         const ahora = Date.now();
         const vivas = new Set(datos.comandas.map((c) => c.comanda_id));
 
@@ -336,6 +366,14 @@
             const d = new SpeechSynthesisUtterance(texto);
             d.lang = 'es-CO';
             d.rate = 0.95;      // un pelín despacio: se escucha con ruido de fondo
+
+            // Se cierra el micrófono mientras habla: si no, se oiría a sí misma
+            // decir «recibida» y daría por recibida una comanda que nadie ha visto
+            if (oyendo && reconocedor) {
+                try { reconocedor.stop(); } catch (e) { /* nada */ }
+            }
+            d.onend = () => { if (escuchaActiva()) { setTimeout(arrancarEscucha, 400); } };
+
             speechSynthesis.speak(d);
         } catch (e) { /* sin voz disponible: queda el pitido */ }
     }
@@ -371,7 +409,161 @@
     document.addEventListener('click', desbloquearVoz, { once: true });
     document.addEventListener('touchstart', desbloquearVoz, { once: true, passive: true });
 
+    // ═══════════════════════════════════════════════════════════════
+    //  Escucha: «oído cocina» sin soltar la sartén
+    //
+    //  Aviso honesto: el reconocimiento de Chrome manda el audio a los
+    //  servidores de Google, así que **esto sí necesita internet**, al revés
+    //  que la lectura en voz alta. Sin conexión no pasa nada malo: el botón
+    //  «Recibido» sigue estando ahí y se avisa en pantalla.
+    // ═══════════════════════════════════════════════════════════════
+
+    const Reconocedor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    /**
+     * Lo que vale como «la he visto».
+     *
+     * Varias formas de decirlo porque cada cocinero dice la suya, y una cocina
+     * con extractor y sartenes no es un estudio de grabación: cuanto más
+     * ancha sea la red, menos veces habrá que repetirlo.
+     */
+    const ORDENES = [
+        'oido cocina', 'oido', 'oida', 'ok cocina', 'okey cocina',
+        'recibido', 'recibida', 'marcha', 'en marcha', 'vale cocina', 'anotado',
+    ];
+    const ORDENES_TODO = ['oido todo', 'todo recibido', 'todas recibidas', 'recibido todo'];
+
+    let escuchaPermitida = false;
+    let escuchaQuerida   = localStorage.getItem('cocina.escucha') === '1';
+    let oyendo           = false;
+    let reconocedor      = null;
+    let fallosSeguidos   = 0;
+    let ultimasComandas  = [];
+
+    /** Quita tildes y signos: «oído» y «oido» tienen que valer igual. */
+    function llano(t) {
+        return String(t).toLowerCase()
+            // El rango \u0300-\u036f son las tildes sueltas que deja NFD. Escrito con
+            // escapes y no con los caracteres, que son invisibles y cualquier
+            // editor los puede estropear sin que se note.
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9 ]/g, ' ')
+            .replace(/\s+/g, ' ').trim();
+    }
+
+    function mostrarOido(texto, acertado) {
+        const c = $('#oido');
+        $('#oido-txt').textContent = texto;
+        c.className = 'oido ver' + (acertado ? ' acertado' : '');
+        clearTimeout(c._t);
+        c._t = setTimeout(() => { c.className = 'oido'; }, acertado ? 2200 : 1600);
+    }
+
+    /** Marca como recibida la más antigua sin recibir, o todas. */
+    async function recibirPorVoz(todas) {
+        const pendientes = ultimasComandas.filter((c) => !c.recibida);
+
+        if (pendientes.length === 0) {
+            mostrarOido('No hay comandas sin recibir', false);
+            return;
+        }
+
+        const objetivo = todas ? pendientes : [pendientes[0]];
+        for (const c of objetivo) {
+            await api('/recibir/' + c.comanda_id + '/' + ZONA, { method: 'POST' });
+        }
+
+        mostrarOido(todas
+            ? 'Recibidas ' + objetivo.length
+            : 'Recibida · ' + objetivo[0].donde, true);
+        sonar();
+        cargar();
+    }
+
+    function arrancarEscucha() {
+        if (!Reconocedor || oyendo || !escuchaActiva()) { return; }
+
+        reconocedor = new Reconocedor();
+        reconocedor.lang = 'es-CO';
+        reconocedor.continuous = true;
+        reconocedor.interimResults = false;
+
+        reconocedor.onresult = (e) => {
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                if (!e.results[i].isFinal) { continue; }
+
+                const dicho = llano(e.results[i][0].transcript);
+                if (dicho === '') { continue; }
+
+                if (ORDENES_TODO.some((o) => dicho.includes(o))) { recibirPorVoz(true); return; }
+                if (ORDENES.some((o) => dicho.includes(o)))       { recibirPorVoz(false); return; }
+
+                // Se enseña lo que se oyó aunque no valga: así el cocinero ve
+                // que el micrófono va y aprende qué frases entiende
+                mostrarOido('« ' + dicho + ' »', false);
+            }
+        };
+
+        reconocedor.onerror = (e) => {
+            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+                // Permiso denegado: insistir sería pedir el micrófono en bucle
+                escuchaQuerida = false;
+                localStorage.setItem('cocina.escucha', '0');
+                mostrarOido('Sin permiso del micrófono', false);
+                pintarBotonEscucha();
+                return;
+            }
+            if (e.error === 'network') {
+                mostrarOido('Escuchar necesita internet', false);
+                fallosSeguidos++;
+            }
+        };
+
+        // Se para sola cada poco: hay que volver a levantarla durante todo el turno
+        reconocedor.onend = () => {
+            oyendo = false;
+            if (!escuchaActiva()) { return; }
+            const espera = Math.min(30000, 600 * Math.pow(2, fallosSeguidos));
+            setTimeout(arrancarEscucha, espera);
+        };
+
+        try {
+            reconocedor.start();
+            oyendo = true;
+            fallosSeguidos = 0;
+        } catch (e) { oyendo = false; }
+
+        pintarBotonEscucha();
+    }
+
+    function pararEscucha() {
+        escuchaQuerida = false;
+        if (reconocedor) { try { reconocedor.stop(); } catch (e) { /* nada */ } }
+        oyendo = false;
+        pintarBotonEscucha();
+    }
+
+    const escuchaActiva = () => escuchaPermitida && escuchaQuerida && !!Reconocedor;
+
+    function pintarBotonEscucha() {
+        const b = $('#btn-escucha');
+        b.style.display = (escuchaPermitida && Reconocedor) ? 'inline-flex' : 'none';
+        b.classList.toggle('escuchando', escuchaQuerida && oyendo);
+        $('#ico-escucha').className = 'bi ' + (escuchaQuerida ? 'bi-mic-fill' : 'bi-mic-mute');
+        b.title = escuchaQuerida
+            ? 'Escuchando · di «oído cocina» para marcar recibida'
+            : 'Micrófono apagado · tocar para encender';
+    }
+
+    $('#btn-escucha').onclick = () => {
+        if (escuchaQuerida) { pararEscucha(); return; }
+        escuchaQuerida = true;
+        localStorage.setItem('cocina.escucha', '1');
+        arrancarEscucha();
+    };
+
     pintarBotonVoz();
+    pintarBotonEscucha();
     cargar();
     setInterval(cargar, 10000);   // la cocina se refresca sola cada 10 segundos
 }());

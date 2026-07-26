@@ -123,6 +123,34 @@
                         altavoz; este interruptor la apaga en todas.
                     </p>
 
+                    <div class="form-check form-switch mt-3 mb-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="cocina_escucha"
+                               name="cocina_escucha" <?= $tpv['cocina_escucha'] ? 'checked' : '' ?>>
+                        <label class="form-check-label fw-semibold" for="cocina_escucha">
+                            Que el cocinero pueda decir «oído cocina»
+                        </label>
+                    </div>
+                    <div class="alert alert-warning py-2 small mb-0">
+                        <p class="mb-2">
+                            Con esto encendido, el cocinero marca la comanda como recibida
+                            <strong>sin tocar la pantalla</strong>: basta con decir
+                            <em>«oído cocina»</em> (también valen «recibido», «marcha» o «anotado»).
+                            Con <em>«oído todo»</em> marca todas las que estén esperando.
+                        </p>
+                        <p class="mb-2">
+                            <i class="bi bi-wifi me-1"></i>
+                            <strong>Esto sí necesita internet</strong>, al revés que la lectura en voz
+                            alta: Chrome envía el audio a Google para entenderlo. Sin conexión, el
+                            botón «Recibido» sigue funcionando igual.
+                        </p>
+                        <p class="mb-0">
+                            <i class="bi bi-mic me-1"></i>
+                            <strong>El micrófono queda encendido durante el turno.</strong> Adviértelo
+                            al personal antes de activarlo. Cada pantalla tiene además su propio
+                            botón para apagarlo, y hay que dar permiso en el navegador la primera vez.
+                        </p>
+                    </div>
+
                     <?php if ($tpv['con_rol'] === []): ?>
                         <div class="alert alert-warning py-2 small mb-0">
                             <i class="bi bi-exclamation-triangle me-1"></i>

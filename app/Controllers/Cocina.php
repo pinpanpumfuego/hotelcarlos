@@ -74,7 +74,10 @@ class Cocina extends BaseController
             'comandas' => array_values($comandas),
             // Se manda en cada refresco: si gerencia apaga la voz, las pantallas
             // se enteran solas sin que nadie tenga que ir a recargarlas
-            'voz'      => (new \App\Models\ConfiguracionModel())->obtener('cocina_voz', '1') === '1',
+            'voz'      => ($config = new \App\Models\ConfiguracionModel())->obtener('cocina_voz', '1') === '1',
+            // Apagada de fábrica: encender un micrófono en el sitio de trabajo
+            // de alguien es una decisión que tiene que tomar la gerencia a mano
+            'escucha'  => $config->obtener('cocina_escucha', '0') === '1',
         ]);
     }
 

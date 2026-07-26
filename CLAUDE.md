@@ -379,6 +379,28 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       mismo ciclo entraba una y salía otra, la nueva pasaba en silencio. Ahora se lleva por `Set` de
       ids, que además es lo que permite repetir solo la que sigue sin recibir.
       · Al recargar la pantalla a media tarde **no se leen las comandas viejas** de golpe.
+- [x] **«Oído cocina»: marcar recibida sin tocar la pantalla** (a petición de Javier).
+      Reconocimiento de voz del navegador. Valen `oído cocina`, `oído`, `recibido`, `marcha`,
+      `en marcha`, `anotado`, `ok cocina`… y **`oído todo`** para marcar todas las que esperan.
+      Se marca la **más antigua sin recibir**.
+      · **Aviso importante y al revés que la lectura**: el reconocimiento de Chrome **manda el audio
+      a Google, así que necesita internet**. La lectura en voz alta sí funciona sin conexión. Sin
+      internet no se rompe nada: sale «Escuchar necesita internet» y el botón sigue estando.
+      · **Se cierra el micrófono mientras la pantalla habla**, o se oiría a sí misma decir
+      «recibida» y daría por vista una comanda que nadie ha mirado.
+      · **Apagada de fábrica** (`cocina_escucha` = 0). Encender un micrófono en el sitio de trabajo
+      de alguien es una decisión de gerencia, no un valor por defecto; el aviso en Administración
+      dice que hay que advertir al personal. Además el botón del micro se ve siempre encendido
+      (pulsa) para que nadie dude de si le están oyendo.
+      · Si se deniega el permiso **se apaga sola y no vuelve a pedirlo**: insistir sería pedir el
+      micrófono en bucle. Verificado.
+      · `llano()` quita tildes y signos con `̀-ͯ` **escrito con escapes**: con los
+      caracteres literales, que son invisibles, cualquier editor los estropea sin que se note.
+      · **Sin probar con voz real**: el panel del navegador de pruebas bloquea el micrófono. Se
+      verificó el emparejado de frases y la ruta de permiso denegado, no el reconocimiento en sí.
+      · Riesgo conocido: `recibido` es palabra común y podría dispararse en una conversación. La
+      confirmación se canta y se ve en verde, así que un error se nota al momento. Si molesta en la
+      práctica, restringir a las frases que lleven «cocina».
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era
