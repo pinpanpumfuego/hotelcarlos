@@ -28,8 +28,19 @@ class App extends BaseConfig
      *     ['media.example.com', 'accounts.example.com']
      *
      * @var list<string>
+     *
+     * ── Pruebas desde el móvil en la red del hotel ──
+     * `baseURL` apunta a localhost, que desde un teléfono es el propio teléfono:
+     * sin esto, todos los enlaces y las llamadas del comandero se romperían.
+     * Con la IP aquí, CodeIgniter genera las direcciones con el nombre por el
+     * que llegó la petición.
+     *
+     * Si el router le da otra IP al PC, es esta línea la que hay que cambiar.
+     * Para verla: en Windows, `ipconfig` → «Dirección IPv4» del adaptador Wi-Fi.
      */
-    public array $allowedHostnames = [];
+    public array $allowedHostnames = [
+        '192.168.100.57',   // PC de Javier en la Wi-Fi
+    ];
 
     /**
      * --------------------------------------------------------------------------
