@@ -73,6 +73,20 @@ $idiomaHtml = \App\Libraries\Traductor::IDIOMAS[idioma_web()]['html'];
             text-shadow: 0 1px 12px rgba(10, 30, 20, .45);
         }
         .hero h1 { font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 600; }
+
+        /* ── Logo de la portada ──
+           Es una ilustración con mucho detalle (el barranquero, el letrero, las
+           flores), así que necesita tamaño: por debajo de unos 200 px deja de
+           leerse y se convierte en una mancha. La sombra lo despega del vídeo. */
+        .logo-hero {
+            display: block; margin: 0 auto;
+            width: clamp(210px, 34vw, 380px); height: auto;
+            filter: drop-shadow(0 6px 26px rgba(8, 24, 16, .55));
+        }
+        @media (max-width: 575.98px) {
+            /* En móvil el vídeo se ve poco y el logo es lo que manda */
+            .logo-hero { width: min(76vw, 300px); }
+        }
         .hero .eslogan { font-size: clamp(1.05rem, 2vw, 1.3rem); opacity: .92; }
 
         /* ── Secciones ── */

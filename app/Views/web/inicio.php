@@ -22,8 +22,24 @@ function escenaParaTipo(string $nombre): string
     <div class="velo" aria-hidden="true"></div>
 
     <div class="container contenido text-center">
-        <p class="etiqueta" style="color:#f2cd7f;"><?= esc(lang('Web.ecolodgeColombia')) ?></p>
-        <h1 class="mb-3"><?= esc($hotel->nombre) ?></h1>
+        <?php
+        // El logo va dentro del <h1>: lleva el nombre del hotel dibujado, así que
+        // repetirlo debajo como texto sería redundante y quedaría de aficionado.
+        // Con el `alt` puesto, los buscadores y los lectores de pantalla siguen
+        // leyendo el nombre igual que si fuera texto.
+        $logo = FCPATH . 'assets/img/logo.png';
+        ?>
+        <?php if (is_file($logo)): ?>
+            <h1 class="mb-3">
+                <img src="<?= base_url('assets/img/logo.png') ?>" class="logo-hero"
+                     alt="<?= esc($hotel->nombre) ?> · <?= esc(lang('Web.avesNaturaleza')) ?>"
+                     width="1024" height="1024" fetchpriority="high">
+            </h1>
+        <?php else: ?>
+            <?php // Mientras no esté el archivo, la portada sigue funcionando ?>
+            <p class="etiqueta" style="color:#f2cd7f;"><?= esc(lang('Web.ecolodgeColombia')) ?></p>
+            <h1 class="mb-3"><?= esc($hotel->nombre) ?></h1>
+        <?php endif ?>
         <p class="eslogan mb-4">
             <?= esc(lang('Web.eslogan1')) ?><br class="d-sm-none"> <?= esc(lang('Web.eslogan2')) ?>
         </p>
