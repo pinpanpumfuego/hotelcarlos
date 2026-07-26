@@ -51,8 +51,13 @@ class Cocina extends BaseController
                     'donde'      => $l['unidad_nombre'] ?: ($l['mesa'] ?: ($l['cliente_nombre'] ?: 'Para llevar')),
                     'enviado_en' => $l['enviado_en'],
                     'minutos'    => (int) ((time() - strtotime($l['enviado_en'])) / 60),
+                    // Si una sola línea está sin mirar, la comanda está sin mirar
+                    'recibida'   => true,
                     'lineas'     => [],
                 ];
+            }
+            if ((int) ($l['recibido'] ?? 0) === 0) {
+                $comandas[$clave]['recibida'] = false;
             }
             $comandas[$clave]['lineas'][] = [
                 'id'            => (int) $l['id'],
@@ -64,7 +69,34 @@ class Cocina extends BaseController
             ];
         }
 
-        return $this->response->setJSON(['ok' => true, 'comandas' => array_values($comandas)]);
+        return $this->response->setJSON([
+            'ok'       => true,
+            'comandas' => array_values($comandas),
+            // Se manda en cada refresco: si gerencia apaga la voz, las pantallas
+            // se enteran solas sin que nadie tenga que ir a recargarlas
+            'voz'      => (new \App\Models\ConfiguracionModel())->obtener('cocina_voz', '1') === '1',
+        ]);
+    }
+
+    /**
+     * El cocinero acusa recibo de la comanda entera.
+     *
+     * No cambia nada de lo que hay que cocinar: sirve para que el camarero y el
+     * TPV sepan que en cocina la han visto. Una comanda enviada que nadie ha
+     * mirado en tres minutos deja de ser un despiste y pasa a ser un aviso.
+     */
+    public function recibir(int $comandaId, string $zona = 'cocina')
+    {
+        $zona = isset(self::ZONAS[$zona]) ? $zona : 'cocina';
+
+        $marcadas = $this->lineas->marcarRecibida($comandaId, $zona);
+
+        if ($marcadas === 0) {
+            return $this->response->setStatusCode(422)
+                ->setJSON(['ok' => false, 'error' => 'Esa comanda ya estaba recibida.']);
+        }
+
+        return $this->response->setJSON(['ok' => true, 'marcadas' => $marcadas]);
     }
 
     /** Marca un producto como listo para servir. */

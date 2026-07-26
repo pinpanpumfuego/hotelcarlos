@@ -9,8 +9,11 @@ class ComandaLineaModel extends Model
     protected $table         = 'comanda_lineas';
     protected $primaryKey    = 'id';
     protected $allowedFields = ['comanda_id', 'producto_id', 'nombre_producto', 'destino', 'precio_unitario',
-        'cantidad', 'entregado', 'servido', 'listo_en', 'enviado_cocina', 'notas',
-        'composicion', 'empleado_id'];
+        'cantidad', 'entregado', 'servido', 'listo_en', 'enviado_cocina', 'recibido', 'recibido_en',
+        'notas', 'composicion', 'empleado_id'];
+
+    /** Minutos sin que cocina la mire antes de dar la voz de alarma en el TPV. */
+    public const ALERTA_SIN_RECIBIR = 3;
     protected $useTimestamps = true;
 
     public function deComanda(int $comandaId): array
@@ -136,6 +139,53 @@ class ComandaLineaModel extends Model
             ->where('comanda_lineas.servido', 0)
             ->orderBy('comanda_lineas.listo_en')
             ->findAll();
+    }
+
+    /**
+     * El cocinero dice «la veo»: se marca toda la comanda de esa zona.
+     *
+     * Por comanda y no por plato porque es lo que ocurre de verdad: se mira el
+     * ticket entero de un vistazo. Marcar seis platos uno a uno solo para decir
+     * que los has visto sería trabajo que nadie va a hacer con las manos llenas.
+     */
+    public function marcarRecibida(int $comandaId, string $zona): int
+    {
+        $afectadas = $this->where('comanda_id', $comandaId)
+            ->where('destino', $zona)
+            ->where('enviado_cocina', 1)
+            ->where('recibido', 0)
+            ->findAll();
+
+        foreach ($afectadas as $l) {
+            $this->update($l['id'], ['recibido' => 1, 'recibido_en' => date('Y-m-d H:i:s')]);
+        }
+
+        return count($afectadas);
+    }
+
+    /**
+     * Comandas que cocina todavía no ha mirado, con cuánto llevan esperando.
+     *
+     * @return array<int,int> comanda_id => minutos desde el envío
+     */
+    public function sinRecibir(): array
+    {
+        $filas = $this->select('comanda_id, MIN(comanda_lineas.updated_at) AS desde')
+            ->join('comandas', 'comandas.id = comanda_lineas.comanda_id')
+            ->where('comandas.estado', 'abierta')
+            ->where('comanda_lineas.enviado_cocina', 1)
+            ->where('comanda_lineas.recibido', 0)
+            ->where('comanda_lineas.entregado', 0)
+            ->whereIn('comanda_lineas.destino', ['cocina', 'barra'])
+            ->groupBy('comanda_lineas.comanda_id')
+            ->findAll();
+
+        $porComanda = [];
+        foreach ($filas as $f) {
+            $porComanda[(int) $f['comanda_id']] = (int) floor((time() - strtotime($f['desde'])) / 60);
+        }
+
+        return $porComanda;
     }
 
     /** Cuántos platos hay listos en cocina esperando a ser servidos. */

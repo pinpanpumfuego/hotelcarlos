@@ -169,6 +169,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->get('barra', 'Cocina::barra');
     $routes->group('cocina', ['filter' => 'tokenjson'], static function ($routes) {
         $routes->get('datos/(:segment)', 'Cocina::datos/$1');
+        $routes->post('recibir/(:num)/(:segment)', 'Cocina::recibir/$1/$2');
         $routes->post('listo/(:num)', 'Cocina::listo/$1');
         $routes->post('comanda/(:num)/lista/(:segment)', 'Cocina::comandaLista/$1/$2');
     });

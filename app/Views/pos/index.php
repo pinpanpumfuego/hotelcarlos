@@ -144,6 +144,15 @@
            En azul y con borde discontinuo: el ámbar ya significa «ocupada» y
            el discontinuo dice «esto todavía no es firme». */
         .mesa .tomando { display: flex; align-items: center; gap: 4px; margin-top: 2px; color: var(--azul); }
+        /* Enviada a cocina y nadie la ha mirado: el fallo caro de un restaurante */
+        .mesa .sin-ver { display: flex; align-items: center; gap: 4px; margin-top: 2px;
+                         color: var(--rojo); font-weight: 600; }
+        .mesa.sin-ver-mesa { border-color: var(--rojo); }
+        .aviso-sin-ver {
+            margin: 8px 6px; padding: 12px 14px; border: 1px solid var(--rojo); border-radius: 10px;
+            background: rgba(179,69,74,.08); color: var(--rojo); font-size: .88rem; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+        }
         .mesa.tomandose { border-color: var(--azul); border-style: dashed; }
         .tomandose-bloque {
             margin: 8px 6px; padding: 10px 12px; border: 1px dashed var(--azul);
@@ -986,6 +995,13 @@
             zonas[zona].forEach((m) => {
                 const b = document.createElement('button');
                 b.className = 'mesa ' + (m.ocupada ? 'ocupada' : 'libre');
+                // Enviada pero nadie la ha mirado en cocina
+                const perdida = m.cocina_no_la_ve
+                    ? '<div class="dato sin-ver"><i class="bi bi-exclamation-triangle-fill"></i> '
+                        + 'Cocina no la ha visto · ' + m.sin_recibir_min + ' min</div>'
+                    : '';
+                if (m.cocina_no_la_ve) { b.classList.add('sin-ver-mesa'); }
+
                 // Alguien está apuntando ahora mismo en su móvil, sin enviar
                 const tomando = m.tomando
                     ? '<div class="dato tomando"><i class="bi bi-pencil"></i> '
@@ -1003,7 +1019,7 @@
                         : '';
                     b.innerHTML = '<div><div class="nombre">' + escaparHtml(m.nombre) + '</div>'
                         + '<div class="dato"><i class="bi bi-clock"></i> ' + m.abierta_hace + ' min</div>'
-                        + quien + tomando + '</div>'
+                        + quien + perdida + tomando + '</div>'
                         + '<div class="total">' + pesos(m.total) + '</div>';
                 } else {
                     b.innerHTML = '<div><div class="nombre">' + escaparHtml(m.nombre) + '</div>'
@@ -1125,6 +1141,17 @@
         cont.innerHTML = '';
         if (!comanda.lineas.length && !(comanda.tomando || []).length) {
             cont.innerHTML = '<p class="vacio">Toca un producto de la carta para empezar.</p>';
+        }
+
+        // Lo enviado sigue sin que nadie lo mire en cocina. Es el fallo que más
+        // caro sale: el cliente espera y aquí todo parece normal.
+        if (comanda.cocina_no_la_ve) {
+            const aviso = document.createElement('div');
+            aviso.className = 'aviso-sin-ver';
+            aviso.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>'
+                + '<span>En cocina no han marcado esta comanda como recibida · '
+                + comanda.sin_recibir_min + ' min esperando</span>';
+            cont.appendChild(aviso);
         }
         const textoEstado = {
             nuevo: '', en_cocina: 'En cocina', en_barra: 'En barra',

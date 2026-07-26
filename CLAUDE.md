@@ -353,6 +353,32 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       · El botón del comandero ya no dice «Enviar a cocina» sino **«Enviar · 1 a cocina · 1 a barra
       · 1 directo»**, y cada línea lleva su etiqueta de destino con color propio.
       · El TPV decía **«En cocina» a un agua**. Ahora hay estado `directo` y la etiqueta correcta.
+- [x] **Paso «Recibido» en cocina y lectura en voz alta** (a petición de Javier).
+      · **El paso que faltaba**: una línea iba de «enviada» a «lista» sin nada en medio, así que una
+      comanda que nadie había mirado y una que se estaba cocinando **se veían igual**. Columnas
+      `recibido` y `recibido_en`. Se marca **por comanda entera, no plato a plato**: el cocinero mira
+      el ticket de un vistazo; marcar seis platos solo para decir que los has visto es trabajo que
+      nadie hace con las manos llenas.
+      · **Si nadie la recibe**: la voz insiste a los 90 s («Sigue pendiente…») y a los 3 minutos
+      (`ALERTA_SIN_RECIBIR`) la comanda **se pone en rojo en el TPV**, en la mesa y dentro de la
+      comanda. Es el fallo que más caro sale: el cliente espera y en el TPV todo parece normal.
+      · **La voz es la del propio navegador** (Web Speech API): no cuesta nada, habla español y
+      **funciona sin internet**. Dice «Nueva comanda. Mesa 3: dos de trucha al ajillo.»
+      · Se dice **«dos de trucha al ajillo»**, no «dos truchas al ajillos»: pluralizar un nombre de
+      plato en español sale mal casi siempre, y además así se habla en una cocina.
+      · Configurable en dos niveles como el modo táctil: interruptor general en Administración
+      (`cocina_voz`) y otro por pantalla (`localStorage`), porque cocina puede tener altavoz y la
+      barra no. El general manda, y la pantalla **se entera sola en el siguiente refresco** sin que
+      nadie tenga que ir a recargarla.
+      · **Los navegadores no dejan sonar nada hasta que alguien toca la pantalla.** Sale un botón
+      «Toca para activar la voz» hasta el primer toque del turno.
+      **Dos fallos encontrados probando y corregidos:**
+      · El primer refresco ocurre **antes** de que nadie haya tocado la pantalla, así que `hablar()`
+      se salía pero las comandas ya quedaban marcadas como anunciadas: **no se cantaban nunca**.
+      · Las comandas nuevas se detectaban comparando el **total**, no los identificadores: si en el
+      mismo ciclo entraba una y salía otra, la nueva pasaba en silencio. Ahora se lleva por `Set` de
+      ids, que además es lo que permite repetir solo la que sigue sin recibir.
+      · Al recargar la pantalla a media tarde **no se leen las comandas viejas** de golpe.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

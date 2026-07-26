@@ -106,6 +106,23 @@
                         Pon 0 para no sugerir ninguna.
                     </p>
 
+                    <hr>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="cocina_voz"
+                               name="cocina_voz" <?= $tpv['cocina_voz'] ? 'checked' : '' ?>>
+                        <label class="form-check-label fw-semibold" for="cocina_voz">
+                            Leer las comandas en voz alta en cocina
+                        </label>
+                    </div>
+                    <p class="form-text mb-0">
+                        Al entrar una comanda, la pantalla de cocina la canta:
+                        <em>«Nueva comanda. Mesa 3: dos de trucha al ajillo, sancocho de gallina.»</em>
+                        Usa la voz del propio navegador, así que <strong>no cuesta nada y funciona
+                        sin internet</strong>. Si nadie la marca como recibida, la repite al minuto
+                        y medio. Cada pantalla puede silenciarla por su cuenta con el botón del
+                        altavoz; este interruptor la apaga en todas.
+                    </p>
+
                     <?php if ($tpv['con_rol'] === []): ?>
                         <div class="alert alert-warning py-2 small mb-0">
                             <i class="bi bi-exclamation-triangle me-1"></i>

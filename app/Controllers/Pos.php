@@ -889,6 +889,8 @@ class Pos extends BaseController
             $l['servido']         = (int) $l['servido'];
             $l['subtotal']        = $l['precio_unitario'] * $l['cantidad'];
 
+            $l['recibido'] = (int) ($l['recibido'] ?? 0);
+
             // Estado visible para el mesero
             if ($l['servido'] === 1) {
                 $l['estado'] = 'servido';
@@ -949,6 +951,11 @@ class Pos extends BaseController
         }
         $comanda['camareros']       = $manos;
         $comanda['varias_manos']    = count($manos) > 1;
+
+        // Enviada a cocina pero sin que nadie la mire: minutos esperando
+        $comanda['sin_recibir_min'] = $this->lineas->sinRecibir()[(int) $comanda['id']] ?? null;
+        $comanda['cocina_no_la_ve'] = $comanda['sin_recibir_min'] !== null
+            && $comanda['sin_recibir_min'] >= ComandaLineaModel::ALERTA_SIN_RECIBIR;
 
         // Lo que alguien esté apuntando ahora en el móvil para esta mesa y no
         // haya enviado todavía. Va aparte de las líneas a propósito: no suma

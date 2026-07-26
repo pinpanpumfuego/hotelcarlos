@@ -48,6 +48,7 @@ class Administracion extends BaseController
                 'bloqueo_seg'     => (int) $this->config->obtener('tpv_bloqueo_seg', '60'),
                 'descuento_libre' => (float) $this->config->obtener('tpv_descuento_libre', '10'),
                 'propina_sugerida' => (float) $this->config->obtener('tpv_propina_sugerida', '10'),
+                'cocina_voz'      => $this->config->obtener('cocina_voz', '1') === '1',
                 'sin_rol'         => (new \App\Models\EmpleadoModel())->where('activo', 1)
                     ->where('rol_tpv', 'ninguno')->countAllResults(),
                 'con_rol'         => (new \App\Models\EmpleadoModel())->delTpv(),
@@ -121,6 +122,7 @@ class Administracion extends BaseController
             'tpv_bloqueo_seg'     => (string) max(15, min(3600, (int) $this->request->getPost('bloqueo_seg'))),
             'tpv_descuento_libre' => (string) max(0, min(100, (float) $this->request->getPost('descuento_libre'))),
             'tpv_propina_sugerida' => (string) max(0, min(100, (float) $this->request->getPost('propina_sugerida'))),
+            'cocina_voz'          => $this->request->getPost('cocina_voz') !== null ? '1' : '0',
         ]);
 
         return redirect()->to('administracion#tpv')->with('ok', 'Ajustes del TPV guardados.');

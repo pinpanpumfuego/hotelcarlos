@@ -38,6 +38,7 @@ class MesaModel extends Model
         }
 
         $borradores = (new ComanderoBorradorModel())->porMesa();
+        $sinRecibir = (new ComandaLineaModel())->sinRecibir();
 
         foreach ($mesas as &$m) {
             $comanda           = $porMesa[$m['id']] ?? null;
@@ -54,6 +55,12 @@ class MesaModel extends Model
             // Lo que un camarero está apuntando ahora mismo en su móvil y
             // todavía no ha enviado. Puede haberlo en una mesa aún «libre».
             $m['tomando'] = $borradores[(int) $m['id']] ?? null;
+
+            // Enviada a cocina pero nadie la ha mirado todavía. Pasados unos
+            // minutos deja de ser un despiste y el camarero tiene que saberlo.
+            $espera = $comanda !== null ? ($sinRecibir[(int) $comanda['id']] ?? null) : null;
+            $m['sin_recibir_min'] = $espera;
+            $m['cocina_no_la_ve'] = $espera !== null && $espera >= ComandaLineaModel::ALERTA_SIN_RECIBIR;
         }
 
         return $mesas;
