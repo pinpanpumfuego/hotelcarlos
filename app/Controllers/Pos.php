@@ -425,33 +425,19 @@ class Pos extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'No hay nada nuevo que enviar.']);
         }
 
-        $ahora     = date('Y-m-d H:i:s');
-        $aPreparar = 0;
-        $directos  = 0;
-
-        foreach ($nuevas as $linea) {
-            if ($linea['destino'] === 'directo') {
-                // No pasa por preparación: se entrega tal cual y queda servido
-                $this->lineas->update($linea['id'], [
-                    'enviado_cocina' => 1,
-                    'entregado'      => 1,
-                    'servido'        => 1,
-                    'listo_en'       => $ahora,
-                ]);
-                $directos++;
-            } else {
-                $this->lineas->update($linea['id'], ['enviado_cocina' => 1]);
-                $aPreparar++;
-            }
-        }
+        // El reparto por destino vive en el modelo: lo usan también el comandero
+        $conteo = $this->lineas->enviarAPreparacion($id);
 
         $partes = [];
-        if ($aPreparar > 0) {
-            $partes[] = $aPreparar . ($aPreparar === 1 ? ' plato enviado' : ' platos enviados') . ' a preparación.';
+        if ($conteo['cocina'] > 0) {
+            $partes[] = $conteo['cocina'] . ($conteo['cocina'] === 1 ? ' plato a cocina.' : ' platos a cocina.');
         }
-        if ($directos > 0) {
-            $partes[] = $directos . ($directos === 1 ? ' producto de entrega directa' : ' productos de entrega directa')
-                . ' (no pasan por cocina).';
+        if ($conteo['barra'] > 0) {
+            $partes[] = $conteo['barra'] . ($conteo['barra'] === 1 ? ' bebida a barra.' : ' bebidas a barra.');
+        }
+        if ($conteo['directo'] > 0) {
+            $partes[] = $conteo['directo'] . ($conteo['directo'] === 1 ? ' producto de entrega directa' : ' productos de entrega directa')
+                . ' (no pasan por preparación).';
         }
 
         return $this->response->setJSON([
@@ -909,7 +895,12 @@ class Pos extends BaseController
             } elseif ($l['entregado'] === 1) {
                 $l['estado'] = 'listo';       // preparación terminada, falta llevarlo a la mesa
             } elseif ($l['enviado_cocina'] === 1) {
-                $l['estado'] = $l['destino'] === 'barra' ? 'en_barra' : 'en_cocina';
+                // Un agua no está «en cocina»: no pasa por preparación
+                $l['estado'] = match ($l['destino']) {
+                    'barra'   => 'en_barra',
+                    'directo' => 'directo',
+                    default   => 'en_cocina',
+                };
             } else {
                 $l['estado'] = 'nuevo';       // aún no se ha enviado
             }

@@ -1128,6 +1128,7 @@
         }
         const textoEstado = {
             nuevo: '', en_cocina: 'En cocina', en_barra: 'En barra',
+            directo: 'Entrega directa',
             listo: '¡Listo para servir!', servido: 'Servido',
         };
 

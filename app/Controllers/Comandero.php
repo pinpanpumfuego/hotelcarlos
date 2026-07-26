@@ -174,6 +174,9 @@ class Comandero extends BaseController
                 'id'        => (int) $p['id'],
                 'nombre'    => $p['nombre'],
                 'precio'    => (float) $p['precio'],
+                // Para que el teléfono pueda decir a dónde va cada cosa antes
+                // de mandarla, y sin tener que preguntar al servidor
+                'destino'   => $p['destino'] ?? 'cocina',
                 'divisible' => (int) ($p['divisible'] ?? 0) === 1,
                 'picante'   => (int) ($p['picante'] ?? 0),
                 'alergenos' => array_map(
@@ -272,16 +275,22 @@ class Comandero extends BaseController
 
             $this->comandas->recalcularTotal($comandaId);
 
-            // La pantalla de cocina ordena por `updated_at` y lo toma como la
-            // hora de envío, así que se sella aquí: si no, una ronda que estuvo
-            // media hora en el teléfono aparecería como si llevara media hora
-            // esperando en cocina y saldría la primera.
+            // Cada cosa a su sitio: cocina, barra o entrega directa. Es la misma
+            // función que usa el TPV fijo, para que no vuelvan a divergir.
             $aCocina = ! empty($datos['a_cocina']);
+            $conteo  = ['cocina' => 0, 'barra' => 0, 'directo' => 0];
             if ($aCocina) {
+                $conteo = $this->lineas->enviarAPreparacion($comandaId);
+
+                // La pantalla de cocina ordena por `updated_at` y lo toma como
+                // la hora de envío, así que se sella ahora: si no, una ronda que
+                // pasó media hora en el teléfono aparecería como si llevara
+                // media hora esperando en cocina y saldría la primera.
                 $this->lineas->builder()
                     ->where('comanda_id', $comandaId)
-                    ->where('enviado_cocina', 0)
-                    ->update(['enviado_cocina' => 1, 'updated_at' => date('Y-m-d H:i:s')]);
+                    ->where('enviado_cocina', 1)
+                    ->where('entregado', 0)
+                    ->update(['updated_at' => date('Y-m-d H:i:s')]);
             }
 
             // Cuánto tardó en llegar: si sale grande y siempre en la misma zona,
@@ -320,6 +329,7 @@ class Comandero extends BaseController
         return $this->response->setJSON([
             'ok'         => true,
             'comanda_id' => $comandaId,
+            'reparto'    => $conteo,
             'comanda'    => $this->detalle($comandaId),
         ]);
     }

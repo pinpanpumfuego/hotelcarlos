@@ -336,6 +336,23 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       tiene que notarse en el momento.
       · En azul y con borde discontinuo. El ámbar ya significa «ocupada» y el discontinuo dice que
       esto todavía no es firme.
+      · El borrador **se reavisa al abrir la mesa y cada 2 min** mientras haya algo apuntado. Sin
+      esto, un borrador que el camarero no estuviera tocando no aparecería nunca, y el que ya se
+      veía caducaría a los 8 minutos con el camarero todavía de pie en la mesa.
+- [x] **Cada cosa a su destino, también desde el móvil** (`ComandaLineaModel::enviarAPreparacion()`).
+      **Fallo real, mío**: el reparto por destino estaba escrito dos veces, en `Pos::enviarCocina()`
+      y en `Comandero::enviar()`, y la copia del móvil **se dejaba el caso `directo`**. Una agua
+      pedida desde el teléfono se quedaba marcada «enviada a cocina» para siempre: la pantalla de
+      barra no la muestra (no es suya) y la de cocina tampoco (es `directo`), así que **nadie la
+      iba a sacar nunca**. Le pasó a la comanda que Javier tomó de prueba: agua y cerveza
+      atascadas. Reparadas en base de datos.
+      · El reparto vive ahora **en el modelo, en un solo sitio**, y lo usan las dos puertas de
+      entrada. Duplicarlo fue el error de origen.
+      · **`directo`** (una botella, una bolsa de papas) no se prepara: se coge y se entrega, así que
+      se marca servido en el acto. `cocina` y `barra` van a su pantalla.
+      · El botón del comandero ya no dice «Enviar a cocina» sino **«Enviar · 1 a cocina · 1 a barra
+      · 1 directo»**, y cada línea lleva su etiqueta de destino con color propio.
+      · El TPV decía **«En cocina» a un agua**. Ahora hay estado `directo` y la etiqueta correcta.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

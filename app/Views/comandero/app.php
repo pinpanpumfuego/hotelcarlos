@@ -90,6 +90,15 @@
         }
         .linea .cuerpo { flex:1; min-width:0; }
         .linea .plato { font-weight:600; font-size:.95rem; }
+        /* Etiqueta de destino: cada color un sitio, para leerlo sin pararse */
+        .destino {
+            display:inline-block; margin-left:7px; padding:2px 7px; border-radius:6px;
+            font-size:.66rem; font-weight:600; letter-spacing:.03em; vertical-align:middle;
+            text-transform:uppercase;
+        }
+        .destino.cocina  { background:rgba(201,146,47,.22); color:#f0cf90; }
+        .destino.barra   { background:rgba(46,111,142,.28); color:#9ccbe4; }
+        .destino.directo { background:var(--alta); color:var(--suave); }
         .linea .detalle { font-size:.78rem; color:var(--suave); margin-top:3px; }
         .linea .precio { font-size:.85rem; color:var(--suave); white-space:nowrap; }
         .linea.enviada { opacity:.62; }
@@ -324,6 +333,10 @@
     let token = <?= json_encode(csrf_hash()) ?>;
     const $ = (s) => document.querySelector(s);
     const pesos = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    // A dónde va cada cosa. «Directo» es lo que se coge y se entrega sin que
+    // nadie lo prepare: una botella, una bolsa de papas.
+    const DESTINOS = { cocina: 'Cocina', barra: 'Barra', directo: 'Directo' };
 
     // ═══════════════════════════════════════════════════════════════
     //  Almacén local
@@ -637,6 +650,7 @@
             tmp: uuid(),
             producto_id: producto.id,
             nombre: nombre,
+            destino: producto.destino || 'cocina',
             precio: precio,
             cantidad: 1,
             notas: extras.notas || '',
@@ -694,6 +708,14 @@
         const b = borrador(claveActual);
         if (!b || b.lineas.length === 0) { return; }
 
+        // Se cuenta antes de vaciar el borrador, para poder decir a dónde fue
+        const reparto = { cocina: 0, barra: 0, directo: 0 };
+        b.lineas.forEach((l) => { reparto[l.destino || 'cocina'] += l.cantidad; });
+        const trozos = [];
+        if (reparto.cocina)  { trozos.push(reparto.cocina + ' a cocina'); }
+        if (reparto.barra)   { trozos.push(reparto.barra + ' a barra'); }
+        if (reparto.directo) { trozos.push(reparto.directo + ' para entregar'); }
+
         cola.push({
             uuid: uuid(),
             clave: b.clave,
@@ -722,7 +744,9 @@
         guardarBorradores();
         guardarCola();
 
-        avisar(navigator.onLine ? 'Enviado a cocina' : 'Guardado: se enviará al recuperar la señal');
+        avisar(navigator.onLine
+            ? 'Enviado · ' + trozos.join(' · ')
+            : 'Guardado: se enviará al recuperar la señal');
         pintarComanda();
         pintarEstado();
         pintarAvisos();
@@ -830,7 +854,9 @@
             if (l.notas) { detalle.push('“' + l.notas + '”'); }
 
             d.innerHTML =
-                '<div class="cuerpo"><div class="plato">' + escapar(l.nombre) + '</div>' +
+                '<div class="cuerpo"><div class="plato">' + escapar(l.nombre) +
+                '<span class="destino ' + (l.destino || 'cocina') + '">' +
+                DESTINOS[l.destino || 'cocina'] + '</span></div>' +
                 (detalle.length ? '<div class="detalle">' + escapar(detalle.join(' · ')) + '</div>' : '') +
                 '</div>' +
                 '<div class="precio">' + pesos(l.precio * l.cantidad) + '</div>' +
@@ -897,14 +923,25 @@
         }
 
         // ── Barra de acción ──
+        // El botón dice a dónde va cada cosa, no «a cocina» a secas: en la
+        // misma ronda puede haber platos, bebidas de barra y una botella que
+        // se entrega tal cual sin pasar por ningún lado.
         const unidades = b.lineas.reduce((a, l) => a + l.cantidad, 0);
         const importe  = b.lineas.reduce((a, l) => a + l.precio * l.cantidad, 0);
+        const reparto  = { cocina: 0, barra: 0, directo: 0 };
+        b.lineas.forEach((l) => { reparto[l.destino || 'cocina'] += l.cantidad; });
+
         $('#accion-izq').textContent = unidades === 0 ? 'Sin platos'
             : unidades + (unidades === 1 ? ' plato' : ' platos');
         $('#accion-der').textContent = unidades === 0 ? '' : pesos(importe);
         $('#btn-enviar').disabled = unidades === 0;
-        $('#btn-enviar-txt').textContent = unidades === 0 ? 'Enviar a cocina'
-            : 'Enviar a cocina (' + unidades + ')';
+
+        const trozos = [];
+        if (reparto.cocina)  { trozos.push(reparto.cocina + ' a cocina'); }
+        if (reparto.barra)   { trozos.push(reparto.barra + ' a barra'); }
+        if (reparto.directo) { trozos.push(reparto.directo + ' directo'); }
+        $('#btn-enviar-txt').textContent = unidades === 0
+            ? 'Enviar' : 'Enviar · ' + trozos.join(' · ');
     }
 
     /** Trae del servidor lo que ya está en cocina de esta comanda. */
@@ -1168,7 +1205,10 @@
 
         window.scrollTo(0, 0);
 
-        if (destino === 'comanda') { pintarComanda(); cargarEnviadas(); }
+        // Al abrir una mesa se reavisa al TPV aunque no se toque nada: si no,
+        // un borrador de hace rato no aparecería, y el que ya se está viendo
+        // caducaría a los 8 minutos mientras el camarero sigue en la mesa
+        if (destino === 'comanda') { pintarComanda(); cargarEnviadas(); avisarAlTpv(claveActual); }
         if (destino === 'carta')   { pintarCarta(); }
         if (destino === 'listos')  { pintarListos(); }
         if (destino === 'mesas')   { pintarMesas(); pintarAvisos(); }
@@ -1231,6 +1271,12 @@
 
     // Latido: mesas y platos listos. Solo en las pantallas donde se ven.
     setInterval(() => { if (vista === 'mesas' || vista === 'listos') { pulso(); } }, 20000);
+
+    // Mantiene vivo en el TPV el borrador de la mesa que se está atendiendo
+    setInterval(() => {
+        const b = claveActual ? borrador(claveActual) : null;
+        if (b && b.lineas.length > 0) { avisarAlTpv(claveActual); }
+    }, 120000);
     setInterval(sincronizar, 15000);
 
     if ('serviceWorker' in navigator) {

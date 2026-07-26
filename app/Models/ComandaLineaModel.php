@@ -38,6 +38,44 @@ class ComandaLineaModel extends Model
             ->findAll();
     }
 
+    /** Dónde se prepara cada cosa, para hablarle claro al camarero. */
+    public const DESTINOS = [
+        'cocina'  => 'Cocina',
+        'barra'   => 'Barra',
+        'directo' => 'Entrega directa',
+    ];
+
+    /**
+     * Manda a preparación lo que aún no se ha enviado, cada cosa a su sitio.
+     *
+     * Vive aquí y no en un controlador porque hay dos puertas de entrada: el
+     * TPV de la barra y el comandero del móvil. Estaba duplicado y el móvil se
+     * dejaba el caso de `directo`, así que un agua pedida desde el teléfono se
+     * quedaba esperando en una cocina que nunca la iba a sacar.
+     *
+     * Lo de destino `directo` (una botella, una bolsa de papas) no se prepara:
+     * se coge y se entrega, así que se marca servido en el acto.
+     *
+     * @return array<string,int> cuántas líneas fueron a cada destino
+     */
+    public function enviarAPreparacion(int $comandaId): array
+    {
+        $nuevas = $this->where('comanda_id', $comandaId)->where('enviado_cocina', 0)->findAll();
+        $ahora  = date('Y-m-d H:i:s');
+        $conteo = ['cocina' => 0, 'barra' => 0, 'directo' => 0];
+
+        foreach ($nuevas as $linea) {
+            $destino = $linea['destino'] ?? 'cocina';
+            $conteo[$destino] = ($conteo[$destino] ?? 0) + 1;
+
+            $this->update($linea['id'], $destino === 'directo'
+                ? ['enviado_cocina' => 1, 'entregado' => 1, 'servido' => 1, 'listo_en' => $ahora]
+                : ['enviado_cocina' => 1]);
+        }
+
+        return $conteo;
+    }
+
     /**
      * Pendientes de una zona de preparación ('cocina' o 'barra'):
      * solo lo que el mesero ya envió y aún no está listo.
