@@ -49,6 +49,21 @@ $routes->get('empleado/historial', 'Empleado::historial');
 $routes->get('empleado/manifest.webmanifest', 'Empleado::manifiesto');
 $routes->post('empleado/fichar', 'Empleado::fichar', ['filter' => 'tokenjson']);
 
+// ── Comandero: el camarero toma nota desde su móvil (PWA) ───────────
+// Sin usuario del sistema: entra con su documento y el PIN de fichaje, igual
+// que en el portal del empleado. No cobra, solo toma nota.
+$routes->get('comandero', 'Comandero::index');
+$routes->post('comandero/entrar', 'Comandero::entrar');
+$routes->post('comandero/salir', 'Comandero::salir');
+$routes->get('comandero/manifest.webmanifest', 'Comandero::manifiesto');
+$routes->group('comandero/api', ['filter' => ['tokenjson', 'comandero']], static function ($routes) {
+    $routes->get('estado', 'Comandero::estado');
+    $routes->get('pulso', 'Comandero::pulso');
+    $routes->get('comanda/(:num)', 'Comandero::comanda/$1');
+    $routes->post('enviar', 'Comandero::enviar');
+    $routes->post('servir/(:num)', 'Comandero::servir/$1');
+});
+
 // ── Acceso ──────────────────────────────────────────────────────────
 $routes->get('login', 'Login::index');
 $routes->post('login/entrar', 'Login::entrar');

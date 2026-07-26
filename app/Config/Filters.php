@@ -29,6 +29,7 @@ class Filters extends BaseFilters
         'rol'           => \App\Filters\Rol::class,
         'tokenjson'     => \App\Filters\TokenJson::class,
         'tpv'           => \App\Filters\Tpv::class,
+        'comandero'     => \App\Filters\Comandero::class,
         'csrf'          => CSRF::class,
         'toolbar'       => DebugToolbar::class,
         'honeypot'      => Honeypot::class,

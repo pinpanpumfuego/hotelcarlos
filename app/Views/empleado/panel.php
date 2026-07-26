@@ -30,6 +30,22 @@ $dias      = ['Mon' => 'lunes', 'Tue' => 'martes', 'Wed' => 'miércoles', 'Thu' 
 <main>
     <div id="aviso" class="aviso" style="display:none"></div>
 
+    <!-- ── Comandero: solo para quien atiende mesas ── -->
+    <?php if (in_array($empleado['rol_tpv'] ?? '', \App\Filters\Comandero::ROLES, true)): ?>
+        <a href="<?= site_url('comandero') ?>" class="tarjeta"
+           style="display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit">
+            <span style="width:46px; height:46px; border-radius:14px; background:#1f4d36; color:#fff;
+                         display:grid; place-items:center; font-size:1.3rem; flex:none">
+                <i class="bi bi-journal-text"></i>
+            </span>
+            <span style="flex:1">
+                <strong style="display:block">Tomar comandas</strong>
+                <span style="font-size:.82rem; color:#7b8a81">Funciona aunque te quedes sin señal</span>
+            </span>
+            <i class="bi bi-chevron-right" style="color:#7b8a81"></i>
+        </a>
+    <?php endif ?>
+
     <!-- ── Estado y botones ── -->
     <div class="tarjeta">
         <div class="estado-grande">

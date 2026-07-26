@@ -93,11 +93,19 @@ class ComandaModel extends Model
             ->findAll();
     }
 
-    /** Comandas cerradas recientes. */
+    /**
+     * Comandas cerradas recientes.
+     *
+     * Los dos join son `left` a propósito: una comanda tomada desde el
+     * comandero del móvil no tiene usuario del sistema, solo empleado. Con un
+     * join normal esas comandas desaparecerían del historial sin avisar.
+     */
     public function historial(int $limite = 15): array
     {
-        return $this->select('comandas.*, usuarios.nombre AS usuario_nombre, reservas.codigo AS reserva_codigo')
-            ->join('usuarios', 'usuarios.id = comandas.usuario_id')
+        return $this->select('comandas.*, reservas.codigo AS reserva_codigo,
+                              COALESCE(usuarios.nombre, empleados.nombre) AS usuario_nombre')
+            ->join('usuarios', 'usuarios.id = comandas.usuario_id', 'left')
+            ->join('empleados', 'empleados.id = comandas.empleado_id', 'left')
             ->join('reservas', 'reservas.id = comandas.reserva_id', 'left')
             ->whereIn('comandas.estado', ['cobrada', 'anulada'])
             ->orderBy('comandas.cerrada_en', 'DESC')

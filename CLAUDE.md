@@ -279,6 +279,32 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       aparte, pero **entra en el total** y hay que repartirla igual.
       · `propinas/comprobante/N` imprime **una hoja por trabajador** con su importe, el periodo, el
       texto de la Ley 1935 y hueco de firma: es la constancia que exige la norma.
+- [x] **Comandero: el camarero toma nota desde su móvil** (`/comandero`, PWA instalable).
+      Dos decisiones de Javier marcan el diseño: **no se cobra desde el móvil** (el dinero se queda
+      en la caja fija, así que perder el teléfono no es perder dinero) y **tiene que funcionar sin
+      señal** (el wifi no llega al muelle ni a la fogata).
+      · **Entra con documento + PIN de fichaje**, no con usuario del sistema: un camarero no tiene
+      cuenta del panel. Comparte sesión con el portal del empleado (`empleado_id`) y el filtro
+      `Comandero` exige `rol_tpv` de camarero o encargado **en cada petición**, no solo al entrar:
+      si a alguien le retiran el permiso a media tarde, se le corta al momento.
+      · **Una ronda se manda entera y de una vez** a `POST comandero/api/enviar`, no plato a plato.
+      Sin señal se guarda en el teléfono y se reintenta sola. El `uuid` que genera el teléfono **no
+      cambia entre reintentos** y queda en `comandero_envios`: por eso un reintento de algo que sí
+      había llegado devuelve `repetida:true` y **no duplica platos en cocina**. Verificado.
+      · **La cola se vacía de una en una, nunca en paralelo**: con `$regenerate = true` el token CSRF
+      rota en cada petición y dos envíos simultáneos harían que el segundo llegara con el token
+      viejo. Y como la pantalla se sirve de la caché cuando no hay red, el token que trae el HTML
+      puede estar caducado: antes de vaciar la cola se pide uno nuevo con un GET (exento de CSRF).
+      · **El precio se recalcula siempre en el servidor**, nunca se acepta el del teléfono: la carta
+      cacheada puede tener días.
+      · La hora de envío se sella al llegar (`updated_at`), no cuando se tomó: si no, una ronda que
+      pasó media hora en el teléfono saldría la primera en cocina como si llevara media hora
+      esperando. Se guarda aparte `demora_seg`, que delata qué zonas no tienen cobertura.
+      · **Aviso de platos listos** con la mesa a la que ir (`listosDetalle()`), no un número suelto.
+      · **`comandas.usuario_id` pasó a admitir nulos** (migración `ComandaSinUsuario`): una comanda
+      del móvil no tiene usuario del sistema, responde el `empleado_id`. Ojo: `historial()` hacía un
+      `join` normal contra `usuarios` y esas comandas **habrían desaparecido del historial sin
+      avisar**; ahora es `left join` con `COALESCE(usuario, empleado)`.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

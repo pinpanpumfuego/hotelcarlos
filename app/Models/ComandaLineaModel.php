@@ -60,6 +60,28 @@ class ComandaLineaModel extends Model
             ->findAll();
     }
 
+    /**
+     * Qué platos están listos y en qué mesa.
+     *
+     * El contador suelto no le sirve al camarero: «2 platos listos» no dice a
+     * dónde ir. Esto sí, y por eso lo usa el comandero del móvil.
+     */
+    public function listosDetalle(): array
+    {
+        return $this->select('comanda_lineas.id, comanda_lineas.nombre_producto,
+                              comanda_lineas.cantidad, comanda_lineas.destino,
+                              comanda_lineas.listo_en, comandas.id AS comanda_id,
+                              comandas.numero, comandas.mesa, unidades.nombre AS unidad_nombre')
+            ->join('comandas', 'comandas.id = comanda_lineas.comanda_id')
+            ->join('reservas', 'reservas.id = comandas.reserva_id', 'left')
+            ->join('unidades', 'unidades.id = reservas.unidad_id', 'left')
+            ->where('comandas.estado', 'abierta')
+            ->where('comanda_lineas.entregado', 1)
+            ->where('comanda_lineas.servido', 0)
+            ->orderBy('comanda_lineas.listo_en')
+            ->findAll();
+    }
+
     /** Cuántos platos hay listos en cocina esperando a ser servidos. */
     public function listosParaServir(): int
     {
