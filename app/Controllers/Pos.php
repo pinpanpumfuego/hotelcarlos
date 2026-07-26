@@ -42,6 +42,8 @@ class Pos extends BaseController
             'compartido'  => $this->tpv->compartido(),
             'bloqueoSeg'  => $this->tpv->segundosBloqueo(),
             'camarero'    => $this->tpv->paraPantalla(),
+            // Se sugiere, no se impone: la Ley 1935 de 2018 la hace voluntaria
+            'propinaSugerida' => (float) (new \App\Models\ConfiguracionModel())->obtener('tpv_propina_sugerida', '10'),
         ]);
     }
 

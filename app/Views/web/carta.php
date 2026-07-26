@@ -54,6 +54,18 @@
         Si tienes alguna alergia o intolerancia, avísanos al reservar o al llegar: adaptamos los platos siempre que sea posible.
         Los precios están en pesos colombianos e incluyen impuestos.
     </div>
+
+    <?php if (! empty($propinaSugerida)): ?>
+        <!-- La Ley 1935 de 2018 obliga a informarlo también en la carta -->
+        <div class="alert alert-light border small">
+            <i class="bi bi-cash-coin me-1"></i>
+            <strong>Propina.</strong> Sugerimos un
+            <?= rtrim(rtrim(number_format($propinaSugerida, 1, ',', '.'), '0'), ',') ?> % de propina,
+            que es <strong>voluntaria</strong>: puedes aceptarla, rechazarla o cambiar su valor, y te lo
+            preguntaremos antes de cobrar. Se reparte íntegramente entre quienes te atienden
+            (Ley 1935 de 2018).
+        </div>
+    <?php endif ?>
 </div>
 
 <?= $this->endSection() ?>

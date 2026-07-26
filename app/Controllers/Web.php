@@ -96,6 +96,8 @@ class Web extends BaseController
             'porCategoria' => $porCategoria,
             'dietas'       => \App\Models\CartaProductoModel::DIETAS,
             'alergenos'    => \App\Models\CartaProductoModel::ALERGENOS,
+            // La propina se anuncia también aquí: la ley pide informarla en la carta
+            'propinaSugerida' => (float) (new \App\Models\ConfiguracionModel())->obtener('tpv_propina_sugerida', '10'),
             'tituloPagina' => 'Restaurante',
             'paginaActiva' => 'carta',
             'descripcion'  => 'Nuestra carta: cocina local con productos de la región. Consulta alérgenos y opciones veganas.',

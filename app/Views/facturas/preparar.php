@@ -107,9 +107,17 @@
                         </tbody>
                         <tfoot class="table-light">
                             <tr class="fw-bold">
-                                <td colspan="3">Total</td>
+                                <td colspan="3">Total a facturar</td>
                                 <td class="text-end">$<?= number_format($total, 0, ',', '.') ?></td>
                             </tr>
+                            <?php if (! empty($propina)): ?>
+                                <tr class="text-muted">
+                                    <td colspan="3" class="fw-normal">
+                                        Propina voluntaria — <strong>no se factura</strong>
+                                    </td>
+                                    <td class="text-end fw-normal">$<?= number_format($propina, 0, ',', '.') ?></td>
+                                </tr>
+                            <?php endif ?>
                         </tfoot>
                     </table>
                 </div>

@@ -18,6 +18,7 @@
         td { vertical-align: top; padding: 1px 0; }
         .der { text-align: right; white-space: nowrap; }
         .grande { font-size: 15px; font-weight: bold; }
+        .legal { font-size: 10px; line-height: 1.35; margin: 8px 0 0; text-align: justify; }
         .nota { font-style: italic; padding-left: 10px; }
         .pie { font-size: 11px; margin-top: 10px; }
         .acciones { margin: 16px 0; text-align: center; }
@@ -77,10 +78,19 @@
         <tr><td>Descuento</td><td class="der">−$<?= number_format($comanda['descuento'], 0, ',', '.') ?></td></tr>
     <?php endif ?>
     <?php if ($comanda['propina'] > 0): ?>
-        <tr><td>Propina</td><td class="der">$<?= number_format($comanda['propina'], 0, ',', '.') ?></td></tr>
+        <tr><td>Propina voluntaria</td><td class="der">$<?= number_format($comanda['propina'], 0, ',', '.') ?></td></tr>
     <?php endif ?>
     <tr class="grande"><td>TOTAL</td><td class="der">$<?= number_format($comanda['a_pagar'], 0, ',', '.') ?></td></tr>
 </table>
+
+<?php if ($comanda['propina'] > 0): ?>
+    <!-- La Ley 1935 de 2018 obliga a informarlo por escrito en la cuenta -->
+    <p class="legal">
+        La propina es <strong>voluntaria</strong>. Usted puede aceptarla, rechazarla
+        o modificar su valor. Se destina íntegramente a los trabajadores que le
+        atendieron (Ley 1935 de 2018).
+    </p>
+<?php endif ?>
 
 <?php if (! empty($comanda['pagos'])): ?>
     <div class="sep"></div>

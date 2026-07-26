@@ -156,7 +156,11 @@ class Facturas extends BaseController
                 'email'     => (string) ($comanda['email'] ?? ''),
             ],
             'lineas'   => $lineas,
-            'total'    => (float) $comanda['total'] - (float) $comanda['descuento'] + (float) $comanda['propina'],
+            // La propina NO se factura: no es ingreso del hotel, es de los
+            // trabajadores (Ley 1935 de 2018). Se muestra aparte para que
+            // cuadre con lo que el cliente pagó.
+            'total'    => (float) $comanda['total'] - (float) $comanda['descuento'],
+            'propina'  => (float) $comanda['propina'],
             'config'   => $this->parametros(),
             'listo'    => $this->listoParaFacturar(),
         ]);

@@ -248,6 +248,23 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       **Verificado**: margen 62,5 % calculado en vivo; 4 adultos + 1 niño = $560.000; rechazo por
       día no operativo y por cupo insuficiente («solo quedan 1 plaza»); cargo al folio al realizarla;
       y reserva web de $1.190.000 que pasa a **$1.610.000** al añadir cabalgata y paseo en lancha.
+- [x] **Propina conforme a la Ley 1935 de 2018** (revisión del TPV a petición de Javier).
+      **Ya estaba bien**: la propina se muestra separada en el ticket, y **no se factura** —
+      `Facturas::emitir()` recalcula el total desde las líneas de producto, así que no entra en la
+      base gravable ni va a la DIAN. Era lo más fácil de hacer mal.
+      **Se corrigió**:
+      · **No se decía en ninguna parte que es voluntaria.** La ley obliga a informarlo por escrito
+      en la carta y en la cuenta. Añadido el aviso en el **ticket** y en la **carta pública**.
+      · **No había propina sugerida**: el camarero tecleaba una cifra a mano. Ahora el TPV ofrece
+      `Sin propina / mitad / sugerida` (10 % configurable en Administración, 0 para no sugerir).
+      **`Sin propina` tiene el mismo peso visual que el resto**: la ley la hace voluntaria, así que
+      esconder esa opción sería empujar al cliente.
+      · **La pantalla de facturar sumaba la propina al total** aunque luego no se facturaba. Ahora
+      dice «Total a facturar» y debajo «Propina voluntaria — no se factura».
+      **Pendiente y avisado a Javier**: la ley exige que el 100 % vaya a los trabajadores y que se
+      les **informe cómo se repartió**. Hoy Reportes dice cuánta propina generó cada camarero, pero
+      no hay constancia documentada del reparto (liquidación firmada por periodo).
+      **Aviso**: esto es lectura de la norma, no asesoría legal; conviene que lo confirme su contador.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

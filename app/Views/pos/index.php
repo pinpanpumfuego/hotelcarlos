@@ -307,6 +307,18 @@
         }
         .oculto { display: none !important; }
 
+        /* Propina sugerida: «Sin propina» tiene el mismo peso visual que el
+           resto, porque la ley la define como voluntaria. */
+        .propinas-rapidas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .propinas-rapidas .btn-propina {
+            font: inherit; font-size: 1.05rem; font-weight: 600; padding: 14px 4px;
+            border-radius: 13px; border: 1px solid var(--borde); background: #fbfdfb;
+            color: var(--tinta); cursor: pointer; display: flex; flex-direction: column;
+            align-items: center; gap: 2px; transition: transform .08s ease;
+        }
+        .propinas-rapidas .btn-propina:active { transform: scale(.95); }
+        .propinas-rapidas .btn-propina small { font-size: .72rem; font-weight: 400; color: var(--tinta-suave); }
+
         /* Quién está en la pantalla */
         .chip-camarero {
             display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
@@ -693,6 +705,7 @@
     }
 
     // ── TPV compartido: bloqueo e identificación ─────────────────
+    const PROPINA_SUGERIDA = <?= (float) $propinaSugerida ?>;
     const COMPARTIDO = <?= $compartido ? 'true' : 'false' ?>;
     const SEG_BLOQUEO = <?= (int) $bloqueoSeg ?>;
     let camarero = <?= json_encode($camarero) ?>;
@@ -1466,12 +1479,55 @@
 
     $('#cli-quitar').onclick = () => asignarCliente({ tipo: 'ninguno' });
 
+    /**
+     * Propina.
+     *
+     * La Ley 1935 de 2018 la define como voluntaria: se puede sugerir, pero el
+     * cliente debe poder rechazarla o cambiarla, y hay que decírselo. Por eso
+     * el «Sin propina» está a la misma altura que el resto, no escondido.
+     */
     $('#btn-propina').onclick = () => {
-        abrirTeclado('Propina en pesos', 'Se suma al total de la cuenta.', comanda.propina, async (valor) => {
+        const base = Math.max(0, comanda.total - comanda.descuento);
+
+        async function fijar(valor) {
             const datos = await api('/comanda/' + comanda.id + '/propina', {
-                method: 'POST', body: JSON.stringify({ tipo: 'valor', valor: valor }),
+                method: 'POST', body: JSON.stringify({ tipo: 'valor', valor: Math.round(valor) }),
             });
             if (datos) { comanda = datos.comanda; pintarComanda(); }
+        }
+
+        const sugeridos = PROPINA_SUGERIDA > 0
+            ? [0, Math.round(PROPINA_SUGERIDA / 2), PROPINA_SUGERIDA]
+            : [0, 5, 10];
+
+        const botones = sugeridos.map(function (pct) {
+            const importe = Math.round(base * pct / 100);
+            return '<button class="btn-propina" data-pct="' + pct + '" data-importe="' + importe + '">'
+                + (pct === 0 ? 'Sin propina' : pct + '%')
+                + (pct > 0 ? '<small>' + pesos(importe) + '</small>' : '')
+                + '</button>';
+        }).join('');
+
+        abrirTexto(
+            'Propina voluntaria',
+            'Pregúntale al cliente. Puede no dejar nada, o poner otra cantidad.',
+            '',
+            async (escrito) => {
+                const valor = parseInt(String(escrito).replace(/\D/g, ''), 10);
+                if (!isNaN(valor)) { await fijar(valor); }
+            },
+            '<div class="propinas-rapidas">' + botones + '</div>'
+            + '<p class="ayuda" style="margin:2px 0 6px">…o escribe otra cantidad en pesos:</p>'
+        );
+
+        $('#txt-campo').setAttribute('inputmode', 'numeric');
+        $('#txt-campo').placeholder = 'Otra cantidad';
+
+        document.querySelectorAll('.btn-propina').forEach(function (b) {
+            b.onclick = async () => {
+                $('#modal-texto').classList.remove('abierta');
+                await fijar(parseInt(b.dataset.importe, 10) || 0);
+            };
         });
     };
 

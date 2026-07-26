@@ -86,9 +86,24 @@
                         </div>
                     </div>
 
-                    <p class="form-text mb-2">
+                    <p class="form-text mb-3">
                         <strong>Anular una comanda siempre</strong> pide el PIN de un encargado, y queda
                         anotado quién lo autorizó.
+                    </p>
+
+                    <hr>
+                    <label class="form-label fw-semibold">Propina sugerida</label>
+                    <div class="input-group mb-2" style="max-width: 180px;">
+                        <input type="number" name="propina_sugerida" class="form-control" min="0" max="100" step="1"
+                               value="<?= (float) $tpv['propina_sugerida'] ?>">
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <p class="form-text mb-0">
+                        El TPV ofrecerá <strong>Sin propina</strong>, la mitad y este porcentaje.
+                        En Colombia la propina es <strong>voluntaria</strong> (Ley 1935 de 2018):
+                        el cliente puede rechazarla o cambiarla, hay que decírselo por escrito
+                        —el ticket ya lo hace— y el 100 % es de los trabajadores.
+                        Pon 0 para no sugerir ninguna.
                     </p>
 
                     <?php if ($tpv['con_rol'] === []): ?>
