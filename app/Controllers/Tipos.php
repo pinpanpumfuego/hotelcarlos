@@ -18,10 +18,27 @@ class Tipos extends BaseController
 
     public function index()
     {
+        $tipos     = $this->tipos->orderBy('nombre')->findAll();
+        $medios    = new MedioModel();
+        $servicios = new ServicioModel();
+
+        // Cuántas fotos y servicios tiene cada tipo, para verlo de un vistazo
+        $resumen = [];
+        foreach ($tipos as $t) {
+            $galeria = $medios->deTipo((int) $t['id']);
+            $resumen[$t['id']] = [
+                'fotos'     => count(array_filter($galeria, static fn ($m) => $m['tipo'] === 'foto')),
+                'videos'    => count(array_filter($galeria, static fn ($m) => $m['tipo'] === 'video')),
+                'servicios' => count($servicios->deTipo((int) $t['id'])),
+                'portada'   => $galeria[0] ?? null,
+            ];
+        }
+
         return view('tipos/index', [
             'titulo'  => 'Tipos de alojamiento',
             'seccion' => 'tipos',
-            'tipos'   => $this->tipos->orderBy('nombre')->findAll(),
+            'tipos'   => $tipos,
+            'resumen' => $resumen,
         ]);
     }
 
