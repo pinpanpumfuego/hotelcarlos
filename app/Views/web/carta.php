@@ -3,13 +3,13 @@
 
 <div class="container seccion">
     <div class="text-center mb-5 reveal visible">
-        <p class="etiqueta">Restaurante</p>
-        <h1 class="titulo-seccion">Nuestra carta</h1>
-        <p class="text-muted mt-2">Cocina local con productos de la región, junto al lago.</p>
+        <p class="etiqueta"><?= esc(lang('Web.restaurante')) ?></p>
+        <h1 class="titulo-seccion"><?= esc(lang('Web.nuestraCarta')) ?></h1>
+        <p class="text-muted mt-2"><?= esc(lang('Web.cocinaLocalIntro')) ?></p>
     </div>
 
     <?php if (empty($porCategoria)): ?>
-        <p class="text-center text-muted">Muy pronto publicaremos nuestra carta.</p>
+        <p class="text-center text-muted"><?= esc(lang('Web.cartaVacia')) ?></p>
     <?php endif ?>
 
     <?php foreach ($porCategoria as $categoria => $productos): ?>
@@ -28,7 +28,7 @@
                                 <?php endif ?>
                             <?php endforeach ?>
                             <?php if ((int) ($p['picante'] ?? 0) > 0): ?>
-                                <span title="Picante"><?= str_repeat('🌶', (int) $p['picante']) ?></span>
+                                <span title="<?= esc(lang('Web.picante')) ?>"><?= str_repeat('🌶', (int) $p['picante']) ?></span>
                             <?php endif ?>
                         </h3>
                         <?php if ($p['descripcion']): ?>
@@ -37,7 +37,8 @@
                         <?php if (! empty($p['alergenos_lista'])): ?>
                             <p class="small mb-0" style="color:#9a3b40;">
                                 <i class="bi bi-exclamation-triangle"></i>
-                                Contiene: <?= esc(implode(', ', array_map(static fn ($a) => $alergenos[$a], $p['alergenos_lista']))) ?>
+                                <?= esc(lang('Web.contiene')) ?>
+                                <?= esc(implode(', ', array_map(static fn ($a) => $alergenos[$a], $p['alergenos_lista']))) ?>
                             </p>
                         <?php endif ?>
                     </div>
@@ -51,19 +52,17 @@
 
     <div class="alert alert-light border small mt-4">
         <i class="bi bi-info-circle me-1"></i>
-        Si tienes alguna alergia o intolerancia, avísanos al reservar o al llegar: adaptamos los platos siempre que sea posible.
-        Los precios están en pesos colombianos e incluyen impuestos.
+        <?= esc(lang('Web.avisoAlergias')) ?>
     </div>
 
     <?php if (! empty($propinaSugerida)): ?>
         <!-- La Ley 1935 de 2018 obliga a informarlo también en la carta -->
         <div class="alert alert-light border small">
             <i class="bi bi-cash-coin me-1"></i>
-            <strong>Propina.</strong> Sugerimos un
-            <?= rtrim(rtrim(number_format($propinaSugerida, 1, ',', '.'), '0'), ',') ?> % de propina,
-            que es <strong>voluntaria</strong>: puedes aceptarla, rechazarla o cambiar su valor, y te lo
-            preguntaremos antes de cobrar. Se reparte íntegramente entre quienes te atienden
-            (Ley 1935 de 2018).
+            <strong><?= esc(lang('Web.propinaTitulo')) ?></strong>
+            <?php // El texto lleva <strong> dentro, así que aquí no se escapa:
+                  // los cuatro idiomas están escritos por nosotros, no vienen de fuera ?>
+            <?= lang('Web.propinaTexto', [rtrim(rtrim(number_format($propinaSugerida, 1, ',', '.'), '0'), ',')]) ?>
         </div>
     <?php endif ?>
 </div>

@@ -8,16 +8,15 @@ use App\Models\MedioModel;
 
 <div class="container seccion">
     <div class="text-center mb-5 reveal">
-        <p class="etiqueta">Experiencias</p>
-        <h1 class="titulo-seccion">Algo más que dormir junto al lago</h1>
+        <p class="etiqueta"><?= esc(lang('Web.experiencias')) ?></p>
+        <h1 class="titulo-seccion"><?= esc(lang('Web.algoMasQueDormir')) ?></h1>
         <p class="text-muted mt-2" style="max-width: 620px; margin: 0 auto;">
-            Actividades para hacer durante tu estancia. Se reservan al llegar o escribiéndonos antes,
-            porque los cupos son pequeños a propósito.
+            <?= esc(lang('Web.expIntro')) ?>
         </p>
     </div>
 
     <?php if ($experiencias === []): ?>
-        <p class="text-center text-muted reveal">Muy pronto publicaremos nuestras experiencias.</p>
+        <p class="text-center text-muted reveal"><?= esc(lang('Web.expVacio')) ?></p>
     <?php else: ?>
         <div class="row g-4">
             <?php foreach ($experiencias as $e): ?>
@@ -50,9 +49,9 @@ use App\Models\MedioModel;
 
                             <div class="d-flex flex-wrap gap-2 mb-3">
                                 <span class="chip"><i class="bi bi-clock me-1"></i><?= esc(ExperienciaModel::duracion((int) $e['duracion_min'])) ?></span>
-                                <span class="chip"><i class="bi bi-people me-1"></i>Máx. <?= (int) $e['capacidad'] ?></span>
+                                <span class="chip"><i class="bi bi-people me-1"></i><?= esc(lang('Web.maxAbrev')) ?> <?= (int) $e['capacidad'] ?></span>
                                 <?php if ($e['edad_minima'] !== null): ?>
-                                    <span class="chip"><i class="bi bi-person-check me-1"></i>Desde <?= (int) $e['edad_minima'] ?> años</span>
+                                    <span class="chip"><i class="bi bi-person-check me-1"></i><?= esc(lang('Web.desdeEdad', [(int) $e['edad_minima']])) ?></span>
                                 <?php endif ?>
                             </div>
 
@@ -63,7 +62,7 @@ use App\Models\MedioModel;
                             <?php if (trim((string) $e['incluye']) !== ''): ?>
                                 <p class="small mb-3">
                                     <i class="bi bi-check-circle text-success me-1"></i>
-                                    <span class="text-muted">Incluye: <?= esc($e['incluye']) ?></span>
+                                    <span class="text-muted"><?= esc(lang('Web.incluyeDosPuntos')) ?> <?= esc($e['incluye']) ?></span>
                                 </p>
                             <?php endif ?>
 
@@ -71,7 +70,7 @@ use App\Models\MedioModel;
                                 <div>
                                     <div class="precio-desde fs-5">$<?= number_format((float) $e['precio'], 0, ',', '.') ?></div>
                                     <div class="small text-muted">
-                                        <?= $e['tipo_precio'] === 'grupo' ? 'el grupo' : 'por persona' ?>
+                                        <?= esc($e['tipo_precio'] === 'grupo' ? lang('Web.elGrupo') : lang('Web.porPersona')) ?>
                                         · <?= esc(ExperienciaModel::textoDias($e)) ?>
                                     </div>
                                 </div>
@@ -83,12 +82,9 @@ use App\Models\MedioModel;
         </div>
 
         <div class="text-center mt-5 reveal">
-            <p class="text-muted">
-                Todas se reservan con tu estancia. Si ya tienes fecha, dínoslo al reservar
-                y te guardamos el cupo.
-            </p>
-            <a href="<?= site_url('reservar') ?>" class="btn btn-reserva">
-                <i class="bi bi-calendar-check me-1"></i>Reservar mi estancia
+            <p class="text-muted"><?= esc(lang('Web.expCierre')) ?></p>
+            <a href="<?= url_web('reservar') ?>" class="btn btn-reserva">
+                <i class="bi bi-calendar-check me-1"></i><?= esc(lang('Web.reservarEstancia')) ?>
             </a>
         </div>
     <?php endif ?>
