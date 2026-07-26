@@ -98,6 +98,37 @@
                         </option>
                     </select>
 
+                    <label class="form-label fw-semibold mt-3">¿De dónde viene?</label>
+                    <select name="canal" class="form-select" id="canalReserva">
+                        <?php foreach (\App\Models\CanalConexionModel::CANALES as $clave => [$nombre, $icono, $color, $comision]): ?>
+                            <option value="<?= $clave ?>" data-comision="<?= $comision ?>"
+                                    <?= old('canal', $reserva['canal'] ?? 'directa') === $clave ? 'selected' : '' ?>>
+                                <?= esc($nombre) ?><?= $comision > 0 ? ' (' . $comision . ' % de comisión)' : '' ?>
+                            </option>
+                        <?php endforeach ?>
+                    </select>
+
+                    <div id="datosPortal" style="display:none">
+                        <div class="row g-2 mt-1">
+                            <div class="col-7">
+                                <label class="form-label small mb-1">Referencia del portal</label>
+                                <input type="text" name="referencia_externa" class="form-control form-control-sm" maxlength="120"
+                                       value="<?= esc(old('referencia_externa', $reserva['referencia_externa'] ?? '')) ?>"
+                                       placeholder="Nº de reserva de Booking">
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label small mb-1">Comisión</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" name="comision" class="form-control" step="0.1" min="0" max="100"
+                                           id="comisionReserva"
+                                           value="<?= esc(old('comision', (float) ($reserva['comision'] ?? 0))) ?>">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-text">Sirve para comparar en Reportes lo que deja cada canal.</div>
+                    </div>
+
                     <label class="form-label fw-semibold mt-3">Notas</label>
                     <textarea name="notas" class="form-control" rows="3"
                               placeholder="Peticiones especiales, hora de llegada…"><?= esc(old('notas', $reserva['notas'] ?? '')) ?></textarea>
@@ -138,5 +169,27 @@
         <a href="<?= site_url('reservas') ?>" class="btn btn-outline-secondary btn-lg">Cancelar</a>
     </div>
 </form>
+
+<script>
+(function () {
+    // Los datos del portal solo se piden si la reserva no es directa
+    const canal = document.getElementById('canalReserva');
+    const caja = document.getElementById('datosPortal');
+    const comision = document.getElementById('comisionReserva');
+
+    function refrescar(cambiado) {
+        const esDirecta = canal.value === 'directa';
+        caja.style.display = esDirecta ? 'none' : 'block';
+
+        // Al cambiar de portal se propone su comisión típica
+        if (cambiado) {
+            comision.value = esDirecta ? 0 : (canal.selectedOptions[0].dataset.comision || 0);
+        }
+    }
+
+    canal.addEventListener('change', () => refrescar(true));
+    refrescar(false);
+})();
+</script>
 
 <?= $this->endSection() ?>

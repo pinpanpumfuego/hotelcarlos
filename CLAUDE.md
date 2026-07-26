@@ -196,6 +196,32 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       El desglose también se ve en la web pública (paso 2 y 3 del motor de reservas) y en la ficha
       de la reserva. **Verificado**: temporada +35 % × fin de semana +20 % × tope máximo × suplemento
       por adulto adicional dan el mismo total en simulador, calendario y web.
+- [x] **Sincronización con portales (Booking, Airbnb) por iCal**
+      (`App\Libraries\Ical`, `App\Libraries\SincronizadorCanales`, controlador `Canales`,
+      comando `canales:sincronizar`; tablas `canal_conexiones` y `bloqueos`; columnas nuevas
+      `reservas.canal / comision / referencia_externa` y `unidades.token_ical`).
+      **Por qué iCal y no la API de Booking**: las APIs existen (Reservations API, ARI) pero solo
+      se entregan a proveedores del *Connectivity Partner Programme*, con certificación y cartera de
+      alojamientos. Un hotel suelto no las obtiene, y eso no se resuelve programando. iCal es lo
+      único que Booking, Airbnb y Expedia abren a cualquier alojamiento.
+      · **Exportar**: `/calendario-ical/{token}` por cabaña, sin sesión (Booking no puede iniciarla)
+      pero con token de 48 caracteres, renovable. Publica **solo fechas**: ni nombres ni importes.
+      **No devuelve los bloqueos que vinieron de otro portal**, para no crear un eco entre portales
+      que acabaría bloqueando fechas realmente libres.
+      · **Importar**: una conexión por cabaña y portal. `reemplazarDeConexion()` borra y reinserta,
+      que es la única forma de que una reserva cancelada en Booking desaparezca de aquí.
+      · **`ReservaModel::unidadDisponible()` mira ahora también los bloqueos**: ahí es donde esto
+      sirve de algo. Verificado: con la Cabaña 2 bloqueada, el motor ofrece 5 de 7.
+      · **Detección de sobreventa** (`BloqueoModel::conflictos()`): reservas propias que chocan con
+      un bloqueo, en rojo arriba del todo y también en la salida del comando.
+      · `Ical` se implementa a mano (RFC 5545: plegado a 75 octetos con `mb_strcut`, escapado,
+      `DTEND` exclusivo) para no depender de una librería en hosting compartido.
+      · **Canal de origen** en cada reserva con su comisión típica (Booking 17 %, Airbnb 15 %),
+      para poder comparar en Reportes lo que deja la venta directa.
+      **Verificado de punta a punta**: calendario exportado válido; importado en otra cabaña (3 fechas);
+      el motor deja de ofrecerla; sobreventa provocada y detectada; y dirección inválida que devuelve
+      «esa dirección no devuelve un calendario».
+      **Pendiente**: programar `canales:sincronizar` cada hora al desplegar.
 - [x] **Experiencias y actividades** (`ExperienciaModel`, `ExperienciaReservaModel`, controlador
       `Experiencias`; tablas `experiencias` y `experiencia_reservas`; `medios.experiencia_id`).
       Venta de mayor margen que la habitación, ofrecida en tres sitios: la web pública

@@ -8,7 +8,7 @@ class ReservaModel extends Model
 {
     protected $table         = 'reservas';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['codigo', 'huesped_id', 'unidad_id', 'fecha_entrada', 'fecha_salida', 'adultos', 'ninos', 'estado', 'total', 'desglose_precio', 'notas'];
+    protected $allowedFields = ['codigo', 'huesped_id', 'unidad_id', 'fecha_entrada', 'fecha_salida', 'adultos', 'ninos', 'estado', 'canal', 'comision', 'referencia_externa', 'total', 'desglose_precio', 'notas'];
     protected $useTimestamps = true;
 
     protected $validationRules = [
@@ -79,7 +79,10 @@ class ReservaModel extends Model
 
     /**
      * Comprueba si la unidad está libre en el rango [entrada, salida).
-     * El día de salida no cuenta como ocupado: otra reserva puede entrar ese mismo día.
+     *
+     * El día de salida no cuenta como ocupado: otra reserva puede entrar ese
+     * mismo día. Además de nuestras reservas se miran los **bloqueos**: las
+     * noches vendidas en Booking o Airbnb, o cerradas a mano.
      */
     public function unidadDisponible(int $unidadId, string $entrada, string $salida, ?int $excluirReservaId = null): bool
     {
@@ -92,7 +95,11 @@ class ReservaModel extends Model
             $builder->where('id !=', $excluirReservaId);
         }
 
-        return $builder->countAllResults() === 0;
+        if ($builder->countAllResults() > 0) {
+            return false;
+        }
+
+        return ! (new BloqueoModel())->unidadBloqueada($unidadId, $entrada, $salida);
     }
 
     /** Unidades de un tipo que están libres en el rango [entrada, salida). */

@@ -8,7 +8,7 @@ class UnidadModel extends Model
 {
     protected $table         = 'unidades';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['tipo_id', 'nombre', 'descripcion', 'ubicacion', 'orden', 'estado', 'notas'];
+    protected $allowedFields = ['tipo_id', 'nombre', 'descripcion', 'ubicacion', 'orden', 'estado', 'notas', 'token_ical'];
     protected $useTimestamps = true;
 
     protected $validationRules = [

@@ -66,6 +66,7 @@ class Reservas extends BaseController
     public function guardar()
     {
         $datos = $this->request->getPost(['huesped_id', 'unidad_id', 'fecha_entrada', 'fecha_salida', 'adultos', 'ninos', 'estado', 'notas']);
+        $datos = array_merge($datos, $this->datosCanal());
 
         $error = $this->validarFechas($datos);
         if ($error !== null) {
@@ -120,6 +121,7 @@ class Reservas extends BaseController
         }
 
         $datos = $this->request->getPost(['huesped_id', 'unidad_id', 'fecha_entrada', 'fecha_salida', 'adultos', 'ninos', 'estado', 'notas']);
+        $datos = array_merge($datos, $this->datosCanal());
 
         $error = $this->validarFechas($datos);
         if ($error !== null) {
@@ -231,6 +233,31 @@ class Reservas extends BaseController
         }
 
         return redirect()->to('reservas/ver/' . $id)->with('ok', 'Reserva confirmada.' . $aviso);
+    }
+
+    /**
+     * De dónde vino la reserva y qué comisión se lleva el portal.
+     *
+     * La comisión no se descuenta del folio —el huésped paga el total— pero
+     * saberla es lo que permite comparar de verdad la venta directa con la
+     * de los portales en los reportes.
+     */
+    private function datosCanal(): array
+    {
+        $canal = (string) $this->request->getPost('canal');
+        if (! array_key_exists($canal, \App\Models\CanalConexionModel::CANALES)) {
+            $canal = 'directa';
+        }
+
+        $comision = $this->request->getPost('comision');
+
+        return [
+            'canal'    => $canal,
+            'comision' => trim((string) $comision) !== ''
+                ? (float) $comision
+                : \App\Models\CanalConexionModel::comisionCanal($canal),
+            'referencia_externa' => trim((string) $this->request->getPost('referencia_externa')) ?: null,
+        ];
     }
 
     /** Reserva con los datos que necesitan las plantillas de correo. */

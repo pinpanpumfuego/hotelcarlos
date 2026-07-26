@@ -27,6 +27,11 @@ $routes->post('registro/(:segment)/documento', 'Registro::subirDocumento/$1');
 $routes->post('registro/(:segment)/documento/eliminar/(:num)', 'Registro::eliminarDocumento/$1/$2');
 $routes->post('registro/(:segment)/enviar', 'Registro::enviar/$1');
 
+// ── Calendario iCal que leen Booking, Airbnb y demás ────────────────
+// Sin sesión porque Booking no puede iniciarla; la dirección lleva un token
+// largo y solo publica fechas ocupadas, ni nombres ni importes.
+$routes->get('calendario-ical/(:segment)', 'Canales::exportar/$1');
+
 // ── Terminal de fichaje (quiosco del hotel, sin sesión) ─────────────
 // No pide usuario a propósito: el PIN identifica a la persona. Lleva freno
 // de intentos y se puede apagar desde Administración.
@@ -268,6 +273,15 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->post('experiencias/video/(:num)', 'Experiencias::anadirVideo/$1');
     $routes->post('experiencias/foto/portada/(:num)', 'Experiencias::portadaFoto/$1');
     $routes->post('experiencias/foto/eliminar/(:num)', 'Experiencias::eliminarFoto/$1');
+
+    // Portales y canales: sincronización iCal y bloqueos
+    $routes->get('canales', 'Canales::index');
+    $routes->post('canales/guardar', 'Canales::guardar');
+    $routes->post('canales/sincronizar', 'Canales::sincronizar');
+    $routes->post('canales/eliminar/(:num)', 'Canales::eliminar/$1');
+    $routes->post('canales/token/(:num)', 'Canales::renovarToken/$1');
+    $routes->post('canales/bloquear', 'Canales::bloquear');
+    $routes->post('canales/desbloquear/(:num)', 'Canales::desbloquear/$1');
 
     // Motor de tarifas: temporadas, reglas, calendario y simulador
     $routes->get('tarifas', 'Tarifas::index');
