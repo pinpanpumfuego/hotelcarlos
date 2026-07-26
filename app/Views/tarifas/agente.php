@@ -2,7 +2,8 @@
 <?= $this->section('contenido') ?>
 
 <?php
-$nuevas    = array_filter($propuestas, static fn ($p) => ! $p['existe']);
+$nuevas    = array_filter($propuestas, static fn ($p) => ! $p['existe'] && ! $p['pasada']);
+$pasadas   = array_filter($propuestas, static fn ($p) => ! $p['existe'] && $p['pasada']);
 $conHistorico = array_filter($propuestas, static fn ($p) => $p['historico'] !== null);
 ?>
 
@@ -34,7 +35,10 @@ $conHistorico = array_filter($propuestas, static fn ($p) => $p['historico'] !== 
             <div class="text-muted small ms-auto">
                 <?= count($festivos) ?> festivos nacionales ·
                 <?= count($propuestas) ?> temporadas propuestas ·
-                <?= count($nuevas) ?> por crear
+                <strong><?= count($nuevas) ?> por crear</strong>
+                <?php if ($pasadas !== []): ?>
+                    · <?= count($pasadas) ?> ya pasaron
+                <?php endif ?>
             </div>
         </form>
     </div>
@@ -79,8 +83,9 @@ $conHistorico = array_filter($propuestas, static fn ($p) => $p['historico'] !== 
                         <tr>
                             <td>
                                 <input class="form-check-input casilla" type="checkbox" name="clave[]"
-                                       value="<?= esc($p['clave']) ?>" data-nueva="<?= $p['existe'] ? '0' : '1' ?>"
-                                       <?= $p['existe'] ? '' : 'checked' ?>>
+                                       value="<?= esc($p['clave']) ?>"
+                                       data-nueva="<?= $p['existe'] || $p['pasada'] ? '0' : '1' ?>"
+                                       <?= $p['existe'] || $p['pasada'] ? '' : 'checked' ?>>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
@@ -89,6 +94,8 @@ $conHistorico = array_filter($propuestas, static fn ($p) => $p['historico'] !== 
                                         <span class="fw-semibold"><?= esc($p['nombre']) ?></span>
                                         <?php if ($p['existe']): ?>
                                             <span class="badge text-bg-light text-muted ms-1">Ya creada</span>
+                                        <?php elseif ($p['pasada']): ?>
+                                            <span class="badge text-bg-light text-muted ms-1">Ya pasó</span>
                                         <?php else: ?>
                                             <span class="badge text-bg-success ms-1">Nueva</span>
                                         <?php endif ?>

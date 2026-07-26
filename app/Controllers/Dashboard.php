@@ -85,6 +85,11 @@ class Dashboard extends BaseController
             'ingresosMes'   => $ingresosMes,
             'ocupacionDias' => $ocupacionDias,
             'registrosPorRevisar' => (new \App\Models\RegistroModel())->pendientesDeRevision(),
+            // Avisos que si no se ven aquí, no se ven en ningún sitio
+            'tarifasPendientes' => session()->get('usuario_rol') === 'gerencia'
+                ? (new \App\Libraries\AgenteTarifas())->pendientes()
+                : [],
+            'sobreventas' => (new \App\Models\BloqueoModel())->conflictos(),
         ]);
     }
 }

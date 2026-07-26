@@ -29,6 +29,30 @@ $meses          = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'j
     </div>
 </div>
 
+<!-- ═══ Lo que no puede esperar ═══ -->
+<?php if (! empty($sobreventas)): ?>
+    <div class="alert alert-danger d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <i class="bi bi-exclamation-octagon me-1"></i>
+            <strong><?= count($sobreventas) ?> posible sobreventa.</strong>
+            Hay noches vendidas a la vez en tu web y en un portal.
+        </div>
+        <a href="<?= site_url('canales') ?>" class="btn btn-sm btn-danger">Resolver</a>
+    </div>
+<?php endif ?>
+
+<?php foreach ($tarifasPendientes as $p): ?>
+    <div class="alert alert-<?= $p['urgente'] ? 'warning' : 'info' ?> d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <i class="bi bi-tags me-1"></i>
+            <strong>Tarifas de <?= esc($p['anio']) ?>.</strong> <?= esc($p['motivo']) ?>
+        </div>
+        <a href="<?= site_url('tarifas/agente?anio=' . $p['anio']) ?>" class="btn btn-sm btn-<?= $p['urgente'] ? 'warning' : 'primary' ?>">
+            Preparar
+        </a>
+    </div>
+<?php endforeach ?>
+
 <!-- ═══ Indicadores ═══ -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">

@@ -34,6 +34,90 @@ class AgenteTarifas
     }
 
     /**
+     * Años que conviene preparar y cuántas temporadas les faltan.
+     *
+     * El agente es manual a propósito —el precio lo aprueba una persona—
+     * pero olvidarse no debería ser tan fácil: si nadie lo pasa, los puentes
+     * se venden a precio base sin que nadie se entere.
+     *
+     * @return list<array{anio: int, faltan: int, urgente: bool, motivo: string}>
+     */
+    public function pendientes(): array
+    {
+        $avisos = [];
+        $anio   = (int) date('Y');
+        $mes    = (int) date('n');
+
+        // El año en curso: solo cuenta lo que queda por delante
+        $faltan = $this->sinPreparar($anio, true);
+        if ($faltan > 0) {
+            $avisos[] = [
+                'anio'    => $anio,
+                'faltan'  => $faltan,
+                'urgente' => true,
+                'motivo'  => 'Quedan ' . $faltan . ' temporada' . ($faltan === 1 ? '' : 's')
+                    . ' de este año sin cargar. Esas fechas se están vendiendo a precio base.',
+            ];
+        }
+
+        // El siguiente, a partir de octubre: da tiempo a revisarlo con calma
+        if ($mes >= 10) {
+            $faltanProximo = $this->sinPreparar($anio + 1);
+            if ($faltanProximo > 0) {
+                $avisos[] = [
+                    'anio'    => $anio + 1,
+                    'faltan'  => $faltanProximo,
+                    'urgente' => false,
+                    'motivo'  => 'Se acerca ' . ($anio + 1) . ' y aún no tiene tarifas preparadas.',
+                ];
+            }
+        }
+
+        return $avisos;
+    }
+
+    /**
+     * Cuántas temporadas propondría el agente para un año y todavía no existen.
+     *
+     * Se cuenta por la clave, que lleva el año dentro, para no tener que
+     * calcular la ocupación histórica solo para pintar un aviso.
+     */
+    public function sinPreparar(int $anio, bool $soloFuturas = false): int
+    {
+        $puentes = FestivosColombia::puentes($anio);
+
+        if ($soloFuturas) {
+            $hoy     = date('Y-m-d');
+            $puentes = array_filter($puentes, static fn ($p) => $p['hasta'] >= $hoy);
+        }
+
+        // Los puentes más Semana Santa, fin de año, mitad de año y temporada baja
+        $esperadas = count($puentes) + ($soloFuturas ? $this->bloquesFijosPendientes($anio) : 4);
+
+        $existentes = $this->temporadas
+            ->where('clave IS NOT NULL')
+            ->like('clave', (string) $anio)
+            ->countAllResults();
+
+        return max(0, $esperadas - $existentes);
+    }
+
+    /** De los cuatro bloques fijos, cuántos aún no han terminado este año. */
+    private function bloquesFijosPendientes(int $anio): int
+    {
+        $hoy = date('Y-m-d');
+
+        $finales = [
+            FestivosColombia::semanaSanta($anio)['hasta'],
+            ($anio + 1) . '-01-15',   // fin de año
+            $anio . '-07-15',         // vacaciones de mitad de año
+            $anio . '-03-15',         // temporada baja
+        ];
+
+        return count(array_filter($finales, static fn ($f) => $f >= $hoy));
+    }
+
+    /**
      * Propuestas para un año.
      *
      * @return list<array>
@@ -228,6 +312,9 @@ class AgenteTarifas
             'nota'       => $nota,
             'historico'  => $historico,
             'existe'     => in_array($clave, $existentes, true),
+            // Crear una temporada que ya terminó no cambia nada: se ofrece
+            // pero sin marcar, para que no ensucie el año en curso.
+            'pasada'     => $hasta < date('Y-m-d'),
         ];
     }
 

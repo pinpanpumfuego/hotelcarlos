@@ -325,6 +325,13 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       un festivo; la temporada empieza la noche anterior porque esa noche también se vende.
       El agente propone el año entero (puentes, Semana Santa completa, fin de año, vacaciones de
       mitad de año y temporada baja) y **Javier acepta lo que quiera**: nada se guarda sin marcarlo.
+      · **Aviso de años sin preparar** (`pendientes()` / `sinPreparar()`): sale en el panel de control
+      y en Tarifas. Que sea manual es a propósito, pero olvidarse no debería ser fácil: si nadie lo
+      pasa, los puentes se venden a precio base sin que nadie se entere. Avisa del **año en curso**
+      contando solo lo que queda por delante, y del **siguiente a partir de octubre**. El conteo es
+      barato (los festivos son cálculo puro y una sola consulta por clave), así que no pesa en el panel.
+      · Las propuestas cuyo tramo **ya terminó** salen marcadas «Ya pasó» y **sin casilla activada**:
+      crearlas no cambia nada y solo ensuciaría el año.
       Cada propuesta lleva `clave` única, así que volver a pasarlo no duplica; y solo refresca las
       temporadas de `origen = agente` (si las editas a mano, se respetan).
       **Aprende de la ocupación real** cuando la haya: mira esas mismas fechas del año anterior

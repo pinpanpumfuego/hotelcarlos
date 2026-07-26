@@ -35,6 +35,20 @@ foreach ($reglas as $r) {
 
 <?= view('partes/errores') ?>
 
+<!-- ── Aviso: años sin preparar ── -->
+<?php foreach ($pendientes as $p): ?>
+    <div class="alert alert-<?= $p['urgente'] ? 'warning' : 'info' ?> d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <i class="bi bi-<?= $p['urgente'] ? 'exclamation-triangle' : 'calendar-plus' ?> me-1"></i>
+            <strong><?= esc($p['anio']) ?> sin preparar.</strong>
+            <?= esc($p['motivo']) ?>
+        </div>
+        <a href="<?= site_url('tarifas/agente?anio=' . $p['anio']) ?>" class="btn btn-sm btn-<?= $p['urgente'] ? 'warning' : 'primary' ?>">
+            <i class="bi bi-magic me-1"></i>Preparar <?= esc($p['anio']) ?>
+        </a>
+    </div>
+<?php endforeach ?>
+
 <!-- ── Cómo se calcula ── -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-4">

@@ -33,6 +33,7 @@ class Tarifas extends BaseController
         return view('tarifas/index', [
             'titulo'     => 'Tarifas',
             'seccion'    => 'tarifas',
+            'pendientes' => (new \App\Libraries\AgenteTarifas())->pendientes(),
             'tipos'      => $this->tipos->orderBy('nombre')->findAll(),
             'temporadas' => $this->temporadas->conPrecios(),
             'reglas'     => $this->reglas->listado(),
