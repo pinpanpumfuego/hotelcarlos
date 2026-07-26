@@ -146,6 +146,12 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       Panel de control rehecho: saludo según la hora, KPIs con tipografía editorial, **gráfica de
       ocupación de 14 días** (Chart.js con degradado y tooltip en %), lista de cabañas legible de un
       vistazo y estados vacíos ilustrados. Verificado en 11 pantallas a 1280 px y en móvil.
+- [x] **Menú reorganizado en grupos plegables**: de 22 enlaces sueltos en 3 grupos a 5 áreas
+      (Recepción · Restaurante · Operación · Equipo · Gerencia) que se pliegan; se abre solo el
+      grupo de la sección en la que estás (en el Panel, el primero). El restaurante reúne ahora
+      operación y configuración de carta en un solo sitio. Los avisos pendientes se suman en la
+      cabecera del grupo para verlos aunque esté plegado. IDs únicos por instancia para que el
+      menú fijo y el móvil no colisionen.
 - [x] **Módulo de personal** (`Personal` y `Turnos`; tablas `empleados`, `turnos`, `ausencias`,
       `empleado_documentos`): fichas con datos personales, laborales y **seguridad social colombiana**
       (EPS, ARL, fondo de pensiones, caja de compensación, banco), contacto de emergencia, antigüedad

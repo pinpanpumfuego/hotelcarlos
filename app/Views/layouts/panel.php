@@ -84,10 +84,20 @@
         .menu-lateral .marca .lugar { display: block; font-family: 'Inter', sans-serif;
             font-size: .68rem; font-weight: 500; letter-spacing: .14em;
             text-transform: uppercase; color: #86a893; margin-top: 3px; }
-        .menu-lateral .titulo-grupo {
-            color: #7fa48d; font-size: .67rem; text-transform: uppercase;
-            letter-spacing: .14em; font-weight: 600; margin: 1.15rem 0 .35rem .85rem;
+        /* Cabecera de grupo plegable */
+        .menu-lateral .grupo-btn {
+            display: flex; align-items: center; width: 100%;
+            background: transparent; border: 0; color: #9dbcaa;
+            font-size: .69rem; text-transform: uppercase; letter-spacing: .13em;
+            font-weight: 700; padding: .55rem .85rem .35rem; margin-top: .5rem;
+            border-radius: var(--radio-sm); transition: color .16s ease, background .16s ease;
         }
+        .menu-lateral .grupo-btn:hover { color: #fff; background: rgba(255,255,255,.05); }
+        .menu-lateral .grupo-btn .flecha {
+            font-size: .8rem; transition: transform .2s ease; opacity: .7;
+        }
+        .menu-lateral .grupo-btn.collapsed .flecha { transform: rotate(-90deg); }
+        .menu-lateral .grupo-btn .badge { font-size: .62rem; }
         @media (min-width: 992px) {
             .menu-lateral { position: fixed; top: 0; bottom: 0; left: 0; overflow-y: auto; z-index: 1030; }
             .zona-contenido { margin-left: var(--ancho-menu); }
@@ -225,67 +235,129 @@ if ($puedeVender) {
     try { $porRevisar = (new \App\Models\RegistroModel())->pendientesDeRevision(); } catch (\Throwable $e) { $porRevisar = 0; }
 }
 
-// Menú según el rol: [clave, url, icono, etiqueta, insignia]
+/**
+ * Menú agrupado por áreas de trabajo.
+ * Cada grupo: icono, y enlaces [clave, ruta, icono, etiqueta, insignia].
+ * Los grupos se pliegan; se abre solo aquel en el que estás.
+ */
 $grupos = [];
-$grupos[''] = [['panel', 'panel', 'bi-speedometer2', 'Panel', 0]];
+
 if ($puedeVender) {
-    $grupos['Recepción'] = [
+    $grupos['Recepción'] = ['icono' => 'bi-bell', 'enlaces' => [
         ['calendario', 'calendario', 'bi-calendar3', 'Calendario', 0],
         ['reservas', 'reservas', 'bi-calendar-check', 'Reservas', 0],
         ['huespedes', 'huespedes', 'bi-people', 'Huéspedes', 0],
         ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada', $porRevisar],
         ['caja', 'caja', 'bi-cash-coin', 'Caja', 0],
+    ]];
+
+    $restaurante = [
         ['pos', 'pos', 'bi-tablet-landscape', 'TPV táctil', 0],
         ['cocina', 'cocina', 'bi-fire', 'Cocina', 0],
         ['barra', 'barra', 'bi-cup-straw', 'Barra', 0],
-        ['tpv', 'tpv', 'bi-cup-hot', 'Restaurante', 0],
+        ['tpv', 'tpv', 'bi-receipt', 'Comandas', 0],
     ];
+    // La configuración de la carta vive con el restaurante, pero solo la ve gerencia
+    if ($rol === 'gerencia') {
+        $restaurante[] = ['carta', 'carta', 'bi-journal-text', 'Carta', 0];
+        $restaurante[] = ['modificadores', 'modificadores', 'bi-sliders', 'Modificadores', 0];
+        $restaurante[] = ['insumos', 'insumos', 'bi-box-seam', 'Insumos y costes', 0];
+        $restaurante[] = ['preparaciones', 'preparaciones', 'bi-stack', 'Preparaciones', 0];
+    }
+    $grupos['Restaurante'] = ['icono' => 'bi-cup-hot', 'enlaces' => $restaurante];
 }
-$grupos['Operación'] = [
+
+$grupos['Operación'] = ['icono' => 'bi-tools', 'enlaces' => [
     ['limpieza', 'limpieza', 'bi-bucket', 'Limpieza', 0],
-    ['mantenimiento', 'mantenimiento', 'bi-tools', 'Mantenimiento', 0],
+    ['mantenimiento', 'mantenimiento', 'bi-wrench-adjustable', 'Mantenimiento', 0],
     ['unidades', 'unidades', 'bi-door-open', 'Cabañas', 0],
-];
+]];
+
 if ($rol === 'gerencia') {
-    $grupos['Gerencia'] = [
+    $grupos['Equipo'] = ['icono' => 'bi-people-fill', 'enlaces' => [
+        ['personal', 'personal', 'bi-person-badge', 'Fichas del personal', 0],
+        ['turnos', 'turnos', 'bi-calendar-week', 'Turnos', 0],
+        ['ausencias', 'ausencias', 'bi-calendar-x', 'Ausencias', 0],
+    ]];
+
+    $grupos['Gerencia'] = ['icono' => 'bi-briefcase', 'enlaces' => [
         ['reportes', 'reportes', 'bi-graph-up', 'Reportes', 0],
         ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0],
         ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento', 0],
-        ['carta', 'carta', 'bi-journal-text', 'Carta del restaurante', 0],
-        ['modificadores', 'modificadores', 'bi-sliders', 'Modificadores', 0],
-        ['insumos', 'insumos', 'bi-box-seam', 'Insumos y costes', 0],
-        ['preparaciones', 'preparaciones', 'bi-stack', 'Preparaciones', 0],
-        ['personal', 'personal', 'bi-people-fill', 'Personal', 0],
-        ['turnos', 'turnos', 'bi-calendar-week', 'Turnos', 0],
-        ['ausencias', 'ausencias', 'bi-calendar-x', 'Ausencias', 0],
         ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0],
         ['administracion', 'administracion', 'bi-gear', 'Administración', 0],
-    ];
+    ]];
+}
+
+// Grupo que contiene la sección abierta: es el que se muestra desplegado
+$grupoActivo = '';
+foreach ($grupos as $titulo => $g) {
+    foreach ($g['enlaces'] as $e) {
+        if ($e[0] === $activa) {
+            $grupoActivo = $titulo;
+            break 2;
+        }
+    }
+}
+
+// En el panel de control no hay grupo activo: se abre el primero para no dejarlo todo cerrado
+if ($grupoActivo === '' && $grupos !== []) {
+    $grupoActivo = array_key_first($grupos);
 }
 
 // El mismo menú se pinta en el panel fijo y en el desplegable móvil
-$pintarMenu = static function () use ($grupos, $activa) { ?>
+$instancia  = 0;
+$pintarMenu = static function () use ($grupos, $activa, $grupoActivo, $porRevisar, &$instancia) {
+    $instancia++;
+    $sufijo = 'm' . $instancia;
+    ?>
     <a class="marca d-block mb-3 text-decoration-none" href="<?= site_url('panel') ?>">
         <i class="bi bi-tree me-1"></i><?= esc(config('Hotel')->nombre) ?>
         <span class="lugar">Sistema de gestión</span>
     </a>
-    <ul class="nav nav-pills flex-column gap-1">
-        <?php foreach ($grupos as $tituloGrupo => $enlaces): ?>
-            <?php if ($tituloGrupo !== ''): ?>
-                <div class="titulo-grupo"><?= esc($tituloGrupo) ?></div>
-            <?php endif ?>
-            <?php foreach ($enlaces as [$clave, $ruta, $icono, $etiqueta, $insignia]): ?>
-                <li class="nav-item">
-                    <a class="nav-link d-flex align-items-center <?= $activa === $clave ? 'active' : '' ?>" href="<?= site_url($ruta) ?>">
-                        <i class="bi <?= $icono ?> me-2"></i><?= esc($etiqueta) ?>
-                        <?php if ($insignia > 0): ?>
-                            <span class="badge text-bg-warning ms-auto"><?= $insignia ?></span>
-                        <?php endif ?>
-                    </a>
-                </li>
-            <?php endforeach ?>
-        <?php endforeach ?>
+
+    <ul class="nav nav-pills flex-column gap-1 mb-2">
+        <li class="nav-item">
+            <a class="nav-link d-flex align-items-center <?= $activa === 'panel' ? 'active' : '' ?>" href="<?= site_url('panel') ?>">
+                <i class="bi bi-speedometer2 me-2"></i>Panel
+            </a>
+        </li>
     </ul>
+
+    <?php foreach ($grupos as $tituloGrupo => $g): ?>
+        <?php
+        $abierto = $tituloGrupo === $grupoActivo;
+        $id      = 'g' . md5($tituloGrupo) . $sufijo;
+        // Avisos del grupo, para verlos aunque esté plegado
+        $avisos = 0;
+        foreach ($g['enlaces'] as $e) {
+            $avisos += (int) $e[4];
+        }
+        ?>
+        <button class="grupo-btn <?= $abierto ? '' : 'collapsed' ?>" data-bs-toggle="collapse"
+                data-bs-target="#<?= $id ?>" aria-expanded="<?= $abierto ? 'true' : 'false' ?>">
+            <i class="bi <?= $g['icono'] ?> me-2"></i><?= esc($tituloGrupo) ?>
+            <?php if ($avisos > 0): ?>
+                <span class="badge text-bg-warning ms-1"><?= $avisos ?></span>
+            <?php endif ?>
+            <i class="bi bi-chevron-down flecha ms-auto"></i>
+        </button>
+
+        <div class="collapse <?= $abierto ? 'show' : '' ?>" id="<?= $id ?>">
+            <ul class="nav nav-pills flex-column gap-1 mb-1">
+                <?php foreach ($g['enlaces'] as [$clave, $ruta, $icono, $etiqueta, $insignia]): ?>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center <?= $activa === $clave ? 'active' : '' ?>" href="<?= site_url($ruta) ?>">
+                            <i class="bi <?= $icono ?> me-2"></i><?= esc($etiqueta) ?>
+                            <?php if ($insignia > 0): ?>
+                                <span class="badge text-bg-warning ms-auto"><?= $insignia ?></span>
+                            <?php endif ?>
+                        </a>
+                    </li>
+                <?php endforeach ?>
+            </ul>
+        </div>
+    <?php endforeach ?>
     <div class="mt-4 pt-3 border-top border-light border-opacity-10">
         <a href="<?= site_url('/') ?>" class="nav-link" target="_blank" rel="noopener">
             <i class="bi bi-globe2 me-2"></i>Ver web pública
