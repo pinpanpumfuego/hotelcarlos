@@ -261,10 +261,24 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       esconder esa opción sería empujar al cliente.
       · **La pantalla de facturar sumaba la propina al total** aunque luego no se facturaba. Ahora
       dice «Total a facturar» y debajo «Propina voluntaria — no se factura».
-      **Pendiente y avisado a Javier**: la ley exige que el 100 % vaya a los trabajadores y que se
-      les **informe cómo se repartió**. Hoy Reportes dice cuánta propina generó cada camarero, pero
-      no hay constancia documentada del reparto (liquidación firmada por periodo).
       **Aviso**: esto es lectura de la norma, no asesoría legal; conviene que lo confirme su contador.
+- [x] **Liquidación de propinas y propina elegida al cobrar** (cierra lo que quedó pendiente arriba).
+      · **La propina se pregunta en el momento de cobrar**, no antes: el bloque
+      `#cob-propina` aparece dentro del modal de cobro, con la cuenta delante del cliente, y ofrece
+      `Sin propina / la mitad / la sugerida`. El pendiente se recalcula al vuelo.
+      **Se oculta si ya hay pagos parciales**: cambiar la propina después alteraría lo ya cobrado.
+      · **Liquidación** (`propinas`, solo gerencia). Tres criterios: `ventas` (proporcional a lo que
+      generó cada uno), `partes_iguales` y `manual`. Se puede ajustar cifra a cifra.
+      · **La regla que gobierna todo el módulo**: lo repartido tiene que ser **exactamente** igual a
+      lo recaudado. `PropinaLiquidacionModel::repartir()` usa `floor()` por línea y le da los pesos
+      sobrantes del redondeo a la primera, y `Propinas::guardar()` **se niega a cerrar** si no cuadra.
+      La propina no es del hotel: no puede quedarse un peso.
+      · Las comandas ya liquidadas se marcan con `comandas.liquidacion_id`, así que **no se pueden
+      repartir dos veces**.
+      · La propina sin camarero asignado (comandas hechas con el TPV compartido apagado) se avisa
+      aparte, pero **entra en el total** y hay que repartirla igual.
+      · `propinas/comprobante/N` imprime **una hoja por trabajador** con su importe, el periodo, el
+      texto de la Ley 1935 y hueco de firma: es la constancia que exige la norma.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

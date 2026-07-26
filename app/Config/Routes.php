@@ -203,6 +203,14 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
 
 // ── Configuración: solo gerencia ────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($routes) {
+    // Liquidación de propinas (Ley 1935 de 2018)
+    $routes->get('propinas', 'Propinas::index');
+    $routes->get('propinas/preparar', 'Propinas::preparar');
+    $routes->post('propinas/guardar', 'Propinas::guardar');
+    $routes->get('propinas/ver/(:num)', 'Propinas::ver/$1');
+    $routes->get('propinas/comprobante/(:num)', 'Propinas::comprobante/$1');
+    $routes->post('propinas/entregar/(:num)', 'Propinas::entregar/$1');
+
     $routes->get('reportes', 'Reportes::index');
     $routes->get('reportes/csv', 'Reportes::csv');
 

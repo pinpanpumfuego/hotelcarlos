@@ -394,6 +394,7 @@ if ($rol === 'gerencia') {
         ['fichajes', 'fichajes', 'bi-clock-history', 'Control de jornada', 0],
         ['turnos', 'turnos', 'bi-calendar-week', 'Turnos', 0],
         ['ausencias', 'ausencias', 'bi-calendar-x', 'Ausencias', 0],
+        ['propinas', 'propinas', 'bi-cash-stack', 'Propinas', 0],
     ]];
 
     $grupos['Gerencia'] = ['icono' => 'bi-briefcase', 'enlaces' => [

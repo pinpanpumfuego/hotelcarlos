@@ -318,6 +318,7 @@
         }
         .propinas-rapidas .btn-propina:active { transform: scale(.95); }
         .propinas-rapidas .btn-propina small { font-size: .72rem; font-weight: 400; color: var(--tinta-suave); }
+        .propinas-rapidas .btn-propina.elegida { border-color: var(--verde); box-shadow: 0 0 0 2px rgba(79,138,104,.2); }
 
         /* Quién está en la pantalla */
         .chip-camarero {
@@ -481,6 +482,15 @@
     <div class="modal-pos">
         <h2>Cobrar comanda</h2>
         <p class="ayuda">Pendiente de cobro: <strong id="cob-total">$0</strong></p>
+
+        <!-- La propina se decide aquí, delante del cliente y con la cuenta a
+             la vista. Puede dejarla entera, una parte o ninguna. -->
+        <div id="cob-propina">
+            <p class="ayuda" style="margin-bottom:6px">
+                ¿Desea dejar propina? <span style="opacity:.75">Es voluntaria</span>
+            </p>
+            <div class="propinas-rapidas" id="cob-propinas"></div>
+        </div>
 
         <p class="ayuda" style="margin-bottom:6px">Dividir la cuenta</p>
         <div class="rapidos" id="cob-dividir"></div>
@@ -1591,12 +1601,64 @@
         });
     }
 
+    /**
+     * Botones de propina dentro del cobro.
+     *
+     * Es el momento natural para preguntarla: la cuenta está a la vista y el
+     * cliente decide si deja toda la sugerida, una parte o nada. Si ya hay
+     * pagos parciales no se toca, porque cambiaría lo que ya se cobró.
+     */
+    function pintarPropinaCobro() {
+        const caja = $('#cob-propina');
+        const yaHayPagos = (comanda.pagos || []).length > 0;
+
+        if (yaHayPagos) {
+            caja.style.display = 'none';
+            return;
+        }
+        caja.style.display = 'block';
+
+        const base = Math.max(0, comanda.total - comanda.descuento);
+        const sugerida = PROPINA_SUGERIDA > 0 ? PROPINA_SUGERIDA : 10;
+        const opciones = [
+            { etiqueta: 'Sin propina', pct: 0 },
+            { etiqueta: 'La mitad', pct: Math.round(sugerida / 2) },
+            { etiqueta: sugerida + '%', pct: sugerida },
+        ];
+
+        const cont = $('#cob-propinas');
+        cont.innerHTML = '';
+
+        opciones.forEach(function (o) {
+            const importe = Math.round(base * o.pct / 100);
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn-propina' + (Math.round(comanda.propina) === importe ? ' elegida' : '');
+            b.innerHTML = o.etiqueta + (o.pct > 0 ? '<small>' + pesos(importe) + '</small>' : '');
+            b.onclick = async () => {
+                const datos = await api('/comanda/' + comanda.id + '/propina', {
+                    method: 'POST', body: JSON.stringify({ tipo: 'valor', valor: importe }),
+                });
+                if (datos) {
+                    comanda = datos.comanda;
+                    pintarComanda();
+                    $('#cob-total').textContent = pesos(comanda.pendiente);
+                    pintarPropinaCobro();
+                    prepararVisor('#cob-visor', 0);
+                    fijarImporte(comanda.pendiente);
+                }
+            };
+            cont.appendChild(b);
+        });
+    }
+
     $('#btn-cobrar').onclick = () => {
         if (!comanda || comanda.pendiente <= 0) return;
         formaSel = 'efectivo';
         $('#cob-total').textContent = pesos(comanda.pendiente);
         prepararVisor('#cob-visor', 0);
         $('#cob-cambio').style.display = 'none';
+        pintarPropinaCobro();
 
         // Dividir la cuenta: todo, o en partes iguales entre los comensales
         const div = $('#cob-dividir');

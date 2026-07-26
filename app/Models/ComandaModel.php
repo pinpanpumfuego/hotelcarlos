@@ -12,7 +12,7 @@ class ComandaModel extends Model
         'numero', 'mesa', 'mesa_id', 'comensales', 'reserva_id', 'estado', 'total',
         'cliente_nombre', 'cliente_documento', 'cliente_telefono',
         'descuento', 'motivo_descuento', 'cupon_id', 'propina', 'forma_pago', 'recibido', 'cambio',
-        'usuario_id', 'empleado_id', 'autorizo_id', 'cerrada_en', 'notas',
+        'usuario_id', 'empleado_id', 'autorizo_id', 'liquidacion_id', 'cerrada_en', 'notas',
     ];
     protected $useTimestamps = true;
 
