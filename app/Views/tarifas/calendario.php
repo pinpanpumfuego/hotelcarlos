@@ -111,7 +111,7 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span><i class="bi bi-calendar3 me-2"></i><?= ucfirst($meses[$mes]) ?> de <?= $anio ?></span>
-        <span class="text-muted small fw-normal">Pasa el ratón por una noche para ver su desglose</span>
+        <span class="text-muted small fw-normal">Toca una noche para ver su desglose</span>
     </div>
     <div class="card-body p-3">
         <div class="rejilla-cal">
@@ -157,8 +157,26 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
                 $titulo .= 'Precio: $' . number_format($info['precio'], 0, ',', '.') . "\n";
                 $titulo .= 'Ocupación: ' . $ocup . ' %';
                 ?>
+                <?php
+                // El desglose viaja en el elemento: en táctil no hay tooltip
+                // que valga, así que hay que poder tocarlo.
+                $detalle = [
+                    'dia'       => $info['dia'] . ' ' . date('d/m/Y', strtotime($fecha)),
+                    'festivo'   => $festivo,
+                    'base'      => (float) $info['base'],
+                    'precio'    => (float) $info['precio'],
+                    'ocupacion' => $ocup,
+                    'ajustes'   => array_map(static fn ($a) => [
+                        'concepto' => $a['concepto'],
+                        'texto'    => $a['texto'],
+                        'importe'  => round($a['importe']),
+                    ], $info['ajustes']),
+                ];
+                ?>
                 <div class="celda <?= $finde ? 'finde' : '' ?> <?= $esHoy ? 'hoy' : '' ?> <?= $pasado ? 'pasado' : '' ?> <?= $festivo !== null ? 'festivo' : '' ?>"
-                     title="<?= esc($titulo) ?>">
+                     title="<?= esc($titulo) ?>"
+                     role="button" tabindex="0"
+                     data-detalle="<?= esc(json_encode($detalle, JSON_UNESCAPED_UNICODE), 'attr') ?>">
                     <?php if ($color !== null): ?>
                         <span class="franja" style="background: <?= esc($color) ?>"></span>
                     <?php endif ?>
@@ -186,6 +204,22 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
             <?php endfor ?>
         </div>
     </div>
+    <!-- Desglose de la noche tocada -->
+    <div class="card-body border-top" id="detalle-noche" style="display:none">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+            <div>
+                <span class="fw-semibold" id="det-dia"></span>
+                <span class="badge text-bg-warning ms-1" id="det-festivo" style="display:none"></span>
+                <div class="text-muted small" id="det-ocupacion"></div>
+            </div>
+            <div class="text-end">
+                <div class="fs-4 fw-semibold" id="det-precio" style="font-family:'Fraunces',serif"></div>
+                <button class="btn btn-sm btn-link p-0 text-muted" id="det-cerrar">Cerrar</button>
+            </div>
+        </div>
+        <div id="det-ajustes"></div>
+    </div>
+
     <div class="card-footer bg-white d-flex flex-wrap gap-3 align-items-center small text-muted p-3">
         <span><span class="marca sube me-1"></span>Recargo</span>
         <span><span class="marca baja me-1"></span>Descuento</span>
@@ -210,7 +244,11 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
     .celda { position: relative; overflow: hidden; min-height: 78px; padding: .4rem .45rem;
              border: 1px solid var(--borde); border-radius: var(--radio-sm);
              background: var(--panel); transition: box-shadow .15s ease, transform .15s ease; }
-    .celda:hover { box-shadow: var(--sombra-2); transform: translateY(-1px); z-index: 2; }
+    .celda { cursor: pointer; }
+    .celda.elegida { border-color: var(--bosque); box-shadow: 0 0 0 2px rgba(31,77,54,.18); }
+    @media (hover: hover) {
+        .celda:hover { box-shadow: var(--sombra-2); transform: translateY(-1px); z-index: 2; }
+    }
     .celda.vacia { background: transparent; border-color: transparent; min-height: 0; }
     .celda.finde { background: var(--panel-tenue); }
     .celda.pasado { opacity: .5; }
@@ -237,5 +275,61 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
         .celda .precio { font-size: .82rem; }
     }
 </style>
+
+<script>
+(function () {
+    // El desglose estaba solo en el tooltip, y en una tableta el tooltip no
+    // existe: esa información era inalcanzable. Ahora se abre al tocar.
+    const caja = document.getElementById('detalle-noche');
+    const pesos = (n) => '$' + Math.round(n).toLocaleString('es-CO');
+
+    function abrir(celda) {
+        let d;
+        try { d = JSON.parse(celda.dataset.detalle); } catch (e) { return; }
+
+        document.querySelectorAll('.celda.elegida').forEach((c) => c.classList.remove('elegida'));
+        celda.classList.add('elegida');
+
+        document.getElementById('det-dia').textContent = d.dia;
+        document.getElementById('det-precio').textContent = pesos(d.precio);
+        document.getElementById('det-ocupacion').textContent = 'Ocupación esa noche: ' + d.ocupacion + ' %';
+
+        const festivo = document.getElementById('det-festivo');
+        festivo.style.display = d.festivo ? 'inline-block' : 'none';
+        festivo.textContent = d.festivo || '';
+
+        let html = '<div class="d-flex justify-content-between small text-muted py-1">'
+            + '<span>Tarifa base</span><span>' + pesos(d.base) + '</span></div>';
+
+        d.ajustes.forEach(function (a) {
+            const sube = a.importe >= 0;
+            html += '<div class="d-flex justify-content-between small py-1 border-top">'
+                + '<span>' + a.concepto + ' <span class="text-muted">(' + a.texto + ')</span></span>'
+                + '<span class="' + (sube ? 'text-warning-emphasis' : 'text-success') + '">'
+                + (sube ? '+' : '−') + pesos(Math.abs(a.importe)) + '</span></div>';
+        });
+
+        if (!d.ajustes.length) {
+            html += '<div class="small text-muted py-1 border-top">Sin ajustes: se cobra la tarifa base.</div>';
+        }
+
+        document.getElementById('det-ajustes').innerHTML = html;
+        caja.style.display = 'block';
+        caja.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    document.querySelectorAll('.celda[data-detalle]').forEach(function (celda) {
+        celda.addEventListener('click', () => abrir(celda));
+        celda.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(celda); }
+        });
+    });
+
+    document.getElementById('det-cerrar').addEventListener('click', function () {
+        caja.style.display = 'none';
+        document.querySelectorAll('.celda.elegida').forEach((c) => c.classList.remove('elegida'));
+    });
+})();
+</script>
 
 <?= $this->endSection() ?>

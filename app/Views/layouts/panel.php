@@ -65,8 +65,12 @@
             transition: background .16s ease, color .16s ease, padding-left .16s ease;
         }
         .menu-lateral .nav-link i { opacity: .8; transition: opacity .16s ease; }
-        .menu-lateral .nav-link:hover { background: rgba(255,255,255,.07); color: #fff; padding-left: 1.05rem; }
-        .menu-lateral .nav-link:hover i { opacity: 1; }
+        /* En táctil no hay ratón: sin este @media el elemento se queda
+           «pegado» en estado hover después de tocarlo. */
+        @media (hover: hover) {
+            .menu-lateral .nav-link:hover { background: rgba(255,255,255,.07); color: #fff; padding-left: 1.05rem; }
+            .menu-lateral .nav-link:hover i { opacity: 1; }
+        }
         .menu-lateral .nav-link.active {
             background: rgba(255,255,255,.13); color: #fff; font-weight: 600;
             box-shadow: inset 0 0 0 1px rgba(255,255,255,.07);
@@ -92,7 +96,9 @@
             font-weight: 700; padding: .55rem .85rem .35rem; margin-top: .5rem;
             border-radius: var(--radio-sm); transition: color .16s ease, background .16s ease;
         }
-        .menu-lateral .grupo-btn:hover { color: #fff; background: rgba(255,255,255,.05); }
+        @media (hover: hover) {
+            .menu-lateral .grupo-btn:hover { color: #fff; background: rgba(255,255,255,.05); }
+        }
         .menu-lateral .grupo-btn .flecha {
             font-size: .8rem; transition: transform .2s ease; opacity: .7;
         }
@@ -114,7 +120,9 @@
             color: var(--tinta-media); text-decoration: none; font-size: .85rem;
             transition: border-color .16s ease, background .16s ease;
         }
-        .chip-usuario:hover { border-color: var(--borde-fuerte); background: #fff; color: var(--tinta); }
+        @media (hover: hover) {
+            .chip-usuario:hover { border-color: var(--borde-fuerte); background: #fff; color: var(--tinta); }
+        }
         .avatar {
             width: 26px; height: 26px; border-radius: 50%; background: var(--bosque);
             color: #fff; display: inline-flex; align-items: center; justify-content: center;
@@ -137,7 +145,9 @@
 
         /* Tarjetas con acción: reaccionan al pasar el ratón */
         a > .card, .card.interactiva { transition: transform .18s ease, box-shadow .18s ease; }
-        a:hover > .card, .card.interactiva:hover { transform: translateY(-2px); box-shadow: var(--sombra-2); }
+        @media (hover: hover) {
+            a:hover > .card, .card.interactiva:hover { transform: translateY(-2px); box-shadow: var(--sombra-2); }
+        }
 
         /* ═══════════ Indicadores ═══════════ */
         .kpi-icono {
@@ -155,18 +165,27 @@
         }
         .table > tbody > tr > td { padding: .8rem 1.1rem; vertical-align: middle; }
         .table > tbody > tr:last-child > td { border-bottom: 0; }
-        .table-hover > tbody > tr:hover > * { background: var(--panel-tenue); }
+        @media (hover: hover) {
+            .table-hover > tbody > tr:hover > * { background: var(--panel-tenue); }
+        }
 
         /* ═══════════ Botones ═══════════ */
         .btn { border-radius: var(--radio-sm); font-weight: 500; transition: all .15s ease; }
         .btn-lg { border-radius: .65rem; }
         .btn-primary { background: var(--bosque); border-color: var(--bosque); }
-        .btn-primary:hover, .btn-primary:focus {
+        /* El :focus se queda fuera del @media: hace falta para el teclado */
+        .btn-primary:focus {
             background: var(--bosque-claro); border-color: var(--bosque-claro);
             box-shadow: 0 3px 10px rgba(31,77,54,.24);
         }
         .btn-outline-primary { color: var(--bosque); border-color: var(--borde-fuerte); }
-        .btn-outline-primary:hover { background: var(--bosque); border-color: var(--bosque); }
+        @media (hover: hover) {
+            .btn-primary:hover {
+                background: var(--bosque-claro); border-color: var(--bosque-claro);
+                box-shadow: 0 3px 10px rgba(31,77,54,.24);
+            }
+            .btn-outline-primary:hover { background: var(--bosque); border-color: var(--bosque); }
+        }
         .btn-outline-secondary { border-color: var(--borde-fuerte); color: var(--tinta-media); }
         .btn-sm { padding: .28rem .6rem; }
 
@@ -198,11 +217,13 @@
 
         /* ═══════════ Paginación ═══════════ */
         .page-link { color: var(--bosque); border-color: var(--borde); }
-        .page-link:hover { background: var(--panel-tenue); color: var(--bosque-oscuro); }
         .active > .page-link { background: var(--bosque); border-color: var(--bosque); }
 
         a { color: var(--bosque-claro); text-underline-offset: 2px; }
-        a:hover { color: var(--bosque-oscuro); }
+        @media (hover: hover) {
+            .page-link:hover { background: var(--panel-tenue); color: var(--bosque-oscuro); }
+            a:hover { color: var(--bosque-oscuro); }
+        }
         .text-muted { color: var(--tinta-suave) !important; }
 
         /* ═══════════ Entrada suave del contenido ═══════════ */
@@ -218,7 +239,99 @@
             h1.h3 { font-size: 1.3rem; }
             .card-header, .table > thead th, .table > tbody > tr > td { padding-left: .8rem; padding-right: .8rem; }
         }
+
+        /* ═══════════ Modo táctil ═══════════
+           Se activa por dispositivo, no por hotel: el mismo sistema lo abre
+           una tableta en recepción y un portátil en la oficina. Objetivo
+           mínimo 44 px, que es lo que recomienda Apple y algo menos que una
+           yema (45-57 mm según el MIT Touch Lab). */
+        html.tactil {
+            --alto-toque: 44px;
+        }
+        html.tactil body { font-size: 1rem; }
+
+        html.tactil .btn,
+        html.tactil .form-control,
+        html.tactil .form-select,
+        html.tactil .input-group-text,
+        html.tactil .page-link {
+            min-height: var(--alto-toque);
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        html.tactil .form-control,
+        html.tactil .form-select { display: block; padding-top: .6rem; padding-bottom: .6rem; }
+        html.tactil textarea.form-control { display: block; }
+
+        html.tactil .btn-sm {
+            min-width: var(--alto-toque); min-height: var(--alto-toque);
+            padding: .45rem .8rem; font-size: .92rem;
+        }
+
+        /* Los botones de acción de las tablas iban pegados: separarlos evita
+           tocar «Eliminar» queriendo tocar «Editar». */
+        html.tactil td .d-inline-flex.gap-1,
+        html.tactil td .d-inline-flex.gap-2 { gap: .6rem !important; }
+        html.tactil .table > tbody > tr > td { padding-top: 1rem; padding-bottom: 1rem; }
+        html.tactil .table > thead th { padding-top: .95rem; padding-bottom: .95rem; }
+
+        /* Sin ratón no hay tooltip: el título del botón se muestra al lado.
+           Solo en los que no tienen ya texto propio. */
+        html.tactil .btn[title]:has(> i:only-child)::after {
+            content: attr(title);
+            font-size: .78rem; font-weight: 500; margin-left: .45rem;
+            white-space: nowrap;
+        }
+        html.tactil .btn[title]:has(> i:only-child) { min-width: 0; padding-inline: .7rem; }
+
+        /* Casillas e interruptores del tamaño de un dedo */
+        html.tactil .form-check-input { width: 1.35rem; height: 1.35rem; margin-top: .1rem; }
+        html.tactil .form-check-input[type="checkbox"].form-check-input { border-width: 2px; }
+        html.tactil .form-check { padding-left: 2rem; min-height: var(--alto-toque); }
+        html.tactil .form-switch .form-check-input { width: 2.6rem; height: 1.35rem; }
+
+        html.tactil .nav-link { padding: .8rem .85rem; }
+        html.tactil .list-group-item { padding-top: .9rem; padding-bottom: .9rem; }
+        html.tactil .btn-close { width: 1.4rem; height: 1.4rem; padding: .6rem; }
+        html.tactil .modal-footer .btn { min-width: 110px; }
+
+        /* Tocar y arrastrar para desplazar, sin selección accidental de texto */
+        html.tactil .table-responsive { -webkit-overflow-scrolling: touch; }
+        html.tactil .btn, html.tactil .nav-link, html.tactil .grupo-btn {
+            -webkit-user-select: none; user-select: none;
+            -webkit-tap-highlight-color: rgba(31,77,54,.12);
+        }
+
+        /* El conmutador de la barra superior */
+        .btn-tactil {
+            display: inline-flex; align-items: center; gap: .35rem;
+            border: 1px solid var(--borde); background: var(--panel-tenue);
+            color: var(--tinta-media); border-radius: 99px;
+            padding: .3rem .7rem; font-size: .82rem; cursor: pointer;
+        }
+        .btn-tactil.activo { background: #e9f4ee; border-color: #c6e2d2; color: #1c5c3c; }
+        html.tactil .btn-tactil { min-height: var(--alto-toque); padding-inline: .9rem; }
     </style>
+
+    <script>
+        /*
+         * Modo táctil. Se decide antes de pintar nada para que la página no
+         * aparezca primero pequeña y luego dé un salto.
+         *
+         * La preferencia es de este dispositivo (localStorage), no del hotel:
+         * la misma instalación la abre una tableta en recepción y un portátil
+         * en la oficina, y cada uno debe quedarse como le va bien.
+         */
+        (function () {
+            var guardado = null;
+            try { guardado = localStorage.getItem('tactil'); } catch (e) { /* modo privado */ }
+
+            // Sin preferencia: se mira si el puntero principal es un dedo
+            var grueso = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+            var activo = guardado === null ? grueso : guardado === '1';
+
+            if (activo) { document.documentElement.classList.add('tactil'); }
+        })();
+    </script>
 </head>
 <body>
 <?php
@@ -393,6 +506,11 @@ $pintarMenu = static function () use ($grupos, $activa, $grupoActivo, $porRevisa
         <span class="fw-semibold d-lg-none text-truncate"><?= esc($titulo ?? 'Panel') ?></span>
 
         <div class="ms-auto d-flex align-items-center gap-2">
+            <button class="btn-tactil" id="btn-tactil" type="button"
+                    title="Botones grandes para pantalla táctil">
+                <i class="bi bi-hand-index-thumb"></i>
+                <span class="d-none d-md-inline">Táctil</span>
+            </button>
             <a href="<?= site_url('perfil') ?>" class="chip-usuario" title="Mi perfil">
                 <span class="avatar"><?= esc($iniciales) ?></span>
                 <span class="d-none d-sm-inline"><?= esc($nombreUsuario) ?></span>
@@ -428,5 +546,29 @@ $pintarMenu = static function () use ($grupos, $activa, $grupoActivo, $porRevisa
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Conmutador del modo táctil
+    (function () {
+        var boton = document.getElementById('btn-tactil');
+        if (!boton) { return; }
+
+        function pintar() {
+            var activo = document.documentElement.classList.contains('tactil');
+            boton.classList.toggle('activo', activo);
+            boton.title = activo
+                ? 'Modo táctil encendido en este dispositivo — toca para apagarlo'
+                : 'Botones grandes para pantalla táctil';
+        }
+
+        boton.addEventListener('click', function () {
+            var activo = document.documentElement.classList.toggle('tactil');
+            try { localStorage.setItem('tactil', activo ? '1' : '0'); } catch (e) { /* modo privado */ }
+            pintar();
+        });
+
+        pintar();
+    })();
+</script>
 </body>
 </html>

@@ -248,6 +248,30 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       **Verificado**: margen 62,5 % calculado en vivo; 4 adultos + 1 niño = $560.000; rechazo por
       día no operativo y por cupo insuficiente («solo quedan 1 plaza»); cargo al folio al realizarla;
       y reserva web de $1.190.000 que pasa a **$1.610.000** al añadir cabalgata y paseo en lancha.
+- [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
+      El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
+      gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era
+      un `title`, 25 reglas `:hover` sin proteger y botones de acción de **35 × 32 px con 4 px de
+      separación** — con una yema de 45-57 mm eso no es incomodidad, es borrar algo por error.
+      · **La preferencia es por dispositivo** (`localStorage`), no del hotel: la misma instalación la
+      abre una tableta en recepción y un portátil en la oficina, y cada uno debe quedarse a su gusto.
+      Se autodetecta con `(pointer: coarse)` y se puede forzar desde la barra superior. La decisión
+      se toma en un `<script>` del `<head>` para que la página no salte al cargar.
+      · **Objetivos de 44 px** (recomendación de Apple), filas más altas y separación real entre los
+      botones de acción. **Medido: 35 × 32 px con 4 px → 136 × 44 px con 10 px.**
+      · Los botones de solo icono **muestran su `title` como texto** vía
+      `.btn[title]:has(> i:only-child)::after` — sin tocar las 28 plantillas. Si el navegador no
+      soporta `:has()` simplemente no se ven las etiquetas: no rompe nada.
+      · **Las 25 reglas `:hover` van dentro de `@media (hover: hover)`**, lo que quita el «hover
+      pegado» de táctil. El `:focus` se dejó fuera a propósito: hace falta para el teclado.
+      · **El desglose del calendario de tarifas ya no vive solo en el tooltip**: en una tableta esa
+      información era inalcanzable. Ahora se abre un panel al tocar la noche (y también con el
+      teclado). Verificado en el sábado del puente de Asunción: base $350.000 + temporada +20 % +
+      fin de semana +20 % = **$504.000**.
+      **Verificado**: con ratón queda apagado por defecto y nada cambia; en tableta (768 px) la
+      página no desborda —solo las tablas, que ya tienen su propio desplazamiento—; la preferencia
+      sobrevive a la recarga y se puede apagar.
+      **No verificable por mí**: el uso con un dedo real y el comportamiento de la tableta concreta.
 - [x] **TPV compartido entre camareros** (`App\Libraries\SesionTpv`, `App\Filters\Tpv`;
       columnas nuevas `empleados.tarjeta_uid` y `rol_tpv`, `comandas.empleado_id` y `autorizo_id`,
       `comanda_lineas.empleado_id`, `comanda_pagos.empleado_id`).
