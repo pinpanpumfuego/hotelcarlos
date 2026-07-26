@@ -408,12 +408,70 @@ class Pos extends BaseController
         $descuento = $tipo === 'porcentaje' ? round($bruto * min(100, max(0, $valor)) / 100) : max(0, $valor);
         $descuento = min($descuento, $bruto);
 
+        // Un descuento manual sustituye a un cupón anterior: se devuelve su uso
+        if ($comanda['cupon_id'] !== null) {
+            (new \App\Models\CuponModel())->devolverUso((int) $comanda['cupon_id'], ['comanda_id' => $id]);
+        }
+
         $this->comandas->update($id, [
             'descuento'        => $descuento,
             'motivo_descuento' => trim((string) ($datos['motivo'] ?? '')) ?: null,
+            'cupon_id'         => null,
         ]);
 
         return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle($id)]);
+    }
+
+    /** Canjea un cupón de descuento sobre la comanda. */
+    public function cupon(int $id)
+    {
+        $comanda = $this->comandas->find($id);
+        if ($comanda === null || $comanda['estado'] !== 'abierta') {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda no está abierta.']);
+        }
+
+        $datos  = $this->request->getJSON(true) ?? [];
+        $codigo = (string) ($datos['codigo'] ?? '');
+        $bruto  = (float) $this->comandas->recalcularTotal($id);
+
+        // El huésped alojado, si lo hay, para poder controlar el límite por persona
+        $huespedId = null;
+        if ($comanda['reserva_id'] !== null) {
+            $reserva   = (new ReservaModel())->find((int) $comanda['reserva_id']);
+            $huespedId = $reserva === null ? null : (int) $reserva['huesped_id'];
+        }
+
+        $cupones = new \App\Models\CuponModel();
+        $r       = $cupones->validar($codigo, 'tpv', 'restaurante', $bruto, $huespedId);
+
+        if (! $r['ok']) {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => $r['mensaje']]);
+        }
+
+        // Si ya había un cupón puesto, se devuelve antes de aplicar el nuevo
+        if ($comanda['cupon_id'] !== null) {
+            $cupones->devolverUso((int) $comanda['cupon_id'], ['comanda_id' => $id]);
+        }
+
+        $cupones->registrarUso($r['cupon'], [
+            'comanda_id' => $id,
+            'huesped_id' => $huespedId,
+            'base'       => $bruto,
+            'descuento'  => $r['descuento'],
+            'canal'      => 'tpv',
+        ]);
+
+        $this->comandas->update($id, [
+            'descuento'        => $r['descuento'],
+            'motivo_descuento' => 'Cupón ' . $r['cupon']['codigo'],
+            'cupon_id'         => $r['cupon']['id'],
+        ]);
+
+        return $this->response->setJSON([
+            'ok'      => true,
+            'mensaje' => $r['mensaje'],
+            'comanda' => $this->comandaDetalle($id),
+        ]);
     }
 
     /**
@@ -533,6 +591,20 @@ class Pos extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda ya está pagada.']);
         }
 
+        // Bono regalo: el dinero ya se cobró al venderlo, aquí solo se gasta saldo
+        $bono = null;
+        if ($forma === 'bono') {
+            $bonos = new \App\Models\BonoModel();
+            $r     = $bonos->validar((string) ($datos['codigo'] ?? ''), $importe);
+
+            if (! $r['ok']) {
+                return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => $r['mensaje']]);
+            }
+
+            $bono    = $r['bono'];
+            $importe = $r['importe']; // nunca más de lo que queda en el bono
+        }
+
         $recibido = null;
         $cambio   = null;
         if ($forma === 'efectivo') {
@@ -554,6 +626,13 @@ class Pos extends BaseController
                 'usuario_id' => session()->get('usuario_id'),
             ]);
             $avisos[] = 'Cargado al folio de ' . $comanda['reserva_codigo'] . '.';
+        } elseif ($forma === 'bono' && $bono !== null) {
+            (new \App\Models\BonoModel())->consumir($bono, $importe, [
+                'comanda_id' => $id,
+                'concepto'   => 'Restaurante · comanda ' . $comanda['numero'],
+            ]);
+            $restante = round((float) $bono['saldo'] - $importe, 2);
+            $avisos[] = 'Bono ' . $bono['codigo'] . ' aplicado. Le quedan $' . number_format($restante, 0, ',', '.') . ' de saldo.';
         } elseif ($forma === 'efectivo') {
             $turno = (new CajaTurnoModel())->abierto();
             if ($turno !== null) {
@@ -621,10 +700,27 @@ class Pos extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Indica el motivo de la anulación.']);
         }
 
+        // Si llevaba cupón, se devuelve el uso: la comanda no llegó a cobrarse
+        if ($comanda['cupon_id'] !== null) {
+            (new \App\Models\CuponModel())->devolverUso((int) $comanda['cupon_id'], ['comanda_id' => $id]);
+        }
+
+        // Y si se había pagado parte con un bono, se le devuelve el saldo
+        $bonos = new \App\Models\BonoModel();
+        foreach ((new \App\Models\BonoMovimientoModel())->where('comanda_id', $id)->where('tipo', 'consumo')->findAll() as $mov) {
+            $bonos->devolver(
+                (int) $mov['bono_id'],
+                (float) $mov['valor'],
+                'Devuelto al anular la comanda ' . $comanda['numero'],
+                ['comanda_id' => $id]
+            );
+        }
+
         $this->comandas->update($id, [
             'estado'     => 'anulada',
             'cerrada_en' => date('Y-m-d H:i:s'),
             'notas'      => 'Anulada: ' . $motivo,
+            'cupon_id'   => null,
         ]);
 
         return $this->response->setJSON(['ok' => true, 'mensaje' => 'Comanda ' . $comanda['numero'] . ' anulada.']);

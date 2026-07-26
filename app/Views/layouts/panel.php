@@ -249,6 +249,7 @@ if ($puedeVender) {
         ['huespedes', 'huespedes', 'bi-people', 'Huéspedes', 0],
         ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada', $porRevisar],
         ['caja', 'caja', 'bi-cash-coin', 'Caja', 0],
+        ['bonos', 'bonos', 'bi-gift', 'Bonos regalo', 0],
     ]];
 
     $restaurante = [
@@ -284,6 +285,7 @@ if ($rol === 'gerencia') {
         ['reportes', 'reportes', 'bi-graph-up', 'Reportes', 0],
         ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0],
         ['tarifas', 'tarifas', 'bi-tags', 'Tarifas', 0],
+        ['cupones', 'cupones', 'bi-ticket-perforated', 'Cupones', 0],
         ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento', 0],
         ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0],
         ['administracion', 'administracion', 'bi-gear', 'Administración', 0],

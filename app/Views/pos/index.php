@@ -377,6 +377,7 @@
                     <span class="insignia" id="ins-pendientes">0</span>
                 </button>
                 <button class="btn" id="btn-descuento"><i class="bi bi-tag"></i> Descuento</button>
+                <button class="btn" id="btn-cupon"><i class="bi bi-ticket-perforated"></i> Cupón</button>
                 <button class="btn" id="btn-propina"><i class="bi bi-coin"></i> Propina</button>
                 <button class="btn" id="btn-recibo"><i class="bi bi-printer"></i> Recibo</button>
                 <button class="btn rojo" id="btn-anular"><i class="bi bi-x-lg"></i> Anular</button>
@@ -418,6 +419,12 @@
         <div class="visor" id="cob-importe" style="font-size:1.35rem">$0</div>
 
         <div class="formas" id="cob-formas"></div>
+        <div id="cob-bono" style="display:none">
+            <p class="ayuda">Código del bono regalo</p>
+            <input type="text" class="campo" id="cob-bono-codigo" placeholder="BR-XXXX-XXXX"
+                   autocomplete="off" style="text-transform:uppercase">
+            <p class="ayuda">Se usa el saldo que tenga; si no llega, se cobra el resto con otra forma de pago.</p>
+        </div>
         <div id="cob-efectivo">
             <p class="ayuda">Efectivo recibido</p>
             <div class="visor" id="cob-visor">0</div>
@@ -998,6 +1005,7 @@
         $('#txt-ayuda').textContent = ayuda || '';
         $('#txt-extra').innerHTML = htmlExtra || '';
         $('#txt-campo').value = valorInicial || '';
+        $('#txt-campo').style.textTransform = 'none';
         $('#modal-texto').classList.add('abierta');
         setTimeout(() => $('#txt-campo').focus(), 100);
         $('#txt-aceptar').onclick = () => {
@@ -1053,6 +1061,17 @@
             });
             if (datos) { comanda = datos.comanda; pintarComanda(); }
         });
+    };
+
+    $('#btn-cupon').onclick = () => {
+        abrirTexto('Cupón de descuento', 'Total actual: ' + pesos(comanda.total), '', async (codigo) => {
+            if (!codigo) { return; }
+            const datos = await api('/comanda/' + comanda.id + '/cupon', {
+                method: 'POST', body: JSON.stringify({ codigo: codigo }),
+            });
+            if (datos) { comanda = datos.comanda; pintarComanda(); avisar(datos.mensaje); }
+        });
+        $('#txt-campo').style.textTransform = 'uppercase';
     };
 
     // ── Cliente de la comanda ────────────────────────────────────
@@ -1241,11 +1260,15 @@
                 cont.querySelectorAll('.forma').forEach((x) => x.classList.remove('sel'));
                 b.classList.add('sel');
                 $('#cob-efectivo').style.display = clave === 'efectivo' ? 'block' : 'none';
+                $('#cob-bono').style.display = clave === 'bono' ? 'block' : 'none';
+                if (clave === 'bono') { setTimeout(() => $('#cob-bono-codigo').focus(), 80); }
             };
             cont.appendChild(b);
         });
 
         $('#cob-efectivo').style.display = 'block';
+        $('#cob-bono').style.display = 'none';
+        $('#cob-bono-codigo').value = '';
         $('#modal-cobro').classList.add('abierta');
     };
 
@@ -1254,6 +1277,10 @@
         if (formaSel === 'efectivo') {
             const recibido = parseInt($('#cob-visor').textContent, 10) || 0;
             cuerpo.recibido = recibido > 0 ? recibido : importeCobro;
+        }
+        if (formaSel === 'bono') {
+            cuerpo.codigo = $('#cob-bono-codigo').value.trim().toUpperCase();
+            if (!cuerpo.codigo) { avisar('Escribe el código del bono.', true); return; }
         }
         const datos = await api('/comanda/' + comanda.id + '/cobrar', {
             method: 'POST', body: JSON.stringify(cuerpo),

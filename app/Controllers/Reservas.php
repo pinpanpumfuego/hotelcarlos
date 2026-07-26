@@ -195,7 +195,8 @@ class Reservas extends BaseController
             'reserva'     => $reserva,
             'movimientos' => $folio->movimientosDeReserva($id),
             'saldo'       => $folio->saldo($id),
-            'metodos'     => FolioModel::METODOS,
+            // El bono no se elige a mano: se canjea con su código, más abajo
+            'metodos'     => array_diff_key(FolioModel::METODOS, ['bono' => '']),
             'registro'    => (new \App\Models\RegistroModel())->where('reserva_id', $id)->first(),
         ]);
     }
@@ -268,6 +269,91 @@ class Reservas extends BaseController
         return redirect()->to('reservas/ver/' . $id)->with('ok', 'Cargo añadido al folio.');
     }
 
+    /** Canjea un cupón de descuento sobre el folio de la reserva. */
+    public function cuponFolio(int $id)
+    {
+        $reserva = $this->reservas->find($id);
+        if ($reserva === null || in_array($reserva['estado'], ['cancelada', 'checkout'], true)) {
+            return redirect()->back()->with('error', 'No se pueden aplicar cupones a esta reserva.');
+        }
+
+        $folio = new FolioModel();
+
+        // La base del descuento son los cargos del folio menos lo ya descontado
+        $cargos      = (float) ($folio->selectSum('valor')->where(['reserva_id' => $id, 'tipo' => 'cargo'])->first()['valor'] ?? 0);
+        $descontado  = (float) ($folio->selectSum('valor')->where(['reserva_id' => $id, 'tipo' => 'descuento'])->first()['valor'] ?? 0);
+        $base        = max(0, $cargos - $descontado);
+
+        $cupones = new \App\Models\CuponModel();
+        $r       = $cupones->validar(
+            (string) $this->request->getPost('codigo'),
+            'recepcion',
+            'alojamiento',
+            $base,
+            (int) $reserva['huesped_id']
+        );
+
+        if (! $r['ok']) {
+            return redirect()->to('reservas/ver/' . $id)->with('error', $r['mensaje']);
+        }
+
+        $folio->insert([
+            'reserva_id' => $id,
+            'tipo'       => 'descuento',
+            'concepto'   => 'Descuento cupón ' . $r['cupon']['codigo'],
+            'valor'      => $r['descuento'],
+            'usuario_id' => session()->get('usuario_id'),
+        ]);
+
+        $cupones->registrarUso($r['cupon'], [
+            'reserva_id' => $id,
+            'huesped_id' => $reserva['huesped_id'],
+            'base'       => $base,
+            'descuento'  => $r['descuento'],
+            'canal'      => 'recepcion',
+        ]);
+
+        return redirect()->to('reservas/ver/' . $id)->with('ok', $r['mensaje']);
+    }
+
+    /**
+     * Canjea un bono regalo contra el saldo pendiente del folio.
+     * No es un descuento: es un pago, porque ese dinero ya entró al venderlo.
+     */
+    public function bonoFolio(int $id)
+    {
+        $reserva = $this->reservas->find($id);
+        if ($reserva === null || $reserva['estado'] === 'cancelada') {
+            return redirect()->back()->with('error', 'No se pueden canjear bonos en esta reserva.');
+        }
+
+        $folio     = new FolioModel();
+        $pendiente = $folio->saldo($id);
+
+        $bonos = new \App\Models\BonoModel();
+        $r     = $bonos->validar((string) $this->request->getPost('codigo'), $pendiente);
+
+        if (! $r['ok']) {
+            return redirect()->to('reservas/ver/' . $id)->with('error', $r['mensaje']);
+        }
+
+        $folio->insert([
+            'reserva_id' => $id,
+            'tipo'       => 'pago',
+            'concepto'   => 'Bono regalo ' . $r['bono']['codigo'],
+            'valor'      => $r['importe'],
+            'metodo'     => 'bono',
+            'usuario_id' => session()->get('usuario_id'),
+        ]);
+
+        $bonos->consumir($r['bono'], $r['importe'], [
+            'reserva_id' => $id,
+            'concepto'   => 'Reserva ' . $reserva['codigo'],
+        ]);
+
+        return redirect()->to('reservas/ver/' . $id)->with('ok', $r['mensaje']);
+    }
+
     /** Registra un pago en el folio. */
     public function pagoFolio(int $id)
     {
@@ -279,7 +365,7 @@ class Reservas extends BaseController
         $valor  = (float) $this->request->getPost('valor');
         $metodo = (string) $this->request->getPost('metodo');
 
-        if ($valor <= 0 || ! array_key_exists($metodo, FolioModel::METODOS)) {
+        if ($valor <= 0 || ! array_key_exists($metodo, FolioModel::METODOS) || $metodo === 'bono') {
             return redirect()->to('reservas/ver/' . $id)->with('error', 'Indica un valor mayor que cero y un método de pago.');
         }
 

@@ -22,6 +22,7 @@
                         <input type="hidden" name="adultos" value="<?= esc($busqueda['adultos']) ?>">
                         <input type="hidden" name="ninos" value="<?= esc($busqueda['ninos']) ?>">
                         <input type="hidden" name="tipo_id" value="<?= esc($tipo['id']) ?>">
+                        <input type="hidden" name="cupon" value="<?= esc($cupon ?? '') ?>">
                         <!-- Campo señuelo antispam: los humanos no lo ven -->
                         <input type="text" name="sitioweb" value="" style="position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true">
 
@@ -108,13 +109,57 @@
                         <hr class="border-light opacity-25">
                     <?php endif ?>
 
+                    <?php $descuentoCupon = (float) ($descuento ?? 0); ?>
+                    <?php if ($descuentoCupon > 0): ?>
+                        <div class="d-flex justify-content-between small">
+                            <span>Alojamiento</span>
+                            <span>$<?= number_format($total, 0, ',', '.') ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span><i class="bi bi-ticket-perforated me-1"></i>Cupón <?= esc($cupon ?? '') ?></span>
+                            <span>−$<?= number_format($descuentoCupon, 0, ',', '.') ?></span>
+                        </div>
+                        <hr class="border-light opacity-25">
+                    <?php endif ?>
+
                     <div class="d-flex justify-content-between align-items-center">
                         <span>Total</span>
-                        <span class="fs-4 fw-bold">$<?= number_format($total, 0, ',', '.') ?> COP</span>
+                        <span class="fs-4 fw-bold">$<?= number_format($total - $descuentoCupon, 0, ',', '.') ?> COP</span>
                     </div>
                     <div class="small opacity-75 text-end">
                         $<?= number_format(isset($cotizacion) ? $cotizacion['media_noche'] : (float) $tipo['tarifa_base'], 0, ',', '.') ?> / noche de media
                     </div>
+                </div>
+            </div>
+
+            <!-- Cupón: formulario aparte, para poder recalcular el resumen sin perder los datos -->
+            <div class="card tarjeta-tipo mt-3">
+                <div class="card-body p-3">
+                    <?php if ($descuentoCupon > 0): ?>
+                        <div class="d-flex align-items-center gap-2 text-success">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <div class="small">
+                                Cupón <strong><?= esc($cupon ?? '') ?></strong> aplicado.
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <form method="post" action="<?= site_url('reservar/datos') ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="entrada" value="<?= esc($busqueda['entrada']) ?>">
+                            <input type="hidden" name="salida" value="<?= esc($busqueda['salida']) ?>">
+                            <input type="hidden" name="adultos" value="<?= esc($busqueda['adultos']) ?>">
+                            <input type="hidden" name="ninos" value="<?= esc($busqueda['ninos']) ?>">
+                            <input type="hidden" name="tipo_id" value="<?= esc($tipo['id']) ?>">
+                            <label class="form-label small mb-1">¿Tienes un cupón de descuento?</label>
+                            <div class="d-flex gap-2">
+                                <input type="text" name="cupon" class="form-control text-uppercase" placeholder="CÓDIGO" autocomplete="off">
+                                <button class="btn btn-outline-secondary rounded-pill px-3">Aplicar</button>
+                            </div>
+                            <?php if (! empty($cuponError)): ?>
+                                <div class="small text-danger mt-2"><i class="bi bi-x-circle me-1"></i><?= esc($cuponError) ?></div>
+                            <?php endif ?>
+                        </form>
+                    <?php endif ?>
                 </div>
             </div>
         </div>

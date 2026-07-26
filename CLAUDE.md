@@ -196,6 +196,29 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       El desglose también se ve en la web pública (paso 2 y 3 del motor de reservas) y en la ficha
       de la reserva. **Verificado**: temporada +35 % × fin de semana +20 % × tope máximo × suplemento
       por adulto adicional dan el mismo total en simulador, calendario y web.
+- [x] **Cupones de descuento** (`CuponModel`, `CuponUsoModel`, controlador `Cupones`, tablas `cupones`
+      y `cupon_usos`; `folio_movimientos.tipo` amplía el ENUM con `descuento` y `comandas.cupon_id`).
+      Cada cupón define: porcentaje o valor fijo, **descuento máximo**, ámbito (alojamiento /
+      restaurante / los dos), vigencia, **importe mínimo**, **límite de usos totales y por huésped**
+      (se controla por documento), y en qué **canales** se puede canjear (web, recepción, TPV).
+      `CuponModel::validar()` es el único punto de verdad: devuelve un mensaje en español explicando
+      por qué no se puede aplicar. Cada canje se anota en `cupon_usos` (base, descuento, canal,
+      quién y dónde), y el contador `usos` sube; el TPV **devuelve el uso** si se anula la comanda o
+      se sustituye por un descuento manual. Un cupón ya canjeado no se borra: se desactiva.
+      En el folio el descuento es un **tipo propio de movimiento** (ni cargo ni pago) y resta del saldo.
+- [x] **Bonos regalo** (`BonoModel`, `BonoMovimientoModel`, controlador `Bonos`, tablas `bonos` y
+      `bono_movimientos`; `folio_movimientos.metodo` y `comanda_pagos.forma_pago` añaden `bono`).
+      **Distinción contable importante**: un bono no es un descuento, es dinero cobrado por
+      adelantado; al canjearlo se registra como **forma de pago**, y la venta del bono en efectivo
+      entra en la caja del turno. Código legible tipo `BR-9888-UM43` (alfabeto sin I/O/0/1).
+      Saldo parcial: se consume lo que haga falta y el resto queda para otra visita; todo movimiento
+      (emisión, canje, devolución, anulación) queda en el historial con el saldo resultante.
+      Se canjea desde la ficha de la reserva y desde el TPV (forma de pago «Bono regalo», compatible
+      con la división de cuenta). Al anular una comanda se **devuelve el saldo** al bono.
+      Ficha imprimible con la marca para entregar al comprador. Los reportes avisan de que lo cobrado
+      con bono no es ingreso del día. **Verificado de punta a punta**: cupón del 10 % en la web
+      (−$160.650 sobre $1.606.500), bono de $500.000 canjeado en el folio, y en el TPV cupón +
+      pago partido bono/efectivo (50.000 + 67.900 = 117.900).
 - [ ] Escandallo fase B: inventario con descuento de existencias (cuando el hotel esté operando)
 - [ ] Combos / menús cerrados (producto compuesto de otros productos) — propuesto, no elegido aún
 - [x] **Registro en línea del huésped / autocheck-in** (tablas `registros`, `registro_acompanantes`,

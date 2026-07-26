@@ -11,7 +11,7 @@ class ComandaModel extends Model
     protected $allowedFields = [
         'numero', 'mesa', 'mesa_id', 'comensales', 'reserva_id', 'estado', 'total',
         'cliente_nombre', 'cliente_documento', 'cliente_telefono',
-        'descuento', 'motivo_descuento', 'propina', 'forma_pago', 'recibido', 'cambio',
+        'descuento', 'motivo_descuento', 'cupon_id', 'propina', 'forma_pago', 'recibido', 'cambio',
         'usuario_id', 'cerrada_en', 'notas',
     ];
     protected $useTimestamps = true;
@@ -22,6 +22,7 @@ class ComandaModel extends Model
         'transferencia' => 'Transferencia',
         'wompi'         => 'Wompi',
         'habitacion'    => 'Cargar a la cabaña',
+        'bono'          => 'Bono regalo',
     ];
 
     /** Número correlativo diario, p. ej. C-0725-03. */

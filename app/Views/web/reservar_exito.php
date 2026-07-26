@@ -13,7 +13,11 @@
             <div class="text-start mx-auto" style="max-width: 380px;">
                 <p class="mb-2"><i class="bi bi-house-heart me-2 text-success"></i><?= esc($reserva['unidad_nombre']) ?></p>
                 <p class="mb-2"><i class="bi bi-calendar3 me-2 text-success"></i><?= esc(date('d/m/Y', strtotime($reserva['fecha_entrada']))) ?> → <?= esc(date('d/m/Y', strtotime($reserva['fecha_salida']))) ?></p>
-                <p class="mb-2"><i class="bi bi-cash-coin me-2 text-success"></i>Total: $<?= number_format((float) $reserva['total'], 0, ',', '.') ?> COP</p>
+                <p class="mb-2"><i class="bi bi-cash-coin me-2 text-success"></i>Alojamiento: $<?= number_format((float) $reserva['total'], 0, ',', '.') ?> COP</p>
+                <?php if (! empty($descuento)): ?>
+                    <p class="mb-2"><i class="bi bi-ticket-perforated me-2 text-success"></i>Descuento del cupón: −$<?= number_format((float) $descuento, 0, ',', '.') ?> COP</p>
+                    <p class="mb-2 fw-semibold"><i class="bi bi-check2 me-2 text-success"></i>A pagar: $<?= number_format((float) $reserva['total'] - (float) $descuento, 0, ',', '.') ?> COP</p>
+                <?php endif ?>
                 <p class="mb-0"><i class="bi bi-envelope me-2 text-success"></i>Te contactaremos en <strong><?= esc($reserva['huesped_email']) ?></strong> para confirmar y coordinar el pago.</p>
             </div>
             <hr class="my-4">

@@ -16,6 +16,7 @@ class FolioModel extends Model
         'tarjeta'       => 'Tarjeta',
         'transferencia' => 'Transferencia',
         'wompi'         => 'Wompi',
+        'bono'          => 'Bono regalo',
         'otro'          => 'Otro',
     ];
 
@@ -30,7 +31,7 @@ class FolioModel extends Model
             ->findAll();
     }
 
-    /** Saldo pendiente: cargos - pagos. */
+    /** Saldo pendiente: cargos menos pagos y descuentos. */
     public function saldo(int $reservaId): float
     {
         $fila = $this->select("SUM(CASE WHEN tipo = 'cargo' THEN valor ELSE -valor END) AS saldo")
@@ -38,6 +39,14 @@ class FolioModel extends Model
             ->first();
 
         return (float) ($fila['saldo'] ?? 0);
+    }
+
+    /** Suma de los descuentos aplicados a una reserva. */
+    public function totalDescuentos(int $reservaId): float
+    {
+        $fila = $this->selectSum('valor')->where(['reserva_id' => $reservaId, 'tipo' => 'descuento'])->first();
+
+        return (float) ($fila['valor'] ?? 0);
     }
 
     /** Total pagado de una reserva. */

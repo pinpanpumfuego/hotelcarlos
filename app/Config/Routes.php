@@ -83,6 +83,16 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
     $routes->get('reservas/ver/(:num)', 'Reservas::ver/$1');
     $routes->post('reservas/confirmar/(:num)', 'Reservas::confirmar/$1');
     $routes->post('reservas/folio/cargo/(:num)', 'Reservas::cargoFolio/$1');
+    $routes->post('reservas/folio/cupon/(:num)', 'Reservas::cuponFolio/$1');
+    $routes->post('reservas/folio/bono/(:num)', 'Reservas::bonoFolio/$1');
+
+    // Bonos regalo: los emite y canjea también recepción
+    $routes->get('bonos', 'Bonos::index');
+    $routes->get('bonos/ver/(:num)', 'Bonos::ver/$1');
+    $routes->get('bonos/imprimir/(:num)', 'Bonos::imprimir/$1');
+    $routes->post('bonos/guardar', 'Bonos::guardar');
+    $routes->post('bonos/actualizar/(:num)', 'Bonos::actualizar/$1');
+    $routes->post('bonos/anular/(:num)', 'Bonos::anular/$1');
     $routes->post('reservas/folio/pago/(:num)', 'Reservas::pagoFolio/$1');
     $routes->get('reservas/nueva', 'Reservas::nueva');
     $routes->post('reservas/guardar', 'Reservas::guardar');
@@ -114,6 +124,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia,recepcion']], static func
         $routes->post('comanda/(:num)/anadir', 'Pos::anadir/$1');
         $routes->post('comanda/(:num)/cocina', 'Pos::enviarCocina/$1');
         $routes->post('comanda/(:num)/descuento', 'Pos::descuento/$1');
+        $routes->post('comanda/(:num)/cupon', 'Pos::cupon/$1');
         $routes->post('comanda/(:num)/propina', 'Pos::propina/$1');
         $routes->post('comanda/(:num)/cliente', 'Pos::cliente/$1');
         $routes->post('comanda/(:num)/cobrar', 'Pos::cobrar/$1');
@@ -199,6 +210,14 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->post('facturas/reenviar/(:num)', 'Facturas::reenviar/$1');
 
     $routes->post('unidades/eliminar/(:num)', 'Unidades::eliminar/$1');
+
+    // Cupones de descuento
+    $routes->get('cupones', 'Cupones::index');
+    $routes->get('cupones/ver/(:num)', 'Cupones::ver/$1');
+    $routes->post('cupones/guardar', 'Cupones::guardar');
+    $routes->post('cupones/actualizar/(:num)', 'Cupones::actualizar/$1');
+    $routes->post('cupones/estado/(:num)', 'Cupones::alternar/$1');
+    $routes->post('cupones/eliminar/(:num)', 'Cupones::eliminar/$1');
 
     // Motor de tarifas: temporadas, reglas, calendario y simulador
     $routes->get('tarifas', 'Tarifas::index');

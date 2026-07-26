@@ -89,6 +89,21 @@ class Reservar extends BaseController
         $cotizacion = (new \App\Libraries\MotorTarifas())
             ->cotizar((int) $tipo['id'], $datos['entrada'], $datos['salida'], $datos['adultos'], $datos['ninos']);
 
+        // Cupón opcional: se comprueba aquí para que el huésped vea el descuento antes de confirmar
+        $cupon      = trim((string) $this->request->getPost('cupon'));
+        $descuento  = 0.0;
+        $cuponError = null;
+
+        if ($cupon !== '') {
+            $r = (new \App\Models\CuponModel())->validar($cupon, 'web', 'alojamiento', $cotizacion['total']);
+            if ($r['ok']) {
+                $descuento = $r['descuento'];
+            } else {
+                $cuponError = $r['mensaje'];
+                $cupon      = '';
+            }
+        }
+
         return view('web/reservar_datos', [
             'hotel'        => config('Hotel'),
             'tituloPagina' => 'Tus datos',
@@ -98,6 +113,9 @@ class Reservar extends BaseController
             'noches'       => $noches,
             'total'        => $cotizacion['total'],
             'cotizacion'   => $cotizacion,
+            'cupon'        => $cupon,
+            'descuento'    => $descuento,
+            'cuponError'   => $cuponError,
         ]);
     }
 
@@ -190,6 +208,38 @@ class Reservar extends BaseController
             'notas'           => 'Reserva creada desde la web. ' . trim((string) $this->request->getPost('comentarios')),
         ]);
 
+        // Cupón: se descuenta en el folio, no en el precio del alojamiento,
+        // para que quede claro cuánto valía la estancia y cuánto se rebajó.
+        $cupon = trim((string) $this->request->getPost('cupon'));
+        if ($cupon !== '' && $reservaId) {
+            $cupones = new \App\Models\CuponModel();
+            $r       = $cupones->validar($cupon, 'web', 'alojamiento', $cotizacion['total'], (int) $huespedId);
+
+            if ($r['ok']) {
+                $folio = new \App\Models\FolioModel();
+                $folio->asegurarCargoAlojamiento([
+                    'id'            => $reservaId,
+                    'total'         => $cotizacion['total'],
+                    'fecha_entrada' => $busqueda['entrada'],
+                    'fecha_salida'  => $busqueda['salida'],
+                ]);
+                $folio->insert([
+                    'reserva_id' => $reservaId,
+                    'tipo'       => 'descuento',
+                    'concepto'   => 'Descuento cupón ' . $r['cupon']['codigo'],
+                    'valor'      => $r['descuento'],
+                ]);
+
+                $cupones->registrarUso($r['cupon'], [
+                    'reserva_id' => $reservaId,
+                    'huesped_id' => $huespedId,
+                    'base'       => $cotizacion['total'],
+                    'descuento'  => $r['descuento'],
+                    'canal'      => 'web',
+                ]);
+            }
+        }
+
         // Aviso interno: el hotel debe saber que hay una reserva por confirmar
         $completa = $this->reservas
             ->select('reservas.*, huespedes.nombre, huespedes.apellidos, huespedes.email, huespedes.telefono,
@@ -225,6 +275,7 @@ class Reservar extends BaseController
             'tituloPagina' => 'Reserva recibida',
             'paginaActiva' => 'reservar',
             'reserva'      => $reserva,
+            'descuento'    => (new \App\Models\FolioModel())->totalDescuentos((int) $reserva['id']),
         ]);
     }
 

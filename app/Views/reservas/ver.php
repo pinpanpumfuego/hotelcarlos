@@ -194,19 +194,31 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
                     <thead class="table-light">
-                        <tr><th>Fecha</th><th>Concepto</th><th class="text-end">Cargo</th><th class="text-end">Pago</th><th>Registró</th></tr>
+                        <tr>
+                            <th>Fecha</th><th>Concepto</th>
+                            <th class="text-end">Cargo</th>
+                            <th class="text-end">Descuento</th>
+                            <th class="text-end">Pago</th>
+                            <th class="d-none d-lg-table-cell">Registró</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($movimientos)): ?>
-                            <tr><td colspan="5" class="text-center text-muted py-4">Sin movimientos todavía.</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted py-4">Sin movimientos todavía.</td></tr>
                         <?php endif ?>
                         <?php foreach ($movimientos as $m): ?>
                             <tr>
                                 <td class="text-muted small"><?= date('d/m H:i', strtotime($m['created_at'])) ?></td>
-                                <td><?= esc($m['concepto']) ?></td>
+                                <td>
+                                    <?php if ($m['tipo'] === 'descuento'): ?>
+                                        <i class="bi bi-ticket-perforated me-1 text-success"></i>
+                                    <?php endif ?>
+                                    <?= esc($m['concepto']) ?>
+                                </td>
                                 <td class="text-end"><?= $m['tipo'] === 'cargo' ? '$' . number_format((float) $m['valor'], 0, ',', '.') : '' ?></td>
+                                <td class="text-end text-success"><?= $m['tipo'] === 'descuento' ? '−$' . number_format((float) $m['valor'], 0, ',', '.') : '' ?></td>
                                 <td class="text-end text-success"><?= $m['tipo'] === 'pago' ? '$' . number_format((float) $m['valor'], 0, ',', '.') : '' ?></td>
-                                <td class="text-muted small"><?= esc($m['usuario_nombre'] ?? 'Web') ?></td>
+                                <td class="text-muted small d-none d-lg-table-cell"><?= esc($m['usuario_nombre'] ?? 'Web') ?></td>
                             </tr>
                         <?php endforeach ?>
                     </tbody>
@@ -216,6 +228,26 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
             <?php if (! in_array($reserva['estado'], ['cancelada', 'checkout'], true)): ?>
                 <div class="card-body border-top">
                     <div class="row g-4">
+                        <div class="col-md-6">
+                            <h3 class="h6 text-muted mb-3">Cupón de descuento</h3>
+                            <form action="<?= site_url('reservas/folio/cupon/' . $reserva['id']) ?>" method="post" class="d-flex gap-2 flex-wrap">
+                                <?= csrf_field() ?>
+                                <input type="text" name="codigo" class="form-control text-uppercase" placeholder="CÓDIGO DEL CUPÓN"
+                                       autocomplete="off" required style="flex: 2; min-width: 150px;">
+                                <button class="btn btn-outline-success"><i class="bi bi-ticket-perforated"></i></button>
+                            </form>
+                            <div class="form-text">Rebaja los cargos del folio.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <h3 class="h6 text-muted mb-3">Bono regalo</h3>
+                            <form action="<?= site_url('reservas/folio/bono/' . $reserva['id']) ?>" method="post" class="d-flex gap-2 flex-wrap">
+                                <?= csrf_field() ?>
+                                <input type="text" name="codigo" class="form-control text-uppercase" placeholder="BR-XXXX-XXXX"
+                                       autocomplete="off" required style="flex: 2; min-width: 150px;">
+                                <button class="btn btn-outline-primary"><i class="bi bi-gift"></i></button>
+                            </form>
+                            <div class="form-text">Paga con el saldo del bono; no es un descuento.</div>
+                        </div>
                         <div class="col-md-6">
                             <h3 class="h6 text-muted mb-3">Añadir cargo</h3>
                             <form action="<?= site_url('reservas/folio/cargo/' . $reserva['id']) ?>" method="post" class="d-flex gap-2 flex-wrap">

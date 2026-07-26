@@ -93,6 +93,13 @@
                             </tr>
                         <?php endforeach ?>
                     </table>
+                    <?php if (in_array('bono', array_column($pagosPorMetodo, 'metodo'), true)): ?>
+                        <p class="form-text mt-2 mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Lo cobrado con <strong>bono regalo</strong> no es dinero que entre hoy:
+                            se cobró el día que se vendió el bono.
+                        </p>
+                    <?php endif ?>
                 <?php endif ?>
                 <hr>
                 <div class="d-flex justify-content-between small text-muted">
