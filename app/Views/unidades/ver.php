@@ -335,17 +335,63 @@ $totalPiezas = array_sum(array_map(static fn ($i) => (int) $i['cantidad'], $conC
             <?php endif ?>
         </div>
 
-        <!-- Fotos internas -->
-        <div class="card border-0 shadow-sm" id="fotos">
-            <div class="card-header bg-white fw-semibold">
-                <i class="bi bi-camera me-2"></i>Fotos internas
+        <!-- Fotos que se publican (viven en el tipo) -->
+        <div class="card border-0 shadow-sm mb-4" id="fotos-web">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="fw-semibold"><i class="bi bi-globe2 me-2"></i>Fotos que se publican en la web</span>
+                <?php if ($esGestor): ?>
+                    <a href="<?= site_url('tipos/ficha/' . $unidad['tipo_id']) ?>#galeria" class="btn btn-sm btn-primary">
+                        <i class="bi bi-upload me-1"></i>Subir fotos a la web
+                    </a>
+                <?php endif ?>
             </div>
             <div class="card-body">
                 <p class="form-text mb-3">
-                    <i class="bi bi-shield-lock me-1"></i>
-                    Estas fotos <strong>no salen en la web</strong>: son de uso interno (cómo debe quedar la cabaña,
-                    desperfectos…). Solo las ve el personal con sesión iniciada.
-                    Las fotos que se anuncian están en <a href="<?= site_url('tipos/ficha/' . $unidad['tipo_id']) ?>">el tipo de alojamiento</a>.
+                    Son las de <strong><?= esc($unidad['tipo_nombre']) ?></strong> y las comparten
+                    <strong>todas las cabañas de este tipo</strong>: se suben una sola vez, no siete.
+                </p>
+
+                <?php if ($galeriaTipo === []): ?>
+                    <div class="aviso-sin-fotos">
+                        <i class="bi bi-camera fs-3 d-block mb-2 opacity-50"></i>
+                        <p class="mb-2">Todavía no hay ninguna foto publicada.</p>
+                        <?php if ($esGestor): ?>
+                            <a href="<?= site_url('tipos/ficha/' . $unidad['tipo_id']) ?>#galeria" class="btn btn-primary btn-sm">
+                                <i class="bi bi-upload me-1"></i>Subir la primera foto
+                            </a>
+                        <?php else: ?>
+                            <p class="small text-muted mb-0">Pídeselo a gerencia.</p>
+                        <?php endif ?>
+                    </div>
+                <?php else: ?>
+                    <div class="galeria-interna">
+                        <?php foreach (array_slice($galeriaTipo, 0, 6) as $m): ?>
+                            <figure class="foto">
+                                <?php if ($m['tipo'] === 'video'): ?>
+                                    <div class="hueco-video"><i class="bi bi-play-circle"></i></div>
+                                <?php else: ?>
+                                    <img src="<?= esc(\App\Models\MedioModel::urlMiniatura($m)) ?>"
+                                         alt="<?= esc($m['alt'] ?? $unidad['tipo_nombre']) ?>" loading="lazy">
+                                <?php endif ?>
+                            </figure>
+                        <?php endforeach ?>
+                    </div>
+                    <?php if (count($galeriaTipo) > 6): ?>
+                        <p class="form-text mt-2 mb-0">y <?= count($galeriaTipo) - 6 ?> más…</p>
+                    <?php endif ?>
+                <?php endif ?>
+            </div>
+        </div>
+
+        <!-- Fotos internas -->
+        <div class="card border-0 shadow-sm" id="fotos">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-shield-lock me-2"></i>Fotos internas de <?= esc($unidad['nombre']) ?>
+            </div>
+            <div class="card-body">
+                <p class="form-text mb-3">
+                    Estas <strong>no salen en la web</strong> y son solo de esta cabaña: cómo debe quedar
+                    tras el aseo, un desperfecto… Solo las ve el personal con sesión iniciada.
                 </p>
 
                 <?php if ($fotos === []): ?>
@@ -411,6 +457,10 @@ $totalPiezas = array_sum(array_map(static fn ($i) => (int) $i['cantidad'], $conC
         display: flex; justify-content: space-between; align-items: center; gap: .3rem;
         padding: .3rem .5rem; font-size: .74rem; color: var(--tinta-suave);
     }
+    .hueco-video { height: 105px; display: flex; align-items: center; justify-content: center;
+                   background: #e9efe9; color: var(--bosque); font-size: 1.6rem; }
+    .aviso-sin-fotos { text-align: center; padding: 1.6rem 1rem; color: var(--tinta-suave);
+                       border: 2px dashed var(--borde-fuerte); border-radius: var(--radio); }
 </style>
 
 <?= $this->endSection() ?>

@@ -59,6 +59,7 @@ class Unidades extends BaseController
             'inventario'  => (new InventarioItemModel())->deUnidad($id),
             'revisiones'  => (new RevisionInventarioModel())->deUnidad($id),
             'fotos'       => (new MedioModel())->deUnidad($id),
+            'galeriaTipo' => (new MedioModel())->deTipo((int) $unidad['tipo_id']),
             'mantenimientos' => $this->incidenciasAbiertas($id),
             'limpiezas'   => $this->ultimasLimpiezas($id),
         ]);
