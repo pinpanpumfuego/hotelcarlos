@@ -289,6 +289,54 @@ class Tarifas extends BaseController
     }
 
     // ─────────────────────────────────────────────────────────────
+    //  Agente de tarifas
+    // ─────────────────────────────────────────────────────────────
+
+    /** Propone el calendario comercial de un año a partir de los festivos de Colombia. */
+    public function agente()
+    {
+        $anio = (int) ($this->request->getGet('anio') ?: date('Y'));
+        $anio = max(2024, min(2100, $anio));
+
+        $agente = new \App\Libraries\AgenteTarifas();
+
+        return view('tarifas/agente', [
+            'titulo'     => 'Agente de tarifas',
+            'seccion'    => 'tarifas',
+            'anio'       => $anio,
+            'propuestas' => $agente->propuestas($anio),
+            'festivos'   => \App\Libraries\FestivosColombia::festivos($anio),
+        ]);
+    }
+
+    /** Crea (o refresca) las temporadas elegidas en la pantalla del agente. */
+    public function aplicarAgente()
+    {
+        $anio   = (int) $this->request->getPost('anio');
+        $claves = (array) $this->request->getPost('clave');
+        $ajustes = (array) $this->request->getPost('ajuste');
+
+        if ($claves === []) {
+            return redirect()->to('tarifas/agente?anio=' . $anio)
+                ->with('error', 'No marcaste ninguna temporada.');
+        }
+
+        [$creadas, $actualizadas] = (new \App\Libraries\AgenteTarifas())->aplicar($anio, $claves, $ajustes);
+
+        $partes = [];
+        if ($creadas > 0) {
+            $partes[] = $creadas . ' temporada' . ($creadas > 1 ? 's creadas' : ' creada');
+        }
+        if ($actualizadas > 0) {
+            $partes[] = $actualizadas . ' actualizada' . ($actualizadas > 1 ? 's' : '');
+        }
+
+        return redirect()->to('tarifas')
+            ->with('ok', ($partes === [] ? 'No hubo cambios' : ucfirst(implode(' y ', $partes)))
+                . '. Revísalas antes de dejarlas activas.');
+    }
+
+    // ─────────────────────────────────────────────────────────────
     //  Simulador
     // ─────────────────────────────────────────────────────────────
 

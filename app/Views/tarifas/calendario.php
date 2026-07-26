@@ -143,7 +143,12 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
                     }
                 }
 
+                $festivo = \App\Libraries\FestivosColombia::nombre($fecha);
+
                 $titulo = $info['dia'] . ' ' . date('d/m', strtotime($fecha)) . "\n";
+                if ($festivo !== null) {
+                    $titulo .= 'Festivo: ' . $festivo . "\n";
+                }
                 $titulo .= 'Base: $' . number_format($info['base'], 0, ',', '.') . "\n";
                 foreach ($info['ajustes'] as $a) {
                     $titulo .= $a['concepto'] . ' (' . $a['texto'] . '): '
@@ -152,12 +157,17 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
                 $titulo .= 'Precio: $' . number_format($info['precio'], 0, ',', '.') . "\n";
                 $titulo .= 'Ocupación: ' . $ocup . ' %';
                 ?>
-                <div class="celda <?= $finde ? 'finde' : '' ?> <?= $esHoy ? 'hoy' : '' ?> <?= $pasado ? 'pasado' : '' ?>"
+                <div class="celda <?= $finde ? 'finde' : '' ?> <?= $esHoy ? 'hoy' : '' ?> <?= $pasado ? 'pasado' : '' ?> <?= $festivo !== null ? 'festivo' : '' ?>"
                      title="<?= esc($titulo) ?>">
                     <?php if ($color !== null): ?>
                         <span class="franja" style="background: <?= esc($color) ?>"></span>
                     <?php endif ?>
-                    <div class="dia"><?= $d ?></div>
+                    <div class="dia">
+                        <?= $d ?>
+                        <?php if ($festivo !== null): ?>
+                            <i class="bi bi-star-fill marca-festivo" aria-label="Festivo"></i>
+                        <?php endif ?>
+                    </div>
                     <div class="precio <?= $delta > 0.02 ? 'alto' : ($delta < -0.02 ? 'bajo' : '') ?>">
                         <span class="d-none d-md-inline">$<?= number_format($info['precio'], 0, ',', '.') ?></span>
                         <span class="d-md-none">$<?= number_format($info['precio'] / 1000, 0, ',', '.') ?>k</span>
@@ -180,6 +190,7 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
         <span><span class="marca sube me-1"></span>Recargo</span>
         <span><span class="marca baja me-1"></span>Descuento</span>
         <span><span class="muestra-ocup me-1"></span>Ocupación de esa noche</span>
+        <span><i class="bi bi-star-fill marca-festivo me-1"></i>Festivo en Colombia</span>
         <?php foreach ($leyenda as $t): ?>
             <span><span class="punto-color me-1" style="background: <?= esc($t['color']) ?>"></span><?= esc($t['nombre']) ?></span>
         <?php endforeach ?>
@@ -205,7 +216,9 @@ $leyenda   = array_filter($temporadas, static fn ($t) => $t['desde'] <= $ultimoD
     .celda.pasado { opacity: .5; }
     .celda.hoy { border-color: var(--bosque); box-shadow: 0 0 0 2px rgba(31,77,54,.15); }
     .celda .franja { position: absolute; inset: 0 0 auto 0; height: 3px; }
+    .celda.festivo { background: #fdf7ef; }
     .celda .dia { font-size: .72rem; color: var(--tinta-suave); font-weight: 600; }
+    .marca-festivo { font-size: .58rem; color: var(--arena); margin-left: 2px; vertical-align: text-top; }
     .celda .precio { font-family: 'Fraunces', serif; font-weight: 600; font-size: .92rem; line-height: 1.25; }
     .celda .precio.alto { color: var(--arena); }
     .celda .precio.bajo { color: #1c7a4f; }

@@ -222,6 +222,8 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     // Motor de tarifas: temporadas, reglas, calendario y simulador
     $routes->get('tarifas', 'Tarifas::index');
     $routes->get('tarifas/calendario', 'Tarifas::calendario');
+    $routes->get('tarifas/agente', 'Tarifas::agente');
+    $routes->post('tarifas/agente/aplicar', 'Tarifas::aplicarAgente');
     $routes->get('tarifas/simulador', 'Tarifas::simulador');
     $routes->get('tarifas/temporada/(:num)', 'Tarifas::temporada/$1');
     $routes->post('tarifas/temporada/guardar', 'Tarifas::guardarTemporada');

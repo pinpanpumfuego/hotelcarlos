@@ -196,6 +196,25 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       El desglose también se ve en la web pública (paso 2 y 3 del motor de reservas) y en la ficha
       de la reserva. **Verificado**: temporada +35 % × fin de semana +20 % × tope máximo × suplemento
       por adulto adicional dan el mismo total en simulador, calendario y web.
+- [x] **Agente de tarifas + calendario de festivos de Colombia**
+      (`App\Libraries\FestivosColombia`, `App\Libraries\AgenteTarifas`, `/tarifas/agente`;
+      columnas `temporadas.origen` y `temporadas.clave`).
+      **No usa IA ni servicios externos**: los festivos son reglas de ley y se calculan.
+      Pascua con el algoritmo gregoriano anónimo (Meeus/Jones/Butcher) implementado a mano —
+      no depende de la extensión `calendar` ni de la zona horaria. Los 18 festivos salen de tres
+      grupos: fijos (1 ene, 1 may, 20 jul, 7 ago, 8 dic, 25 dic), trasladables al lunes siguiente
+      por la **Ley 51 de 1983 («Ley Emiliani»)** (6 ene, 19 mar, 29 jun, 15 ago, 12 oct, 1 nov,
+      11 nov) y los de Pascua (Jueves y Viernes Santo sin mover; Ascensión +43, Corpus +64 y
+      Sagrado Corazón +71, que ya caen en lunes). **Verificado contra 2026 y 2027.**
+      Los **puentes** se detectan solos: rachas de 3+ días no laborables seguidos que contengan
+      un festivo; la temporada empieza la noche anterior porque esa noche también se vende.
+      El agente propone el año entero (puentes, Semana Santa completa, fin de año, vacaciones de
+      mitad de año y temporada baja) y **Javier acepta lo que quiera**: nada se guarda sin marcarlo.
+      Cada propuesta lleva `clave` única, así que volver a pasarlo no duplica; y solo refresca las
+      temporadas de `origen = agente` (si las editas a mano, se respetan).
+      **Aprende de la ocupación real** cuando la haya: mira esas mismas fechas del año anterior
+      (incluidas las estancias ya terminadas) y sube o baja la sugerencia. Sin histórico lo dice
+      claramente en vez de inventar. El calendario de tarifas marca los festivos con una estrella.
 - [x] **Cupones de descuento** (`CuponModel`, `CuponUsoModel`, controlador `Cupones`, tablas `cupones`
       y `cupon_usos`; `folio_movimientos.tipo` amplía el ENUM con `descuento` y `comandas.cupon_id`).
       Cada cupón define: porcentaje o valor fijo, **descuento máximo**, ámbito (alojamiento /

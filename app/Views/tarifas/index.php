@@ -21,6 +21,9 @@ foreach ($reglas as $r) {
         </p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+        <a href="<?= site_url('tarifas/agente') ?>" class="btn btn-primary">
+            <i class="bi bi-magic me-1"></i>Agente de tarifas
+        </a>
         <a href="<?= site_url('tarifas/calendario') ?>" class="btn btn-outline-primary">
             <i class="bi bi-calendar3 me-1"></i>Calendario
         </a>

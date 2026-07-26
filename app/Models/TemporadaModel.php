@@ -8,7 +8,7 @@ class TemporadaModel extends Model
 {
     protected $table         = 'temporadas';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['nombre', 'desde', 'hasta', 'tipo_ajuste', 'ajuste', 'prioridad', 'color', 'activa'];
+    protected $allowedFields = ['nombre', 'desde', 'hasta', 'tipo_ajuste', 'ajuste', 'prioridad', 'color', 'activa', 'origen', 'clave'];
     protected $useTimestamps = true;
 
     /** Cómo se aplica el ajuste de la temporada sobre la tarifa base. */
