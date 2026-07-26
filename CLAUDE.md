@@ -221,9 +221,7 @@ códigos únicos, timestamps, operaciones idempotentes, nunca asumir conexión p
       como canal secundario en contacto).
 - [x] Inventario real: 1 tipo "Cabaña" × 7 unidades (seeder `InventarioReal`);
       capacidad 4 y tarifa 350.000 COP son PROVISIONALES, confirmar con Javier.
-- [ ] Pago online con Wompi sobre el motor de reservas
-- [ ] Aviso por correo al hotel/huésped cuando entra una reserva web (necesita SMTP)
-- [ ] Autocheck-in y portal del huésped
+- [ ] Pago online con Wompi sobre el motor de reservas (ver más abajo; requiere credenciales)
 
 ## Fases siguientes (según propuesta)
 3. Operación interna: housekeeping, mantenimiento, lavandería
