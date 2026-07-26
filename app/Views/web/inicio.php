@@ -48,14 +48,38 @@ function escenaParaTipo(string $nombre): string
         // pesa 190 KB y el PNG queda de respaldo para navegadores viejos.
         $logo = FCPATH . 'assets/img/logo.png';
         ?>
+        <?php $animado = FCPATH . 'assets/video/logo-animado.mp4'; ?>
         <?php if (is_file($logo)): ?>
             <h1 class="mb-3">
-                <picture>
-                    <source srcset="<?= base_url('assets/img/logo.webp') ?>" type="image/webp">
-                    <img src="<?= base_url('assets/img/logo.png') ?>" class="logo-hero"
-                         alt="<?= esc($hotel->nombre) ?> · <?= esc(lang('Web.avesNaturaleza')) ?>"
-                         width="760" height="760" fetchpriority="high">
-                </picture>
+                <?php
+                // El logo cobra vida: al pasar el ratón en el escritorio, al
+                // tocarlo en el móvil. El vídeo es vertical y el logo cuadrado,
+                // así que se muestra entero dentro de la misma caja (`contain`)
+                // en vez de recortarlo: recortado le cortaría la cabeza al
+                // barranquero, que es justo lo que hay que ver.
+                //
+                // No se precarga nada: los 4,9 MB solo se piden si alguien
+                // muestra interés. Quien pasa de largo no gasta un byte.
+                ?>
+                <span class="logo-vivo<?= is_file($animado) ? ' con-video' : '' ?>">
+                    <picture>
+                        <source srcset="<?= base_url('assets/img/logo.webp') ?>" type="image/webp">
+                        <img src="<?= base_url('assets/img/logo.png') ?>" class="logo-hero"
+                             alt="<?= esc($hotel->nombre) ?> · <?= esc(lang('Web.avesNaturaleza')) ?>"
+                             width="760" height="760" fetchpriority="high">
+                    </picture>
+
+                    <?php if (is_file($animado)): ?>
+                        <video class="logo-video" playsinline loop muted preload="none"
+                               poster="<?= base_url('assets/video/logo-animado.jpg') ?>"
+                               aria-hidden="true" tabindex="-1">
+                            <source src="<?= base_url('assets/video/logo-animado.mp4') ?>" type="video/mp4">
+                        </video>
+                        <button type="button" class="logo-toque" aria-label="<?= esc(lang('Web.verLogoAnimado')) ?>">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                    <?php endif ?>
+                </span>
             </h1>
         <?php else: ?>
             <?php // Mientras no esté el archivo, la portada sigue funcionando ?>

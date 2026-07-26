@@ -31,6 +31,7 @@ return [
     // ── Portada ──
     'ecolodgeColombia' => 'Ecolodge · Colombia',
     'avesNaturaleza'   => 'Aves y naturaleza',
+    'verLogoAnimado'   => 'Ver el logo animado',
     'eslogan1'         => 'Montaña, lago y silencio.',
     'eslogan2'         => 'El descanso que estabas buscando.',
     'reservarAhora'    => 'Reservar ahora',

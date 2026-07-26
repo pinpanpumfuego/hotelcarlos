@@ -22,6 +22,7 @@ return [
     // ── Startseite ──
     'ecolodgeColombia' => 'Ecolodge · Kolumbien',
     'avesNaturaleza'   => 'Vögel und Natur',
+    'verLogoAnimado'   => 'Animiertes Logo ansehen',
     'eslogan1'         => 'Berge, See und Stille.',
     'eslogan2'         => 'Die Ruhe, die Sie gesucht haben.',
     'reservarAhora'    => 'Jetzt buchen',

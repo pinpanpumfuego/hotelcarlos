@@ -124,3 +124,7 @@ _modules/*
 
 /results/
 /phpunit.xml
+
+# Máster del vídeo del logo: 62 MB sin comprimir. La versión que usa la web
+# está en public/assets/video/logo-animado.mp4 (4,9 MB).
+/sa.mp4

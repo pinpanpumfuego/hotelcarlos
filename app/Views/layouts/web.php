@@ -87,6 +87,41 @@ $idiomaHtml = \App\Libraries\Traductor::IDIOMAS[idioma_web()]['html'];
             /* En móvil el vídeo se ve poco y el logo es lo que manda */
             .logo-hero { width: min(76vw, 300px); }
         }
+
+        /* ── El logo cobra vida ──
+           El vídeo es 9:16 y el logo 1:1. Se muestra entero dentro de la misma
+           caja, centrado: así no se recorta y, sobre todo, **la caja no cambia
+           de tamaño**, que es lo que haría saltar toda la portada. */
+        .logo-vivo {
+            position: relative; display: inline-block; line-height: 0;
+        }
+        .logo-video {
+            position: absolute; inset: 0; margin: auto;
+            max-width: 100%; max-height: 100%;
+            opacity: 0; transition: opacity .45s ease;
+            pointer-events: none; border-radius: 12px;
+        }
+        .logo-vivo.animando .logo-video { opacity: 1; }
+        .logo-vivo.animando .logo-hero { opacity: 0; transition: opacity .45s ease; }
+        .logo-hero { transition: opacity .45s ease; }
+
+        /* El aviso de que ahí hay algo. Sin esto nadie descubriría el vídeo. */
+        .logo-toque {
+            position: absolute; right: 4%; bottom: 6%;
+            width: 44px; height: 44px; border: 0; border-radius: 50%;
+            background: rgba(20, 52, 37, .78); color: #f2cd7f;
+            display: grid; place-items: center; font-size: 1.35rem; line-height: 1;
+            backdrop-filter: blur(4px); cursor: pointer;
+            transition: transform .2s ease, background .2s ease, opacity .3s ease;
+        }
+        .logo-toque:hover { background: rgba(20, 52, 37, .95); transform: scale(1.08); }
+        .logo-vivo.animando .logo-toque { opacity: 0; pointer-events: none; }
+        /* Con ratón el vídeo sale solo al pasar por encima, así que el botón
+           solo hace falta donde no hay ratón */
+        @media (hover: hover) and (pointer: fine) {
+            .logo-toque { opacity: .55; }
+            .logo-vivo:hover .logo-toque { opacity: 0; }
+        }
         .hero .eslogan { font-size: clamp(1.05rem, 2vw, 1.3rem); opacity: .92; }
 
         /* ── Secciones ── */
@@ -328,6 +363,65 @@ $idiomaHtml = \App\Libraries\Traductor::IDIOMAS[idioma_web()]['html'];
         entradas.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observador.unobserve(e.target); } });
     }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(el => observador.observe(el));
+
+    /* ── El logo cobra vida ──────────────────────────────────────────
+       Con ratón basta pasar por encima; sin ratón hay que tocar el botón,
+       porque el hover no existe en un teléfono.
+
+       El vídeo pesa 4,9 MB y no se precarga: solo se pide cuando alguien
+       muestra interés de verdad. Y ese interés se mide con 220 ms de espera,
+       para que cruzar el logo camino del botón de reservar no dispare nada.
+    */
+    (function () {
+        const caja = document.querySelector('.logo-vivo.con-video');
+        if (!caja) { return; }
+
+        const video = caja.querySelector('.logo-video');
+        const boton = caja.querySelector('.logo-toque');
+        const quieto = window.matchMedia('(prefers-reduced-motion: reduce)');
+        let espera = null;
+
+        function arrancar(conSonido) {
+            if (quieto.matches && !conSonido) { return; }
+            video.muted = !conSonido;
+            caja.classList.add('animando');
+            // play() puede rechazar (política del navegador): no pasa nada,
+            // simplemente se queda el póster, que ya es el logo
+            const p = video.play();
+            if (p && p.catch) { p.catch(() => { video.muted = true; video.play().catch(() => {}); }); }
+        }
+
+        function parar() {
+            clearTimeout(espera);
+            caja.classList.remove('animando');
+            video.pause();
+            video.currentTime = 0;
+            video.muted = true;
+        }
+
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            caja.addEventListener('mouseenter', () => {
+                clearTimeout(espera);
+                espera = setTimeout(() => arrancar(false), 220);
+            });
+            caja.addEventListener('mouseleave', parar);
+        }
+
+        // El botón sí lleva sonido: es un gesto deliberado, que es justo lo
+        // que los navegadores exigen para dejar sonar algo. Y el sonido del
+        // bosque es la mitad de la gracia.
+        boton.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (caja.classList.contains('animando')) { parar(); return; }
+            arrancar(true);
+        });
+
+        // Al salir de la pantalla se para: nadie quiere un vídeo corriendo
+        // por detrás gastando batería
+        new IntersectionObserver((ent) => {
+            ent.forEach((x) => { if (!x.isIntersecting) { parar(); } });
+        }, { threshold: 0 }).observe(caja);
+    }());
 </script>
 </body>
 </html>

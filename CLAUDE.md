@@ -454,6 +454,28 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       · Todo con `transform` y `opacity`, que compone la tarjeta gráfica: sin recálculo de diseño.
       **Pendiente de Javier**: hacer verificar los nombres comunes en francés y alemán por alguien
       que sepa de aves. El científico no falla; los comunes sí, y ese público es quisquilloso.
+- [x] **El logo cobra vida** (`sa.mp4` que aportó Javier).
+      **Me equivoqué al opinar y lo corregí.** Javier pidió que el vídeo se reprodujera al pasar por
+      el logo y yo argumenté en contra (sin hover en móvil, 62 MB, se dispara al cruzar hacia el
+      botón, el audio no puede sonar sin clic). **Luego miré el contenido: el vídeo es el propio
+      logo animado**, no imágenes del hotel. Eso le daba la razón: un botón «Ver el vídeo» promete
+      enseñar el lugar y decepcionaría, mientras que «pasas por encima y cobra vida» es exactamente
+      lo que ese material pide. Opinar antes de mirar el material fue el error.
+      · **62,7 MB → 4,9 MB** con ffmpeg (540×960, CRF 28, faststart) y póster JPG de 109 KB.
+      · **El vídeo es 9:16 y el logo 1:1**, y además va más cerrado (corta «SAN ANTO…»). Se muestra
+      **entero dentro de la misma caja** en vez de recortarlo: recortado le cortaría la cabeza al
+      barranquero. Verificado que **la caja mide 285×285 antes y durante**: la portada no salta.
+      · **No se precarga** (`preload="none"`): verificado que hay **0 peticiones del MP4** hasta que
+      alguien muestra interés. Quien pasa de largo no gasta un byte de sus datos móviles.
+      · **220 ms de espera antes de arrancar**: el logo está en el camino del ratón hacia el botón de
+      reservar, y sin esa pausa se dispararía cada vez que alguien lo cruza.
+      · **Con ratón basta pasar por encima; sin ratón hay un botón**, porque el hover no existe en un
+      teléfono. El botón lleva **sonido** (los del bosque, según Javier): un clic es el gesto
+      deliberado que los navegadores exigen para dejar sonar algo, y el hover nunca lo sería.
+      · Se para al salir de la pantalla: nadie quiere un vídeo corriendo por detrás gastando batería.
+      **Nota de método**: tanto aquí como con las aves, el panel del navegador oculto **congela las
+      transiciones y animaciones**, y eso parece un fallo que no existe. Se comprueba desactivando
+      las transiciones y leyendo el valor final, o muestreando `currentTime` de la animación.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era
