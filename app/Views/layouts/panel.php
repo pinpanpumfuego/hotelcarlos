@@ -287,6 +287,8 @@ if ($rol === 'gerencia') {
         ['tarifas', 'tarifas', 'bi-tags', 'Tarifas', 0],
         ['cupones', 'cupones', 'bi-ticket-perforated', 'Cupones', 0],
         ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento', 0],
+        ['servicios', 'servicios', 'bi-stars', 'Servicios', 0],
+        ['inventario-cabanas', 'inventario-cabanas', 'bi-box-seam', 'Enseres de cabañas', 0],
         ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0],
         ['administracion', 'administracion', 'bi-gear', 'Administración', 0],
     ]];

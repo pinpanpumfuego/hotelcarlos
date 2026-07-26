@@ -23,7 +23,12 @@ function escenaParaTipoLista(string $nombre): string
         <div class="card tarjeta-tipo mb-4 reveal">
             <div class="row g-0 align-items-stretch">
                 <div class="col-md-5">
-                    <?= view('web/_escena', ['variante' => escenaParaTipoLista($t['nombre'])]) ?>
+                    <?= view('web/_galeria_tipo', [
+                        'medios'   => $galerias[$t['id']] ?? [],
+                        'variante' => escenaParaTipoLista($t['nombre']),
+                        'nombre'   => $t['nombre'],
+                        'idCarrusel' => 'g' . $t['id'],
+                    ]) ?>
                 </div>
                 <div class="col-md-7 d-flex align-items-center">
                     <div class="card-body p-4 p-lg-5">
@@ -34,8 +39,17 @@ function escenaParaTipoLista(string $nombre): string
                         <p class="text-muted"><?= esc($t['descripcion'] ?? '') ?></p>
                         <div class="d-flex flex-wrap gap-2 mb-4">
                             <span class="chip"><i class="bi bi-people me-1"></i>Hasta <?= esc($t['capacidad']) ?> personas</span>
-                            <span class="chip"><i class="bi bi-water me-1"></i>Acceso al lago</span>
-                            <span class="chip"><i class="bi bi-p-circle me-1"></i>Parqueadero</span>
+                            <?php $lista = $servicios[$t['id']] ?? []; ?>
+                            <?php foreach (array_slice($lista, 0, 8) as $s): ?>
+                                <span class="chip"><i class="bi <?= esc($s['icono']) ?> me-1"></i><?= esc($s['nombre']) ?></span>
+                            <?php endforeach ?>
+                            <?php if (count($lista) > 8): ?>
+                                <span class="chip">y <?= count($lista) - 8 ?> más</span>
+                            <?php endif ?>
+                            <?php if ($lista === []): ?>
+                                <span class="chip"><i class="bi bi-water me-1"></i>Acceso al lago</span>
+                                <span class="chip"><i class="bi bi-p-circle me-1"></i>Parqueadero</span>
+                            <?php endif ?>
                         </div>
                         <a class="btn btn-reserva" href="<?= site_url('reservar') ?>">
                             <i class="bi bi-calendar-check me-1"></i>Consultar disponibilidad

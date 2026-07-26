@@ -49,6 +49,26 @@ $actual = old('estado', $unidad['estado'] ?? 'disponible');
                 </div>
             </div>
 
+            <div class="row g-3 mb-3">
+                <div class="col-sm-8">
+                    <label class="form-label fw-semibold">Dónde está</label>
+                    <input type="text" name="ubicacion" class="form-control" maxlength="120"
+                           value="<?= esc(old('ubicacion', $unidad['ubicacion'] ?? '')) ?>"
+                           placeholder="Orilla del lago, junto al sendero, primera fila…">
+                    <div class="form-text">Ayuda a recepción a asignar la cabaña adecuada a cada huésped.</div>
+                </div>
+                <div class="col-sm-4">
+                    <label class="form-label fw-semibold">Orden</label>
+                    <input type="number" name="orden" class="form-control" min="0" max="999"
+                           value="<?= esc(old('orden', $unidad['orden'] ?? 0)) ?>">
+                    <div class="form-text">En qué posición aparece en los listados.</div>
+                </div>
+            </div>
+
+            <label class="form-label fw-semibold">Qué tiene de particular</label>
+            <textarea name="descripcion" class="form-control mb-3" rows="2" maxlength="300"
+                      placeholder="La más apartada, con la mejor vista al amanecer. Sin escalones."><?= esc(old('descripcion', $unidad['descripcion'] ?? '')) ?></textarea>
+
             <label class="form-label fw-semibold">Estado actual</label>
             <div class="row g-2 mb-3">
                 <?php foreach ($estados as $valor => [$titulo, $detalle, $color, $icono]): ?>

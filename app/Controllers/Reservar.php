@@ -57,6 +57,8 @@ class Reservar extends BaseController
                     'total'      => $cotizacion['total'],
                     'porNoche'   => $cotizacion['media_noche'],
                     'cotizacion' => $cotizacion,
+                    'galeria'    => (new \App\Models\MedioModel())->deTipo((int) $tipo['id']),
+                    'servicios'  => (new \App\Models\ServicioModel())->fichaDeTipo((int) $tipo['id']),
                 ];
             }
         }

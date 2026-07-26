@@ -19,9 +19,23 @@ class Web extends BaseController
 
     public function alojamientos()
     {
+        $tipos     = (new TipoUnidadModel())->orderBy('tarifa_base')->findAll();
+        $medios    = new \App\Models\MedioModel();
+        $servicios = new \App\Models\ServicioModel();
+
+        // Galería y servicios de cada tipo, para no consultarlos dentro de la vista
+        $galerias = [];
+        $chips    = [];
+        foreach ($tipos as $t) {
+            $galerias[$t['id']] = $medios->deTipo((int) $t['id']);
+            $chips[$t['id']]    = $servicios->fichaDeTipo((int) $t['id']);
+        }
+
         return view('web/alojamientos', [
             'hotel'        => config('Hotel'),
-            'tipos'        => (new TipoUnidadModel())->orderBy('tarifa_base')->findAll(),
+            'tipos'        => $tipos,
+            'galerias'     => $galerias,
+            'servicios'    => $chips,
             'tituloPagina' => 'Alojamientos',
             'paginaActiva' => 'alojamientos',
             'descripcion'  => 'Habitaciones, cabañas y glamping. Tarifas por noche y capacidad.',

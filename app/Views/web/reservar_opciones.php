@@ -35,7 +35,12 @@
         <div class="card tarjeta-tipo mb-4">
             <div class="row g-0 align-items-stretch">
                 <div class="col-md-5">
-                    <?= view('web/_escena', ['variante' => 'cabana']) ?>
+                    <?= view('web/_galeria_tipo', [
+                        'medios'     => $op['galeria'] ?? [],
+                        'variante'   => 'cabana',
+                        'nombre'     => $op['tipo']['nombre'],
+                        'idCarrusel' => 'r' . $op['tipo']['id'],
+                    ]) ?>
                 </div>
                 <div class="col-md-7 d-flex align-items-center">
                     <div class="card-body p-4">
@@ -51,6 +56,9 @@
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             <span class="chip"><i class="bi bi-people me-1"></i>Hasta <?= esc($op['tipo']['capacidad']) ?> personas</span>
                             <span class="chip"><i class="bi bi-moon me-1"></i><?= esc($noches) ?> noche<?= $noches > 1 ? 's' : '' ?></span>
+                            <?php foreach (array_slice($op['servicios'] ?? [], 0, 6) as $s): ?>
+                                <span class="chip"><i class="bi <?= esc($s['icono']) ?> me-1"></i><?= esc($s['nombre']) ?></span>
+                            <?php endforeach ?>
                         </div>
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>

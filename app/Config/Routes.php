@@ -53,8 +53,16 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
 
     // Unidades: ver y actualizar estado, todo el personal (limpieza incluida)
     $routes->get('unidades', 'Unidades::index');
+    $routes->get('unidades/ver/(:num)', 'Unidades::ver/$1');
     $routes->get('unidades/editar/(:num)', 'Unidades::editar/$1');
     $routes->post('unidades/actualizar/(:num)', 'Unidades::actualizar/$1');
+
+    // Revisión del inventario: la hace quien limpia, desde el móvil
+    $routes->get('unidades/revisar/(:num)', 'Unidades::revisar/$1');
+    $routes->post('unidades/revisar/(:num)', 'Unidades::guardarRevision/$1');
+    $routes->get('unidades/foto/(:num)', 'Unidades::foto/$1');
+    $routes->post('unidades/foto/(:num)', 'Unidades::subirFoto/$1');
+    $routes->post('unidades/foto/eliminar/(:num)', 'Unidades::eliminarFoto/$1');
 });
 
 // ── Venta y recepción: gerencia + recepción ─────────────────────────
@@ -236,7 +244,30 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->post('tarifas/regla/estado/(:num)', 'Tarifas::alternarRegla/$1');
     $routes->post('tarifas/regla/eliminar/(:num)', 'Tarifas::eliminarRegla/$1');
 
+    // Cabañas: servicios propios e inventario
+    $routes->post('unidades/servicios/(:num)', 'Unidades::guardarServicios/$1');
+    $routes->post('unidades/inventario/(:num)', 'Unidades::guardarInventario/$1');
+    $routes->post('unidades/inventario/copiar/(:num)', 'Unidades::copiarInventario/$1');
+
+    // Catálogos que alimentan las fichas
+    $routes->get('servicios', 'Catalogos::servicios');
+    $routes->post('servicios/guardar', 'Catalogos::guardarServicio');
+    $routes->post('servicios/actualizar/(:num)', 'Catalogos::actualizarServicio/$1');
+    $routes->post('servicios/eliminar/(:num)', 'Catalogos::eliminarServicio/$1');
+
+    $routes->get('inventario-cabanas', 'Catalogos::inventario');
+    $routes->post('inventario-cabanas/guardar', 'Catalogos::guardarItem');
+    $routes->post('inventario-cabanas/actualizar/(:num)', 'Catalogos::actualizarItem/$1');
+    $routes->post('inventario-cabanas/eliminar/(:num)', 'Catalogos::eliminarItem/$1');
+
     $routes->get('tipos', 'Tipos::index');
+    $routes->get('tipos/ficha/(:num)', 'Tipos::ficha/$1');
+    $routes->post('tipos/servicios/(:num)', 'Tipos::guardarServicios/$1');
+    $routes->post('tipos/foto/(:num)', 'Tipos::subirFoto/$1');
+    $routes->post('tipos/video/(:num)', 'Tipos::anadirVideo/$1');
+    $routes->post('tipos/foto/portada/(:num)', 'Tipos::portada/$1');
+    $routes->post('tipos/foto/mover/(:num)', 'Tipos::moverFoto/$1');
+    $routes->post('tipos/foto/eliminar/(:num)', 'Tipos::eliminarFoto/$1');
     $routes->get('tipos/nuevo', 'Tipos::nuevo');
     $routes->post('tipos/guardar', 'Tipos::guardar');
     $routes->get('tipos/editar/(:num)', 'Tipos::editar/$1');

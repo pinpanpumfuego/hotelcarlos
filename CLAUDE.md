@@ -196,6 +196,32 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       El desglose también se ve en la web pública (paso 2 y 3 del motor de reservas) y en la ficha
       de la reserva. **Verificado**: temporada +35 % × fin de semana +20 % × tope máximo × suplemento
       por adulto adicional dan el mismo total en simulador, calendario y web.
+- [x] **Ficha completa de las cabañas** (`MedioModel`, `ServicioModel`, `InventarioItemModel`,
+      `RevisionInventarioModel`, `App\Libraries\Galeria`, controladores `Unidades`, `Catalogos` y
+      ampliación de `Tipos`; tablas `medios`, `servicios`, `tipo_servicios`, `unidad_servicios`,
+      `inventario_items`, `unidad_inventario`, `inventario_revisiones`,
+      `inventario_revision_lineas`; columnas nuevas en `unidades`: `descripcion`, `ubicacion`, `orden`).
+      **Reparto de responsabilidades**: lo que se anuncia va en el **tipo** (es lo que se vende) y lo
+      que se limpia, se avería y se cuenta va en la **unidad** física.
+      · **Galería** (`/tipos/ficha/:id`): subida de fotos con redimensionado por GD a 1600 px y
+      miniatura de 480 px (verificado: 2400×1600 → 1600×1067, 51 KB), portada, reordenar, texto
+      alternativo, y vídeos de YouTube/Vimeo por enlace (no se suben archivos de vídeo).
+      Las fotos comerciales van a `public/medios/tipos/`; las **internas de cada cabaña** a
+      `writable/uploads/unidades/` y solo se sirven por controlador con `no-store` y registro de
+      acceso — **verificado: acceso web directo devuelve 403**.
+      · **Servicios**: catálogo con icono y grupo; se marcan en el tipo y las cabañas los heredan.
+      Cada cabaña admite **excepciones** (`unidad_servicios` con estado `si`/`no`): solo se guarda
+      lo que se aparta del tipo, así un cambio en el tipo se propaga solo.
+      · **Inventario de enseres**: catálogo con valor de reposición y cantidad estándar; cantidades
+      por cabaña (con «copiar a las demás»); pantalla de **revisión** pensada para el móvil donde se
+      marca ok / falta / dañado. Lo dañado abre un **aviso de mantenimiento** y lo que falta se
+      **carga al folio** del huésped al valor de reposición. **Verificado de punta a punta**:
+      1 toalla faltante + 1 secador dañado → aviso de mantenimiento abierto y $40.000 al folio.
+      · **Ficha `/unidades/ver/:id`**: estado, próximas reservas, limpiezas, incidencias abiertas,
+      servicios, inventario, revisiones y fotos internas. El listado pasó de tabla a tarjetas con foto.
+      · **Web pública**: `web/_galeria_tipo.php` muestra carrusel con las fotos reales y los servicios
+      como chips, en Alojamientos y en el paso 2 del motor de reservas. **Mientras no haya fotos
+      sigue mostrando las ilustraciones SVG**: es mejor un dibujo cuidado que un hueco.
 - [x] **Agente de tarifas + calendario de festivos de Colombia**
       (`App\Libraries\FestivosColombia`, `App\Libraries\AgenteTarifas`, `/tarifas/agente`;
       columnas `temporadas.origen` y `temporadas.clave`).
