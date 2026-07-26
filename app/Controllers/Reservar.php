@@ -33,6 +33,84 @@ class Reservar extends BaseController
         ]);
     }
 
+    /**
+     * Datos del calendario: qué noches quedan libres y a qué precio.
+     *
+     * Tres cuidados:
+     *
+     * 1. **Un día lleno sigue valiendo como fecha de salida.** Si la última
+     *    cabaña está ocupada la noche del 15, uno se puede ir la mañana del 15
+     *    igualmente. Por eso se devuelve la ocupación de la **noche**, y es el
+     *    calendario el que aplica una regla u otra según esté eligiendo la
+     *    llegada o la salida. Confundirlo es el fallo clásico que hace perder
+     *    una noche vendible por reserva.
+     *
+     * 2. **El precio sale del mismo motor que la cotización.** Si el calendario
+     *    calculara por su cuenta, acabaría prometiendo un precio que luego la
+     *    reserva no respeta.
+     *
+     * 3. **Se muestra el más barato disponible** («desde»), porque en este paso
+     *    el visitante todavía no ha elegido tipo de alojamiento.
+     */
+    public function calendario()
+    {
+        $desde = $this->request->getGet('desde') ?: date('Y-m-01');
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $desde)) {
+            $desde = date('Y-m-01');
+        }
+
+        // Un tope sensato: nadie reserva a tres años vista y calcular de más
+        // solo hace la respuesta más lenta
+        $meses = max(1, min(4, (int) ($this->request->getGet('meses') ?: 2)));
+        $hasta = date('Y-m-d', strtotime($desde . ' +' . $meses . ' month'));
+
+        $libres = $this->reservas->libresPorNoche($desde, $hasta);
+        $motor  = new \App\Libraries\MotorTarifas();
+        $hoy    = date('Y-m-d');
+
+        // El precio de cada tipo para cada noche, pedido una sola vez por tipo
+        $tipos   = $this->tipos->findAll();
+        $precios = [];
+        foreach ($tipos as $t) {
+            foreach (array_keys($libres) as $fecha) {
+                $precios[(int) $t['id']][$fecha] = $motor->precioNoche((int) $t['id'], $fecha)['precio'];
+            }
+        }
+
+        $dias = [];
+        foreach ($libres as $fecha => $porTipo) {
+            $totalLibres = 0;
+            $masBarato   = null;
+
+            foreach ($porTipo as $tipoId => $n) {
+                if ($n <= 0) {
+                    continue;
+                }
+                $totalLibres += $n;
+                $p = $precios[$tipoId][$fecha] ?? null;
+                if ($p !== null && ($masBarato === null || $p < $masBarato)) {
+                    $masBarato = $p;
+                }
+            }
+
+            $dias[$fecha] = [
+                'libres' => $totalLibres,
+                'desde'  => $masBarato !== null ? (int) round($masBarato) : null,
+                'pasado' => $fecha < $hoy,
+            ];
+        }
+
+        return $this->response->setJSON([
+            'ok'     => true,
+            'desde'  => $desde,
+            'hasta'  => $hasta,
+            'hoy'    => $hoy,
+            'dias'   => $dias,
+            // Por debajo de esto se avisa de que quedan pocas
+            'pocas'  => 2,
+        ]);
+    }
+
     /** Paso 2: mostrar disponibilidad real y precio total. */
     public function disponibilidad()
     {

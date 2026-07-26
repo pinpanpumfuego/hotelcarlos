@@ -102,6 +102,83 @@ class ReservaModel extends Model
         return ! (new BloqueoModel())->unidadBloqueada($unidadId, $entrada, $salida);
     }
 
+    /**
+     * Cuántas unidades quedan libres **cada noche** de un rango.
+     *
+     * Existe para el calendario de la web, que necesita saberlo de 60 o 90
+     * noches seguidas. Hacerlo con `unidadesLibresDelTipo()` por día serían
+     * cientos de consultas; aquí se piden las reservas y los bloqueos **una
+     * sola vez** y se reparten por noche en memoria.
+     *
+     * Una reserva del 10 al 12 ocupa las noches del 10 y el 11, no la del 12:
+     * el día de salida la cabaña vuelve a estar libre. Confundir eso es el
+     * error clásico que hace perder una noche por reserva.
+     *
+     * @return array<string, array<int,int>> fecha => tipo_id => unidades libres
+     */
+    public function libresPorNoche(string $desde, string $hasta): array
+    {
+        $db = $this->db;
+
+        // Unidades vendibles, agrupadas por tipo
+        $unidades = $db->table('unidades')
+            ->select('id, tipo_id')
+            ->whereNotIn('estado', ['bloqueada'])
+            ->get()->getResultArray();
+
+        $tipoDeUnidad = [];
+        $totalPorTipo = [];
+        foreach ($unidades as $u) {
+            $tipoDeUnidad[(int) $u['id']] = (int) $u['tipo_id'];
+            $totalPorTipo[(int) $u['tipo_id']] = ($totalPorTipo[(int) $u['tipo_id']] ?? 0) + 1;
+        }
+
+        // Todo lo que ocupa, de una vez: reservas y bloqueos (que incluyen las
+        // noches vendidas en Booking o Airbnb)
+        $ocupaciones = [];
+
+        $reservas = $this->select('unidad_id, fecha_entrada, fecha_salida')
+            ->whereIn('estado', self::ESTADOS_ACTIVOS)
+            ->where('unidad_id IS NOT NULL')
+            ->where('fecha_entrada <', $hasta)
+            ->where('fecha_salida >', $desde)
+            ->findAll();
+
+        foreach ($reservas as $r) {
+            $ocupaciones[] = [(int) $r['unidad_id'], $r['fecha_entrada'], $r['fecha_salida']];
+        }
+
+        foreach ((new BloqueoModel())->enRango($desde, $hasta) as $b) {
+            if (! empty($b['unidad_id'])) {
+                $ocupaciones[] = [(int) $b['unidad_id'], $b['fecha_entrada'], $b['fecha_salida']];
+            }
+        }
+
+        // Se marca noche a noche qué unidades están tomadas
+        $tomadas = [];
+        foreach ($ocupaciones as [$unidadId, $entrada, $salida]) {
+            $noche = max($entrada, $desde);
+            $fin   = min($salida, $hasta);
+            while ($noche < $fin) {
+                $tomadas[$noche][$unidadId] = true;
+                $noche = date('Y-m-d', strtotime($noche . ' +1 day'));
+            }
+        }
+
+        $libres = [];
+        for ($f = $desde; $f < $hasta; $f = date('Y-m-d', strtotime($f . ' +1 day'))) {
+            $libres[$f] = $totalPorTipo;   // se parte del total y se descuenta
+            foreach (array_keys($tomadas[$f] ?? []) as $unidadId) {
+                $tipo = $tipoDeUnidad[$unidadId] ?? null;
+                if ($tipo !== null && isset($libres[$f][$tipo])) {
+                    $libres[$f][$tipo]--;
+                }
+            }
+        }
+
+        return $libres;
+    }
+
     /** Unidades de un tipo que están libres en el rango [entrada, salida). */
     public function unidadesLibresDelTipo(int $tipoId, string $entrada, string $salida): array
     {

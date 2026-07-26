@@ -476,6 +476,27 @@ Plataforma integral de gestión hotelera basada en la propuesta funcional de
       **Nota de método**: tanto aquí como con las aves, el panel del navegador oculto **congela las
       transiciones y animaciones**, y eso parece un fallo que no existe. Se comprueba desactivando
       las transiciones y leyendo el valor final, o muestreando `currentTime` de la animación.
+- [x] **Calendario de reserva con precios y disponibilidad real** (`web/_calendario.php`).
+      `<input type="date">` abre el calendario del sistema operativo: **no deja pintar precios ni
+      tachar días**. Por eso el calendario es propio. Los dos campos siguen existiendo ocultos, así
+      que el resto del motor de reservas no cambió ni una línea.
+      · **Un día lleno sigue valiendo como fecha de salida.** Si la última cabaña está ocupada la
+      noche del 15, uno se puede ir la mañana del 15 igualmente. `sirveComoEntrada()` mira esa noche;
+      `sirveComoSalida()` exige que estén libres **todas las noches desde la llegada hasta la
+      víspera**, y ninguna más. Es el fallo clásico que hace perder una noche vendible por reserva.
+      Verificado: con la noche del 8 llena y llegada el 6, **el 8 se puede elegir como salida pero el
+      9 y el 12 quedan bloqueados**.
+      · **Solo se tacha lo completamente lleno.** Con 7 cabañas, un día con algunas ocupadas sigue
+      siendo vendible; taparlo sería regalar noches. En cada día libre va **«desde $X»**, el precio
+      del tipo más barato que quede, porque en ese paso aún no se ha elegido alojamiento.
+      · **El precio sale del mismo `MotorTarifas` que la cotización.** Si el calendario calculara por
+      su cuenta acabaría prometiendo un precio que la reserva no respeta.
+      · **`ReservaModel::libresPorNoche()`**: reservas y bloqueos se piden **una sola vez** y se
+      reparten por noche en memoria. Con una consulta por día serían cientos. 62 días en 369 ms.
+      · El aviso de «últimas cabañas» **no es un truco de urgencia**: sale del número real de
+      unidades libres esa noche.
+      · Los nombres de los meses y los días de la semana salen del navegador (`toLocaleDateString`),
+      así que están bien en los cuatro idiomas sin traducirlos a mano.
 - [x] **Modo táctil del panel** (`layouts/panel.php`, conmutador `#btn-tactil`).
       El TPV, el terminal de fichaje y el portal del empleado ya nacieron para dedos; **el panel de
       gestión no**. Medido antes de tocar nada: 28 botones de solo icono cuya única explicación era

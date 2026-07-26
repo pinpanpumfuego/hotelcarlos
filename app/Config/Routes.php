@@ -20,6 +20,7 @@ $paginasPublicas = static function ($routes) {
 
     // Motor de reservas online
     $routes->get('reservar', 'Reservar::index');
+    $routes->get('reservar/calendario', 'Reservar::calendario');
     $routes->post('reservar/disponibilidad', 'Reservar::disponibilidad');
     $routes->post('reservar/datos', 'Reservar::datos');
     $routes->post('reservar/confirmar', 'Reservar::confirmar');

@@ -16,17 +16,11 @@
         <div class="card-body p-4 p-lg-5">
             <form method="post" action="<?= url_web('reservar/disponibilidad') ?>">
                 <?= csrf_field() ?>
-                <div class="row g-3">
-                    <div class="col-6">
-                        <label class="form-label fw-semibold"><?= esc(lang('Web.llegada')) ?></label>
-                        <input type="date" name="entrada" class="form-control form-control-lg" required
-                               min="<?= date('Y-m-d') ?>" value="<?= esc(old('entrada', '')) ?>">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label fw-semibold"><?= esc(lang('Web.salida')) ?></label>
-                        <input type="date" name="salida" class="form-control form-control-lg" required
-                               min="<?= date('Y-m-d', strtotime('+1 day')) ?>" value="<?= esc(old('salida', '')) ?>">
-                    </div>
+                <?php // Calendario propio: el nativo del navegador no deja
+                      // pintar precios ni tachar los días ocupados ?>
+                <?= view('web/_calendario') ?>
+
+                <div class="row g-3 mt-1">
                     <div class="col-6">
                         <label class="form-label fw-semibold"><?= esc(lang('Web.adultos')) ?></label>
                         <select name="adultos" class="form-select form-select-lg">
