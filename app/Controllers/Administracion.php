@@ -22,6 +22,9 @@ class Administracion extends BaseController
             'titulo'  => 'Administración',
             'seccion' => 'administracion',
 
+            // Estado de lo que debe correr solo en el servidor
+            'tareas'  => $this->tareas(),
+
             // Datos del hotel (con los valores por defecto del código como respaldo)
             'hotel' => [
                 'nombre'    => $this->config->obtener('hotel_nombre', $hotel->nombre),
@@ -113,6 +116,101 @@ class Administracion extends BaseController
         ]);
 
         return redirect()->to('administracion')->with('ok', 'Datos del hotel guardados: la web pública y el panel ya los muestran.');
+    }
+
+    /**
+     * Estado de las tareas que deben correr solas en el servidor.
+     *
+     * Se enseña aquí porque una tarea programada que deja de funcionar no
+     * avisa: simplemente los datos se quedan viejos y nadie se entera hasta
+     * que un huésped reserva una noche ya vendida en Booking.
+     */
+    private function tareas(): array
+    {
+        $cambios = (new \App\Models\TipoCambioModel())->listado();
+        $ultimo  = null;
+        foreach ($cambios as $c) {
+            if ($ultimo === null || $c['updated_at'] > $ultimo) {
+                $ultimo = $c['updated_at'];
+            }
+        }
+
+        $horas = $ultimo !== null ? (time() - strtotime($ultimo)) / 3600 : null;
+
+        // En palabras, que «hace 214 horas» no se lee de un vistazo
+        $antiguedad = null;
+        if ($horas !== null) {
+            $antiguedad = match (true) {
+                $horas < 1  => 'hace unos minutos',
+                $horas < 2  => 'hace una hora',
+                $horas < 48 => 'hace ' . (int) $horas . ' horas',
+                default     => 'hace ' . (int) ($horas / 24) . ' días',
+            };
+        }
+
+        return [
+            'cambios'    => $cambios,
+            'ultimo'     => $ultimo,
+            // Se trae a diario: pasadas 48 horas algo va mal
+            'caducado'   => $ultimo === null || $horas > 48,
+            'antiguedad' => $antiguedad,
+            // La ruta real de este servidor, para copiar y pegar en el panel
+            'ordenes'   => [
+                [
+                    'que'    => 'Tipo de cambio de las divisas',
+                    'cuando' => 'Una vez al día',
+                    'orden'  => 'php ' . ROOTPATH . 'spark cambio:actualizar',
+                ],
+                [
+                    'que'    => 'Fechas ocupadas en Booking y Airbnb',
+                    'cuando' => 'Cada hora',
+                    'orden'  => 'php ' . ROOTPATH . 'spark canales:sincronizar',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Lanza la actualización del cambio desde el panel.
+     *
+     * Sirve para dos cosas: sacar de un apuro cuando la tarea programada
+     * falló, y comprobar que la orden funciona en este servidor antes de
+     * programarla.
+     */
+    public function actualizarCambio()
+    {
+        // CodeIgniter define STDOUT cuando una orden se lanza desde un
+        // controlador, pero se olvida de STDERR. Sin esto, en cuanto la orden
+        // escribe un error (justo el caso que más interesa ver) el panel
+        // revienta. Y tiene que ser un recurso de verdad, no la cadena
+        // 'php://output': CodeIgniter se lo pasa a las funciones que miran si
+        // la consola admite color, y esas exigen recurso.
+        if (! defined('STDERR')) {
+            define('STDERR', fopen('php://output', 'w'));
+        }
+
+        try {
+            // `command()` ya captura la salida y la devuelve; no hay que
+            // envolverla en otro ob_start()
+            $salida = (string) command('cambio:actualizar');
+        } catch (\Throwable $e) {
+            return redirect()->to('administracion#tareas')
+                ->with('error', 'No se pudo actualizar: ' . $e->getMessage());
+        }
+
+        // Quitar los colores de consola, que aquí solo son basura
+        $salida = trim(preg_replace('/\033\[[0-9;]*m/', '', $salida));
+        $salida = trim(preg_replace('/\s*\n\s*/', ' · ', $salida));
+
+        $fallo = str_contains($salida, 'No se pudo consultar')
+            || (new \App\Models\TipoCambioModel())->vigentes() === [];
+
+        return redirect()->to('administracion#tareas')->with(
+            $fallo ? 'error' : 'ok',
+            $fallo
+                ? 'No se pudo traer el cambio. Lo más probable es que este servidor no tenga salida a internet. ' . $salida
+                : 'Tipo de cambio actualizado. ' . $salida
+        );
     }
 
     /** Ajustes del TPV compartido. */

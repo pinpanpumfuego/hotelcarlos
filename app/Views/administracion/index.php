@@ -3,6 +3,82 @@
 
 <h1 class="h3 mb-4">Administración</h1>
 
+<?= view('partes/errores') ?>
+
+<!-- ═══ Tareas del servidor ═══ -->
+<?php // Va lo primero a propósito: una tarea programada que deja de correr no
+      // avisa. Los datos se quedan viejos en silencio y nadie se entera hasta
+      // que un huésped reserva una noche ya vendida en Booking. ?>
+<div class="card border-0 shadow-sm mb-4" id="tareas">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="fw-semibold"><i class="bi bi-clock-history me-2 text-success"></i>Tareas automáticas del servidor</span>
+        <?php if ($tareas['caducado']): ?>
+            <span class="badge text-bg-warning"><i class="bi bi-exclamation-triangle me-1"></i>Requiere atención</span>
+        <?php else: ?>
+            <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Al día</span>
+        <?php endif ?>
+    </div>
+    <div class="card-body">
+
+        <!-- Tipo de cambio -->
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 pb-3 mb-3 border-bottom">
+            <div>
+                <div class="fw-semibold">Tipo de cambio de las divisas</div>
+                <?php if ($tareas['ultimo'] === null): ?>
+                    <div class="small text-danger">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Nunca se ha traído. La web solo enseña pesos, sin conversión.
+                    </div>
+                <?php else: ?>
+                    <div class="small <?= $tareas['caducado'] ? 'text-danger' : 'text-muted' ?>">
+                        Actualizado <?= esc($tareas['antiguedad']) ?>
+                        <?= $tareas['caducado'] ? ' · demasiado viejo, la tarea puede no estar corriendo' : '' ?>
+                    </div>
+                    <div class="small text-muted mt-1">
+                        <?php foreach ($tareas['cambios'] as $c): ?>
+                            <span class="me-3">
+                                1 <?= esc($c['moneda']) ?> =
+                                $<?= number_format((float) $c['pesos'], 0, ',', '.') ?>
+                                <?= $c['origen'] === 'manual' ? '<em>(a mano)</em>' : '' ?>
+                            </span>
+                        <?php endforeach ?>
+                    </div>
+                <?php endif ?>
+            </div>
+            <form method="post" action="<?= site_url('administracion/cambio') ?>">
+                <?= csrf_field() ?>
+                <button class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i>Actualizar ahora
+                </button>
+            </form>
+        </div>
+
+        <!-- Cómo programarlas -->
+        <p class="small text-muted mb-2">
+            Estas órdenes tienen que correr solas. Añádelas en el panel de tu hosting,
+            en <strong>Tareas programadas</strong>. Son las rutas reales de este servidor:
+        </p>
+
+        <?php foreach ($tareas['ordenes'] as $o): ?>
+            <div class="mb-2">
+                <div class="small">
+                    <strong><?= esc($o['que']) ?></strong>
+                    <span class="text-muted">· <?= esc($o['cuando']) ?></span>
+                </div>
+                <code class="d-block bg-light border rounded p-2 small mt-1"
+                      style="word-break: break-all;"><?= esc($o['orden']) ?></code>
+            </div>
+        <?php endforeach ?>
+
+        <div class="alert alert-light border small mb-0 mt-3">
+            <i class="bi bi-info-circle me-1"></i>
+            El botón <strong>Actualizar ahora</strong> sirve para dos cosas: salir de un apuro si
+            la tarea falló, y <strong>comprobar que la orden funciona en este servidor</strong>
+            antes de programarla.
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
     <!-- ═══ Datos del hotel ═══ -->
     <div class="col-12">

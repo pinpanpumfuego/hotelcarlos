@@ -299,6 +299,7 @@ $routes->group('', ['filter' => ['auth', 'rol:gerencia']], static function ($rou
     $routes->get('administracion', 'Administracion::index');
     $routes->post('administracion/hotel', 'Administracion::guardarHotel');
     $routes->post('administracion/tpv', 'Administracion::guardarTpv');
+    $routes->post('administracion/cambio', 'Administracion::actualizarCambio');
     $routes->post('administracion/fichaje', 'Administracion::guardarFichaje');
     $routes->post('administracion/correo', 'Administracion::guardarCorreo');
     $routes->post('administracion/correo/probar', 'Administracion::probarCorreo');
