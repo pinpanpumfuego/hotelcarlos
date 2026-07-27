@@ -302,6 +302,13 @@ $routes->group('', ['filter' => ['auth', 'permiso:comunicaciones.plantillas']], 
     $routes->post('comunicaciones/regla/(:num)', 'Comunicaciones::guardarRegla/$1');
 });
 
+// ── Niveles y referidos ─────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:niveles.gestionar']], static function ($routes) {
+    $routes->get('niveles', 'Niveles::index');
+    $routes->post('niveles/guardar/(:num)', 'Niveles::guardar/$1');
+    $routes->post('niveles/referidos', 'Niveles::guardarReferidos');
+});
+
 // ── Campañas ────────────────────────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'permiso:campanas.gestionar']], static function ($routes) {
     $routes->get('campanas', 'Campanas::index');

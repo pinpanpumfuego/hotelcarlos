@@ -19,6 +19,9 @@ $alergias = array_filter($preferencias, static fn (array $p): bool => $p['tipo']
     <div>
         <h1 class="h3 mb-1">
             <?= esc($huesped['nombre'] . ' ' . $huesped['apellidos']) ?>
+            <?php if ($nivel !== null): ?>
+                <span class="badge text-bg-<?= esc($nivel['color']) ?> align-middle"><?= esc($nivel['nombre']) ?></span>
+            <?php endif ?>
             <?php if ((int) $huesped['vip'] === 1): ?>
                 <span class="badge text-bg-warning align-middle"><i class="bi bi-star-fill me-1"></i>VIP</span>
             <?php endif ?>
@@ -276,6 +279,96 @@ $alergias = array_filter($preferencias, static fn (array $p): bool => $p['tipo']
                 </dl>
             </div>
         </div>
+
+        <!-- ═══ Su nivel ═══ -->
+        <?php if ($nivel !== null && ($beneficios !== [] || $siguiente !== null)): ?>
+            <div class="card border-0 shadow-sm mb-4 border-top border-4 border-<?= esc($nivel['color']) ?>">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-award me-2"></i><?= esc($nivel['nombre']) ?>
+                    <?php if ((float) $nivel['descuento_pct'] > 0): ?>
+                        <span class="badge text-bg-<?= esc($nivel['color']) ?> ms-1">
+                            <?= rtrim(rtrim(number_format((float) $nivel['descuento_pct'], 2, ',', '.'), '0'), ',') ?> %
+                        </span>
+                    <?php endif ?>
+                </div>
+                <div class="card-body">
+                    <?php if ($beneficios !== []): ?>
+                        <div class="small text-muted mb-2">Lo que le corresponde:</div>
+                        <ul class="small ps-3 mb-0">
+                            <?php foreach ($beneficios as $b): ?>
+                                <li><?= esc($b) ?></li>
+                            <?php endforeach ?>
+                        </ul>
+                        <?php if ((float) $nivel['descuento_pct'] > 0): ?>
+                            <?php // El descuento NO se aplica solo. Un descuento
+                                  // automático es dinero que se va sin que nadie
+                                  // lo haya decidido esa vez. ?>
+                            <div class="alert alert-light border small mt-3 mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                El descuento <strong>no se aplica solo</strong>: hay que ponerlo a mano en
+                                el folio de la reserva. Así queda claro quién lo dio y cuándo.
+                            </div>
+                        <?php endif ?>
+                    <?php endif ?>
+
+                    <?php if ($siguiente !== null): ?>
+                        <?php // «Le falta una estancia para el siguiente nivel» es
+                              // la frase que hace que alguien reserve otra vez. ?>
+                        <div class="border-top mt-3 pt-3 small">
+                            <span class="text-muted">Para llegar a</span>
+                            <strong><?= esc($siguiente['nivel']['nombre']) ?></strong>:
+                            <?php if ($siguiente['faltan_estancias'] !== null && $siguiente['faltan_estancias'] > 0): ?>
+                                le falta<?= $siguiente['faltan_estancias'] > 1 ? 'n' : '' ?>
+                                <strong><?= $siguiente['faltan_estancias'] ?></strong>
+                                estancia<?= $siguiente['faltan_estancias'] > 1 ? 's' : '' ?>
+                            <?php endif ?>
+                            <?php if ($siguiente['falta_gasto'] !== null && $siguiente['falta_gasto'] > 0): ?>
+                                <?= ($siguiente['faltan_estancias'] ?? 0) > 0 ? ' o ' : 'le faltan ' ?>
+                                <strong><?= $dinero($siguiente['falta_gasto']) ?></strong>
+                            <?php endif ?>.
+                        </div>
+                    <?php endif ?>
+                </div>
+            </div>
+        <?php endif ?>
+
+        <!-- ═══ Su código de referido ═══ -->
+        <?php if ($codigo_referido !== null): ?>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white fw-semibold"><i class="bi bi-share me-2"></i>Su código para recomendar</div>
+                <div class="card-body">
+                    <div class="text-center border rounded py-3 mb-2" style="background: #fbfbfa;">
+                        <div class="font-monospace fs-4 fw-semibold" style="letter-spacing: .15em;">
+                            <?= esc($codigo_referido) ?>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        Dáselo cuando se vaya contento: es el único momento en que alguien recomienda
+                        algo. Los dos reciben su cupón <strong>cuando el recomendado se va</strong>,
+                        no cuando reserva.
+                    </p>
+
+                    <?php if ($trajo !== []): ?>
+                        <div class="border-top mt-3 pt-3">
+                            <div class="small text-muted mb-2">Ha traído a:</div>
+                            <?php foreach ($trajo as $t): ?>
+                                <div class="d-flex justify-content-between small py-1">
+                                    <span>
+                                        <?= esc(trim(($t['referido_nombre'] ?? '') . ' ' . ($t['referido_apellidos'] ?? ''))) ?: 'alguien' ?>
+                                        <?php if ($t['reserva_codigo']): ?>
+                                            <span class="text-muted font-monospace">· <?= esc($t['reserva_codigo']) ?></span>
+                                        <?php endif ?>
+                                    </span>
+                                    <span class="badge text-bg-<?= $t['estado'] === 'cumplido' ? 'success' : ($t['estado'] === 'anulado' ? 'secondary' : 'warning') ?>">
+                                        <?= esc($estados_ref[$t['estado']]) ?>
+                                    </span>
+                                </div>
+                            <?php endforeach ?>
+                        </div>
+                    <?php endif ?>
+                </div>
+            </div>
+        <?php endif ?>
 
         <!-- ═══ Preferencias ═══ -->
         <div class="card border-0 shadow-sm mb-4">

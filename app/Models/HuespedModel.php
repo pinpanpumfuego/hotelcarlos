@@ -11,7 +11,7 @@ class HuespedModel extends Model
     protected $allowedFields = [
         'nombre', 'apellidos', 'tipo_documento', 'num_documento', 'nacionalidad',
         'fecha_nacimiento', 'idioma', 'ciudad', 'pais', 'empresa', 'empresa_nit',
-        'origen', 'vip', 'telefono', 'email', 'notas', 'notas_internas',
+        'origen', 'vip', 'codigo_referido', 'telefono', 'email', 'notas', 'notas_internas',
         'estado', 'fusionado_en', 'anonimizado_en',
     ];
     protected $useTimestamps = true;

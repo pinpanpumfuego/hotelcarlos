@@ -488,7 +488,16 @@ class Reservas extends BaseController
         (new \App\Libraries\Housekeeping())->abrirTarea((int) $reserva['unidad_id'], 'salida');
         $this->unidades->update($reserva['unidad_id'], ['estado' => 'disponible']);
 
-        return redirect()->to('reservas')->with('ok', 'Check-out realizado: la unidad pasa a limpieza.');
+        // La estancia ocurrió: ahora sí se reparten los cupones del referido.
+        // Antes no, porque una reserva cancelada habría dejado dos cupones
+        // regalados por una estancia que no llegó a pasar.
+        $premio = (new \App\Libraries\Referidos())->cumplir($id);
+        $aviso  = $premio === null
+            ? ''
+            : ' Vino recomendado: se emitieron los cupones ' . $premio['referidor']
+                . ($premio['referido'] !== null ? ' y ' . $premio['referido'] : '') . '.';
+
+        return redirect()->to('reservas')->with('ok', 'Check-out realizado: la unidad pasa a limpieza.' . $aviso);
     }
 
     public function cancelar(int $id)
@@ -499,6 +508,9 @@ class Reservas extends BaseController
         }
 
         $this->reservas->update($id, ['estado' => 'cancelada']);
+
+        // Si venía de una recomendación, esa recomendación no ha traído a nadie
+        (new \App\Libraries\Referidos())->anular($id, 'La reserva se canceló.');
 
         return redirect()->to('reservas')->with('ok', 'Reserva cancelada. Sus fechas quedan libres.');
     }

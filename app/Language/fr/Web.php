@@ -229,4 +229,7 @@ return [
     // ── Avis de langue ──
     'disponibleEn'     => 'Cette page est disponible dans votre langue.',
     'verEn'            => 'Voir en',
+    'teRecomendaron'  => 'Quelqu\x27un vous a recommandé ?',
+    'codigoOpcional'  => 'Code, si vous en avez un',
+    'referidoTexto'   => 'Si un ami vous a parlé de nous, entrez son code : vous aurez tous les deux une réduction pour la prochaine fois.',
 ];

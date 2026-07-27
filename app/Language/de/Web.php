@@ -229,4 +229,7 @@ return [
     // ── Sprachhinweis ──
     'disponibleEn'     => 'Diese Seite ist in Ihrer Sprache verfügbar.',
     'verEn'            => 'Ansehen auf',
+    'teRecomendaron'  => 'Hat Sie jemand empfohlen?',
+    'codigoOpcional'  => 'Code, falls vorhanden',
+    'referidoTexto'   => 'Wenn ein Freund Ihnen von uns erzählt hat, geben Sie seinen Code ein: Sie beide bekommen einen Rabatt für das nächste Mal.',
 ];

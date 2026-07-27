@@ -88,6 +88,9 @@ final class Catalogo
         'comunicaciones.enviar' => ['modulo' => 'huespedes', 'nombre' => 'Mandar mensajes a mano', 'sensible' => false],
         // Mandarle algo a media base de datos de golpe no lo hace cualquiera.
         'campanas.gestionar'   => ['modulo' => 'huespedes', 'nombre' => 'Crear y lanzar campañas', 'sensible' => true],
+        // Bajar un umbral asciende de golpe a media base de datos, y con
+        // el nivel van los descuentos: es dinero.
+        'niveles.gestionar'    => ['modulo' => 'huespedes', 'nombre' => 'Niveles, beneficios y referidos', 'sensible' => true],
         // Las PQR llevan plazo legal (Ley 1755/2015). Cualquiera puede
         // recoger una; contestarla en nombre del hotel, no.
         'pqr.ver'              => ['modulo' => 'huespedes', 'nombre' => 'Ver quejas y peticiones', 'sensible' => false],

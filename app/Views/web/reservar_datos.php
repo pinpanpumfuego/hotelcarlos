@@ -40,6 +40,18 @@ if (! function_exists('fechaLarga')) {
                         <input type="hidden" name="ninos" value="<?= esc($busqueda['ninos']) ?>">
                         <input type="hidden" name="tipo_id" value="<?= esc($tipo['id']) ?>">
                         <input type="hidden" name="cupon" value="<?= esc($cupon ?? '') ?>">
+                        <?php // Campo de referido: solo aparece si el programa está
+                              // en marcha. Enseñarlo apagado sería pedirle a alguien
+                              // un código que no le va a servir de nada. ?>
+                        <?php if (! empty($referidosActivos)): ?>
+                            <div class="mb-3">
+                                <label class="form-label small mb-1"><?= esc(lang('Web.teRecomendaron')) ?></label>
+                                <input type="text" name="referido" class="form-control text-uppercase"
+                                       maxlength="12" autocomplete="off"
+                                       placeholder="<?= esc(lang('Web.codigoOpcional')) ?>">
+                                <div class="form-text"><?= esc(lang('Web.referidoTexto')) ?></div>
+                            </div>
+                        <?php endif ?>
                         <?php if (! empty($experiencias)): ?>
                             <!-- ── Venta cruzada: se ofrece antes de pedir los datos ── -->
                             <div class="bloque-experiencias">

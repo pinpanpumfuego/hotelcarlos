@@ -227,4 +227,7 @@ return [
     // ── Language notice ──
     'disponibleEn'     => 'This page is available in your language.',
     'verEn'            => 'View in',
+    'teRecomendaron'  => 'Did someone recommend us?',
+    'codigoOpcional'  => 'Code, if you have one',
+    'referidoTexto'   => 'If a friend told you about us, enter their code: you will both get a discount for next time.',
 ];

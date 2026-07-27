@@ -205,6 +205,9 @@ class Reservar extends BaseController
             'descuento'    => $descuento,
             'cuponError'   => $cuponError,
             'experiencias' => $this->experienciasDisponibles($datos),
+            // Pedirle un código de referido a alguien cuando el programa está
+            // apagado es pedirle algo que no le va a servir de nada.
+            'referidosActivos' => (new \App\Libraries\Referidos())->activo(),
         ]);
     }
 
@@ -331,6 +334,14 @@ class Reservar extends BaseController
                     'canal'      => 'web',
                 ]);
             }
+        }
+
+        // Si viene recomendado, se apunta. No se reparte nada todavía: el
+        // premio se entrega cuando la estancia ocurra de verdad.
+        $referido = trim((string) $this->request->getPost('referido'));
+
+        if ($referido !== '') {
+            (new \App\Libraries\Referidos())->apuntar($reservaId, $referido, $huespedId);
         }
 
         // Aviso interno: el hotel debe saber que hay una reserva por confirmar

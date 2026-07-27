@@ -238,4 +238,7 @@ return [
     // ── Aviso de idioma ──
     'disponibleEn'     => 'Esta página está disponible en tu idioma.',
     'verEn'            => 'Ver en',
+    'teRecomendaron'  => '¿Te recomendó alguien?',
+    'codigoOpcional'  => 'Código, si lo tienes',
+    'referidoTexto'   => 'Si un amigo te habló de nosotros, poned su código: os llevaréis los dos un descuento para la próxima.',
 ];

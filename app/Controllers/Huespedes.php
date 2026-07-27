@@ -70,12 +70,24 @@ class Huespedes extends BaseController
 
         $verSensibles = puede('huespedes.sensibles');
         $historial    = $this->crm->historial($id);
+        $valor        = $this->crm->valor($id);
+        $niveles      = new \App\Models\NivelModel();
+        $nivel        = $niveles->de($valor);
+        $referidos    = new \App\Libraries\Referidos();
 
         return view('huespedes/ficha', [
             'titulo'      => trim($huesped['nombre'] . ' ' . $huesped['apellidos']),
             'seccion'     => 'huespedes',
             'huesped'     => $huesped,
-            'valor'       => $this->crm->valor($id),
+            'valor'       => $valor,
+            'nivel'       => $nivel,
+            'beneficios'  => $niveles->beneficiosDe($nivel),
+            'siguiente'   => $niveles->siguiente($valor),
+            // El código solo se genera cuando el programa está en marcha: si no,
+            // se llenaría la tabla de códigos que nadie va a usar.
+            'codigo_referido' => $referidos->activo() ? $referidos->codigoDe($id) : null,
+            'trajo'       => $referidos->deHuesped($id),
+            'estados_ref' => \App\Models\ReferidoModel::ESTADOS,
             'reservas'    => $historial['reservas'],
             'encuestas'   => $historial['encuestas'],
             'solicitudes' => $historial['solicitudes'],
