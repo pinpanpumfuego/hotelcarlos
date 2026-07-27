@@ -99,6 +99,32 @@ $registroPendiente = $fase !== 'despues'
     </div>
 </div>
 
+<?php if ($acompanantes !== []): ?>
+    <div class="card mt-3">
+        <div class="card-header bg-white fw-semibold small">
+            <i class="bi bi-people me-1"></i><?= esc(lang('Portal.acompanantes')) ?>
+        </div>
+        <div class="card-body py-2">
+            <?php foreach ($acompanantes as $a): ?>
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <span><?= esc(trim($a['nombre'] . ' ' . $a['apellidos'])) ?></span>
+                    <?php if (! empty($a['es_menor'])): ?>
+                        <span class="badge text-bg-light border"><?= esc(lang('Portal.menor')) ?></span>
+                    <?php endif ?>
+                </div>
+            <?php endforeach ?>
+        </div>
+    </div>
+<?php endif ?>
+
+<?php if ($fase === 'durante'): ?>
+    <div class="d-grid gap-2 mt-3">
+        <a class="btn btn-bosque" href="<?= site_url('estancia/' . $token . '/carta') ?>">
+            <i class="bi bi-cup-hot me-1"></i><?= esc(lang('Portal.pedirCarta')) ?>
+        </a>
+    </div>
+<?php endif ?>
+
 <?php if ($pendientes !== []): ?>
     <?php
     $etiquetas = [

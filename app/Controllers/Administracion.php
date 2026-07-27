@@ -58,6 +58,16 @@ class Administracion extends BaseController
                 'con_rol'         => (new \App\Models\EmpleadoModel())->delTpv(),
             ],
 
+            // Portal del huésped: los textos que lee quien se aloja
+            'portal' => [
+                'horarios'        => $this->config->obtener('portal_horarios', ''),
+                'normas'          => $this->config->obtener('portal_normas', ''),
+                'politica'        => $this->config->obtener('portal_politica_cancelacion', ''),
+                'rutas'           => $this->config->obtener('portal_rutas', ''),
+                'recomendaciones' => $this->config->obtener('portal_recomendaciones', ''),
+                'tope_cargo'      => (int) $this->config->obtener('portal_tope_cargo', '300000'),
+            ],
+
             // Control de jornada
             'fichaje' => [
                 'terminal' => $this->config->obtener('fichaje_terminal', '1') === '1',
@@ -226,6 +236,29 @@ class Administracion extends BaseController
         ]);
 
         return redirect()->to('administracion#tpv')->with('ok', 'Ajustes del TPV guardados.');
+    }
+
+    /**
+     * Textos y límites del portal del huésped.
+     *
+     * Todo esto lo escribe gerencia, no yo: las rutas seguras, los horarios
+     * reales y qué recomendar de la zona los sabe quien vive allí. Lo que está
+     * vacío no se pinta en el portal, así que dejarlo a medias no rompe nada.
+     */
+    public function guardarPortal()
+    {
+        $this->config->guardarPares([
+            'portal_horarios'              => trim((string) $this->request->getPost('horarios')),
+            'portal_normas'                => trim((string) $this->request->getPost('normas')),
+            'portal_politica_cancelacion'  => trim((string) $this->request->getPost('politica')),
+            'portal_rutas'                 => trim((string) $this->request->getPost('rutas')),
+            'portal_recomendaciones'       => trim((string) $this->request->getPost('recomendaciones')),
+            // Hasta cuánto puede cargar el huésped a la cabaña sin que nadie lo
+            // apruebe. En 0 se apagan los pedidos desde el portal.
+            'portal_tope_cargo'            => (string) max(0, (int) $this->request->getPost('tope_cargo')),
+        ]);
+
+        return redirect()->to('administracion#portal')->with('ok', 'Textos del portal del huésped guardados.');
     }
 
     /** Ajustes del control de jornada. */

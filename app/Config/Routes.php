@@ -437,6 +437,7 @@ $routes->group('', ['filter' => ['auth', 'permiso:administracion.ver']], static 
     $routes->post('administracion/hotel', 'Administracion::guardarHotel');
     $routes->post('administracion/tpv', 'Administracion::guardarTpv');
     $routes->post('administracion/cambio', 'Administracion::actualizarCambio');
+    $routes->post('administracion/portal', 'Administracion::guardarPortal');
     $routes->post('administracion/fichaje', 'Administracion::guardarFichaje');
 });
 // Credenciales de terceros: solo gerencia. Quien las tiene puede facturar en
@@ -652,3 +653,12 @@ $routes->group('', ['filter' => ['auth', 'permiso:limpieza.trabajar,mantenimient
     $routes->post('solicitudes/atender/(:num)', 'Solicitudes::atender/$1');
     $routes->post('solicitudes/encuesta/(:num)', 'Solicitudes::leerEncuesta/$1');
 });
+
+// ── Portal del huésped · segunda tanda ──────────────────────────────
+$routes->get('estancia/(:segment)/preferencias', 'Portal::preferencias/$1');
+$routes->post('estancia/(:segment)/preferencias', 'Portal::guardarPreferencias/$1');
+$routes->get('estancia/(:segment)/actividades', 'Portal::actividades/$1');
+$routes->post('estancia/(:segment)/apuntarse', 'Portal::apuntarse/$1');
+$routes->get('estancia/(:segment)/carta', 'Portal::carta/$1');
+$routes->post('estancia/(:segment)/pedido', 'Portal::pedido/$1');
+$routes->get('estancia/(:segment)/comprobante', 'Portal::comprobante/$1');

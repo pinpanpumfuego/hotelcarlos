@@ -5,6 +5,28 @@ $seccion = 'info';
 $titulo  = lang('Portal.info');
 
 $mapa = trim((string) ($hotel->direccion ?? ''));
+
+// Los servicios se agrupan por su grupo para no soltar una lista de treinta
+// cosas seguidas, que nadie lee.
+$porGrupo = [];
+foreach ($servicios as $s) {
+    $porGrupo[$s['grupo'] ?: '—'][] = $s;
+}
+
+/** Bloque de texto libre escrito por gerencia. Si está vacío, ni se pinta. */
+$bloque = static function (string $titulo, string $texto, string $icono): void {
+    if (trim($texto) === '') {
+        return;
+    }
+    ?>
+    <div class="card mt-3">
+        <div class="card-header bg-white fw-semibold small">
+            <i class="bi <?= $icono ?> me-1"></i><?= esc($titulo) ?>
+        </div>
+        <div class="card-body small" style="white-space: pre-line;"><?= esc($texto) ?></div>
+    </div>
+    <?php
+};
 ?>
 
 <?= $this->section('cabecera') ?>
@@ -43,6 +65,33 @@ $mapa = trim((string) ($hotel->direccion ?? ''));
     </div>
 </div>
 
+<?php $bloque(lang('Portal.horarios'), (string) $horarios, 'bi-clock'); ?>
+
+<?php if ($porGrupo !== []): ?>
+    <div class="card mt-3">
+        <div class="card-header bg-white fw-semibold small">
+            <i class="bi bi-stars me-1"></i><?= esc(lang('Portal.queOfrecemos')) ?>
+        </div>
+        <div class="card-body py-2">
+            <?php foreach ($porGrupo as $grupo => $lista): ?>
+                <?php if ($grupo !== '—'): ?>
+                    <div class="dato mt-2 mb-1"><?= esc($grupo) ?></div>
+                <?php endif ?>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <?php foreach ($lista as $s): ?>
+                        <span class="badge text-bg-light border fw-normal">
+                            <?php if (! empty($s['icono'])): ?>
+                                <i class="bi <?= esc($s['icono']) ?> me-1"></i>
+                            <?php endif ?>
+                            <?= esc($s['nombre']) ?>
+                        </span>
+                    <?php endforeach ?>
+                </div>
+            <?php endforeach ?>
+        </div>
+    </div>
+<?php endif ?>
+
 <?php if ($mapa !== ''): ?>
     <div class="card mt-3">
         <div class="card-header bg-white fw-semibold small">
@@ -50,8 +99,9 @@ $mapa = trim((string) ($hotel->direccion ?? ''));
         </div>
         <div class="card-body">
             <p class="mb-2"><?= esc($mapa) ?></p>
-            <?php // Enlace a la app de mapas del móvil: funciona en Android y en iPhone
-                  // sin cargar un mapa incrustado, que en mala cobertura no llega. ?>
+            <?php // Enlace a la app de mapas del móvil: funciona en Android y en
+                  // iPhone sin cargar un mapa incrustado, que con mala cobertura
+                  // no llega a pintarse. ?>
             <a class="btn btn-outline-secondary btn-sm"
                href="https://www.google.com/maps/search/?api=1&query=<?= urlencode($hotel->nombre . ' ' . $mapa) ?>"
                target="_blank" rel="noopener">
@@ -61,30 +111,12 @@ $mapa = trim((string) ($hotel->direccion ?? ''));
     </div>
 <?php endif ?>
 
-<div class="card mt-3">
-    <div class="card-header bg-white fw-semibold small">
-        <i class="bi bi-journal-text me-1"></i><?= esc(lang('Portal.normas')) ?>
-    </div>
-    <div class="card-body small">
-        <?php
-        // Estas se sacarán de Administración cuando gerencia las escriba. Hasta
-        // entonces, las mínimas de un alojamiento rural: mejor algo correcto y
-        // corto que un texto inventado y largo.
-        $normas = [
-            lang('Portal.entrada') . ': 15:00 · ' . lang('Portal.salida') . ': 12:00',
-            'No se puede fumar dentro de las cabañas.',
-            'A partir de las 22:00, silencio: hay fauna alrededor y otros huéspedes.',
-            'No alimentes a los animales, por su bien y por el tuyo.',
-            'Lleva calzado cerrado si vas a los senderos.',
-        ];
-        ?>
-        <ul class="mb-0 ps-3">
-            <?php foreach ($normas as $n): ?>
-                <li class="mb-1"><?= esc($n) ?></li>
-            <?php endforeach ?>
-        </ul>
-    </div>
-</div>
+<?php
+$bloque(lang('Portal.rutas'), (string) $rutas, 'bi-signpost-split');
+$bloque(lang('Portal.recomendaciones'), (string) $recomendaciones, 'bi-compass');
+$bloque(lang('Portal.normas'), (string) $normas, 'bi-journal-text');
+$bloque(lang('Portal.politicaTitulo'), (string) $politica, 'bi-file-text');
+?>
 
 <div class="card mt-3 border-danger">
     <div class="card-body small">
@@ -96,6 +128,12 @@ $mapa = trim((string) ($hotel->direccion ?? ''));
             <i class="bi bi-telephone-fill me-1"></i>123
         </a>
     </div>
+</div>
+
+<div class="d-grid mt-3">
+    <a class="btn btn-outline-secondary btn-sm" href="<?= site_url('estancia/' . $token . '/preferencias') ?>">
+        <i class="bi bi-sliders me-1"></i><?= esc(lang('Portal.misDatos')) ?>
+    </a>
 </div>
 
 <?= $this->endSection() ?>

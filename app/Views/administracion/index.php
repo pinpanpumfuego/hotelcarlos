@@ -251,6 +251,72 @@
         </div>
     </div>
 
+    <!-- ═══ Portal del huésped ═══ -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm" id="portal">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-phone me-2 text-success"></i>Portal del huésped
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">
+                    Lo que lee el huésped en su móvil durante la estancia. <strong>Lo que dejes
+                    en blanco no se le enseña</strong>, así que puedes rellenarlo poco a poco.
+                </p>
+                <form method="post" action="<?= site_url('administracion/portal') ?>">
+                    <?= csrf_field() ?>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Horarios</label>
+                            <textarea name="horarios" class="form-control" rows="4"
+                                      placeholder="Recepción: 7:00 a 21:00&#10;Desayuno: 7:30 a 10:00&#10;Restaurante: 12:30 a 15:00 y 19:00 a 21:30"><?= esc($portal['horarios']) ?></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Normas de la casa</label>
+                            <textarea name="normas" class="form-control" rows="4"
+                                      placeholder="Entrada desde las 15:00, salida hasta las 12:00&#10;No se puede fumar dentro de las cabañas&#10;Silencio a partir de las 22:00"><?= esc($portal['normas']) ?></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Rutas y senderos</label>
+                            <textarea name="rutas" class="form-control" rows="4"
+                                      placeholder="Sendero del lago · 40 min · fácil&#10;Mirador de los Farallones · 2 h · exige calzado cerrado&#10;No salgas del sendero marcado ni después del anochecer"><?= esc($portal['rutas']) ?></textarea>
+                            <div class="form-text">
+                                Si hay senderos, di también lo que <strong>no</strong> hay que hacer.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Recomendaciones de la zona</label>
+                            <textarea name="recomendaciones" class="form-control" rows="4"
+                                      placeholder="Dónde comer, qué visitar, cómo moverse…"><?= esc($portal['recomendaciones']) ?></textarea>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Condiciones de cancelación</label>
+                            <textarea name="politica" class="form-control" rows="3"
+                                      placeholder="Cancelación gratuita hasta 7 días antes de la llegada…"><?= esc($portal['politica']) ?></textarea>
+                            <div class="form-text">
+                                Es lo que el huésped busca cuando le cambian los planes.
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tope de cargo a la cabaña</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="tope_cargo" class="form-control" min="0" step="10000"
+                                       value="<?= (int) $portal['tope_cargo'] ?>">
+                            </div>
+                            <div class="form-text">
+                                Lo máximo que puede pedir al restaurante sin que nadie lo apruebe.
+                                <strong>En 0 se apagan los pedidos desde el portal.</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3">
+                        <i class="bi bi-check-lg me-1"></i>Guardar textos del portal
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- ═══ Control de jornada ═══ -->
     <div class="col-lg-6" id="fichaje">
         <div class="card border-0 shadow-sm h-100">
