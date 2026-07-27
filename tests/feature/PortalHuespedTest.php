@@ -47,6 +47,11 @@ final class PortalHuespedTest extends CIUnitTestCase
         $db->table('portal_accesos')->where('reserva_id', $this->reservaId)->delete();
         $db->table('folio_movimientos')->where('reserva_id', $this->reservaId)->delete();
         $db->table('reservas')->where('id', $this->reservaId)->delete();
+
+        foreach ($db->table('huespedes')->select('id')->where('num_documento', 'PRUEBA-PORTAL')->get()->getResultArray() as $h) {
+            $db->table('consentimientos')->where('huesped_id', $h['id'])->delete();
+        }
+
         $db->table('huespedes')->where('num_documento', 'PRUEBA-PORTAL')->delete();
 
         parent::tearDown();
@@ -364,5 +369,83 @@ final class PortalHuespedTest extends CIUnitTestCase
         $codigos    = array_column($pendientes, 'codigo');
 
         $this->assertContains($this->reserva['codigo'], $codigos);
+    }
+
+    // ── Consentimientos desde el portal ─────────────────────────────────
+
+    public function testElHuespedSeApuntaYSeDaDeBajaSolo(): void
+    {
+        // Retirar tiene que ser tan fácil como dar. Más allá de la ley: quien
+        // no puede darse de baja marca el correo como spam, y entonces dejan de
+        // llegar también los que sí importan.
+        $consentimientos = new \App\Models\ConsentimientoModel();
+        $huespedId       = (int) $this->reserva['huesped_id'];
+        $token           = $this->acceso()['token'];
+
+        $this->assertFalse($consentimientos->permite($huespedId, 'marketing', 'email'), 'Por defecto, no.');
+
+        $this->post('estancia/' . $token . '/preferencias', [
+            csrf_token() => csrf_hash(),
+            'campanas'   => '1',
+        ]);
+        $this->assertTrue($consentimientos->permite($huespedId, 'marketing', 'email'));
+
+        $this->post('estancia/' . $token . '/preferencias', [csrf_token() => csrf_hash()]);
+        $this->assertFalse($consentimientos->permite($huespedId, 'marketing', 'email'));
+    }
+
+    public function testCadaFinalidadVaPorSuCuenta(): void
+    {
+        // Autorizar que le manden ofertas no es autorizar que le pregunten qué
+        // tal estuvo.
+        $consentimientos = new \App\Models\ConsentimientoModel();
+        $huespedId       = (int) $this->reserva['huesped_id'];
+
+        $this->post('estancia/' . $this->acceso()['token'] . '/preferencias', [
+            csrf_token() => csrf_hash(),
+            'encuestas'  => '1',
+        ]);
+
+        $this->assertTrue($consentimientos->permite($huespedId, 'encuestas', 'email'));
+        $this->assertFalse($consentimientos->permite($huespedId, 'marketing', 'email'));
+    }
+
+    public function testGuardarSinCambiarNadaNoLlenaElLibroDeRuido(): void
+    {
+        // Una fila por cada vez que alguien abre la pantalla y le da a guardar
+        // haría imposible encontrar el consentimiento bueno el día que haga
+        // falta demostrarlo.
+        $token     = $this->acceso()['token'];
+        $huespedId = (int) $this->reserva['huesped_id'];
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->post('estancia/' . $token . '/preferencias', [
+                csrf_token() => csrf_hash(),
+                'campanas'   => '1',
+            ]);
+        }
+
+        $this->assertSame(
+            1,
+            (new \App\Models\ConsentimientoModel())->where('huesped_id', $huespedId)->countAllResults()
+        );
+    }
+
+    public function testLaPantallaEnsenaLoQueDeVerdadEstaAutorizado(): void
+    {
+        // Si lo que ve marcado y lo que decide las campañas salieran de sitios
+        // distintos, alguien se daría de baja aquí y seguiría recibiendo correos.
+        $token = $this->acceso()['token'];
+
+        (new \App\Libraries\Crm())->otorgar((int) $this->reserva['huesped_id'], 'marketing', 'email');
+
+        $r = $this->get('estancia/' . $token . '/preferencias');
+
+        $r->assertOK();
+        $this->assertMatchesRegularExpression(
+            '/id="campanas"[^>]*checked|checked[^>]*id="campanas"/',
+            (string) $r->response()->getBody(),
+            'La casilla debería salir marcada.'
+        );
     }
 }

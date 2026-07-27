@@ -94,6 +94,8 @@ return [
     'campanas'           => 'Ich möchte Neuigkeiten und Angebote erhalten',
     'campanasTexto'      => 'Sie können das jederzeit ändern. Abwählen, und wir schreiben Ihnen nicht mehr.',
     'guardar'            => 'Speichern',
+    'encuestasPermiso'     => 'Ich möchte nach meinem Aufenthalt gefragt werden',
+    'encuestasPermisoTexto' => 'Nur einmal nach der Abreise. Sonst nichts.',
     'preferenciasOk'     => 'Gespeichert.',
     'actividades'        => 'Aktivitäten',
     'reservarActividad'  => 'Ich melde mich an',

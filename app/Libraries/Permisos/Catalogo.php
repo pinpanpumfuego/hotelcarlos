@@ -76,6 +76,12 @@ final class Catalogo
         // El más delicado del sistema: cédulas y firmas, Ley 1581/2012.
         'registros.documentos' => ['modulo' => 'huespedes', 'nombre' => 'Ver documentos de identidad y firmas', 'sensible' => true],
         'registros.reporte'    => ['modulo' => 'huespedes', 'nombre' => 'Generar el reporte legal', 'sensible' => false],
+        // Alergias, dietas y accesibilidad son datos de salud: la Ley
+        // 1581/2012 los llama sensibles y no los ve cualquiera. Cocina y
+        // recepción sí, porque sin ellos pueden mandar a alguien al hospital.
+        'huespedes.sensibles'  => ['modulo' => 'huespedes', 'nombre' => 'Ver alergias y datos de salud', 'sensible' => true],
+        'huespedes.fusionar'   => ['modulo' => 'huespedes', 'nombre' => 'Fusionar perfiles duplicados', 'sensible' => true],
+        'consentimientos.gestionar' => ['modulo' => 'huespedes', 'nombre' => 'Dar y retirar consentimientos', 'sensible' => true],
 
         // ── Caja ────────────────────────────────────────────────────────
         'caja.ver'        => ['modulo' => 'caja', 'nombre' => 'Ver el turno', 'sensible' => false],
@@ -215,6 +221,7 @@ final class Catalogo
                 'folio.cupon', 'folio.bono',
                 'huespedes.ver', 'huespedes.editar',
                 'registros.ver', 'registros.aprobar', 'registros.documentos', 'registros.reporte',
+                'huespedes.sensibles', 'huespedes.fusionar', 'consentimientos.gestionar',
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento',
                 'pos.usar', 'pos.cobrar', 'pos.mover',
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',
@@ -258,6 +265,8 @@ final class Catalogo
                 'caja.ver', 'caja.abrir', 'caja.cerrar',
                 'carta.disponible',
                 'mantenimiento.crear',
+                // Sin ver las alergias, la cocina puede mandar a alguien al hospital.
+                'huespedes.ver', 'huespedes.sensibles',
                 // El cuadrante lo necesita para organizar el servicio. Las horas
                 // trabajadas son dato laboral y se quedan en gerencia.
                 'turnos.ver',

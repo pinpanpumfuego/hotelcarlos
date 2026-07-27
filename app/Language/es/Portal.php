@@ -99,6 +99,8 @@ return [
     'campanas'           => 'Quiero recibir novedades y ofertas',
     'campanasTexto'      => 'Puedes cambiarlo cuando quieras. Si lo desmarcas, dejamos de escribirte.',
     'guardar'            => 'Guardar',
+    'encuestasPermiso'     => 'Quiero que me pregunten qué tal estuvo',
+    'encuestasPermisoTexto' => 'Una sola vez tras tu salida. Nada más.',
     'preferenciasOk'     => 'Guardado.',
     'actividades'        => 'Actividades',
     'reservarActividad'  => 'Quiero apuntarme',

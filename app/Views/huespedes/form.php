@@ -64,6 +64,58 @@ $tiposDoc = [
                                    value="<?= esc(old('nacionalidad', $huesped['nacionalidad'] ?? 'Colombia')) ?>">
                         </div>
                     </div>
+
+                    <div class="row g-3 mt-0">
+                        <div class="col-sm-4">
+                            <label class="form-label fw-semibold">Fecha de nacimiento</label>
+                            <input type="date" name="fecha_nacimiento" class="form-control"
+                                   value="<?= esc(old('fecha_nacimiento', $huesped['fecha_nacimiento'] ?? '')) ?>">
+                            <div class="form-text">Para felicitarle, si lo autoriza.</div>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label fw-semibold">Ciudad</label>
+                            <input type="text" name="ciudad" class="form-control" maxlength="120"
+                                   value="<?= esc(old('ciudad', $huesped['ciudad'] ?? '')) ?>">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label fw-semibold">País</label>
+                            <input type="text" name="pais" class="form-control" maxlength="80"
+                                   value="<?= esc(old('pais', $huesped['pais'] ?? '')) ?>">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label fw-semibold">Idioma</label>
+                            <select name="idioma" class="form-select">
+                                <?php foreach (['es' => 'Español', 'en' => 'Inglés', 'fr' => 'Francés', 'de' => 'Alemán'] as $c => $n): ?>
+                                    <option value="<?= $c ?>" <?= old('idioma', $huesped['idioma'] ?? 'es') === $c ? 'selected' : '' ?>><?= $n ?></option>
+                                <?php endforeach ?>
+                            </select>
+                            <div class="form-text">En el que se le escribe.</div>
+                        </div>
+                        <div class="col-sm-8">
+                            <label class="form-label fw-semibold">Cómo nos conoció</label>
+                            <select name="origen" class="form-select">
+                                <option value="">Sin saber</option>
+                                <?php foreach ($origenes as $c => $n): ?>
+                                    <option value="<?= $c ?>" <?= old('origen', $huesped['origen'] ?? '') === $c ? 'selected' : '' ?>><?= esc($n) ?></option>
+                                <?php endforeach ?>
+                            </select>
+                            <div class="form-text">
+                                Es lo único que dice si lo que se invierte en un canal sirve de algo.
+                                No se puede deducir de ningún otro dato.
+                            </div>
+                        </div>
+                        <div class="col-sm-8">
+                            <label class="form-label fw-semibold">Empresa</label>
+                            <input type="text" name="empresa" class="form-control" maxlength="150"
+                                   value="<?= esc(old('empresa', $huesped['empresa'] ?? '')) ?>">
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label fw-semibold">NIT</label>
+                            <input type="text" name="empresa_nit" class="form-control" maxlength="40"
+                                   value="<?= esc(old('empresa_nit', $huesped['empresa_nit'] ?? '')) ?>">
+                        </div>
+                    </div>
+
                     <div class="form-text mt-2">
                         <i class="bi bi-info-circle me-1"></i>
                         No puede haber dos huéspedes con el mismo tipo y número de documento.
@@ -86,9 +138,22 @@ $tiposDoc = [
                     <div class="form-text mb-3">Se usa para enviarle la confirmación y su enlace de registro.</div>
 
                     <label class="form-label fw-semibold">Notas</label>
-                    <textarea name="notas" class="form-control" rows="4"
-                              placeholder="Alergias, preferencias, incidencias previas…"><?= esc(old('notas', $huesped['notas'] ?? '')) ?></textarea>
-                    <div class="form-text">Las ve el personal, nunca el huésped.</div>
+                    <textarea name="notas" class="form-control" rows="3"
+                              placeholder="Contexto útil de su estancia…"><?= esc(old('notas', $huesped['notas'] ?? '')) ?></textarea>
+                    <div class="form-text mb-3">
+                        <strong>Las alergias ya no van aquí</strong>: se apuntan en su ficha, en
+                        «lo que sabemos de él». Son dato de salud y no las puede ver cualquiera.
+                    </div>
+
+                    <label class="form-label fw-semibold">
+                        Notas internas
+                        <span class="badge text-bg-secondary ms-1">Nunca las ve</span>
+                    </label>
+                    <textarea name="notas_internas" class="form-control" rows="3"
+                              placeholder="Lo que no querrías que leyera si un día pide sus datos."><?= esc(old('notas_internas', $huesped['notas_internas'] ?? '')) ?></textarea>
+                    <div class="form-text">
+                        Separadas de las de arriba a propósito: aquellas acaban imprimiéndose.
+                    </div>
                 </div>
             </div>
         </div>

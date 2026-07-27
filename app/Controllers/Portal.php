@@ -123,8 +123,18 @@ class Portal extends BaseController
             return $this->caducado();
         }
 
+        $consentimientos = new \App\Models\ConsentimientoModel();
+        $huespedId       = (int) $ctx['reserva']['huesped_id'];
+
         return view('portal/preferencias', $ctx + [
             'registro' => (new RegistroModel())->where('reserva_id', $ctx['reserva']['id'])->first(),
+            // Lo que él mismo ve marcado tiene que ser lo mismo que decide si
+            // entra en una campaña. Si se leyera de sitios distintos, alguien
+            // se daría de baja aquí y seguiría recibiendo correos.
+            'permisos' => [
+                'marketing' => $consentimientos->permite($huespedId, 'marketing', 'email'),
+                'encuestas' => $consentimientos->permite($huespedId, 'encuestas', 'email'),
+            ],
         ]);
     }
 
@@ -135,12 +145,43 @@ class Portal extends BaseController
             return $this->caducado();
         }
 
+        $huespedId = (int) $ctx['reserva']['huesped_id'];
+        $crm       = new \App\Libraries\Crm();
+
+        $prueba = [
+            'origen'      => 'portal',
+            'ip'          => $this->request->getIPAddress(),
+            'dispositivo' => $this->request->getUserAgent()->getAgentString(),
+            'reserva_id'  => (int) $ctx['reserva']['id'],
+            'nota'        => 'Lo cambió el propio huésped desde su portal.',
+        ];
+
+        // Solo se escribe cuando de verdad cambia algo. Guardar una fila cada
+        // vez que alguien abre esta pantalla y le da a guardar llenaría el
+        // libro de ruido y haría imposible encontrar el consentimiento bueno.
+        $consentimientos = new \App\Models\ConsentimientoModel();
+
+        foreach (['marketing' => 'campanas', 'encuestas' => 'encuestas'] as $finalidad => $campo) {
+            $quiere = $this->request->getPost($campo) !== null;
+            $tiene  = $consentimientos->permite($huespedId, $finalidad, 'email');
+
+            if ($quiere === $tiene) {
+                continue;
+            }
+
+            $quiere
+                ? $crm->otorgar($huespedId, $finalidad, 'email', $prueba)
+                : $crm->retirar($huespedId, $finalidad, 'email', $prueba);
+        }
+
+        // Se conserva la casilla vieja del registro para no romper el reporte
+        // legal de llegada, que la mira. Manda la tabla de consentimientos.
         $registros = new RegistroModel();
         $registro  = $registros->where('reserva_id', $ctx['reserva']['id'])->first();
 
         if ($registro !== null) {
             $registros->update($registro['id'], [
-                'acepta_marketing' => $this->request->getPost('campanas') ? 1 : 0,
+                'acepta_marketing' => $this->request->getPost('campanas') !== null ? 1 : 0,
             ]);
         }
 

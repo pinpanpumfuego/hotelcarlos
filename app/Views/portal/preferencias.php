@@ -26,12 +26,23 @@ $titulo  = lang('Portal.misDatos');
                   // consentimiento (Ley 1581/2012). ?>
             <div class="form-check form-switch mb-2">
                 <input class="form-check-input" type="checkbox" name="campanas" value="1" id="campanas"
-                       <?= ! empty($registro['acepta_marketing']) ? 'checked' : '' ?>>
+                       <?= $permisos['marketing'] ? 'checked' : '' ?>>
                 <label class="form-check-label fw-semibold" for="campanas">
                     <?= esc(lang('Portal.campanas')) ?>
                 </label>
             </div>
-            <p class="small text-muted"><?= esc(lang('Portal.campanasTexto')) ?></p>
+            <p class="small text-muted mb-3"><?= esc(lang('Portal.campanasTexto')) ?></p>
+
+            <?php // Cada finalidad por separado: autorizar que le manden ofertas
+                  // no es autorizar que le pregunten qué tal estuvo. ?>
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" name="encuestas" value="1" id="encuestas"
+                       <?= $permisos['encuestas'] ? 'checked' : '' ?>>
+                <label class="form-check-label fw-semibold" for="encuestas">
+                    <?= esc(lang('Portal.encuestasPermiso')) ?>
+                </label>
+            </div>
+            <p class="small text-muted"><?= esc(lang('Portal.encuestasPermisoTexto')) ?></p>
 
             <div class="d-grid">
                 <button class="btn btn-bosque"><?= esc(lang('Portal.guardar')) ?></button>

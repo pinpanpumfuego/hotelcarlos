@@ -94,6 +94,8 @@ return [
     'campanas'           => 'Je souhaite recevoir les actualités et les offres',
     'campanasTexto'      => 'Vous pouvez le changer quand vous voulez. Décochez et nous cessons de vous écrire.',
     'guardar'            => 'Enregistrer',
+    'encuestasPermiso'     => 'Je souhaite donner mon avis sur mon séjour',
+    'encuestasPermisoTexto' => 'Une seule fois après votre départ. Rien de plus.',
     'preferenciasOk'     => 'Enregistré.',
     'actividades'        => 'Activités',
     'reservarActividad'  => 'Je m’inscris',

@@ -94,6 +94,8 @@ return [
     'campanas'           => 'I want to receive news and offers',
     'campanasTexto'      => 'You can change this whenever you like. Untick it and we stop writing to you.',
     'guardar'            => 'Save',
+    'encuestasPermiso'     => 'I want to be asked how my stay went',
+    'encuestasPermisoTexto' => 'Just once after you leave. Nothing else.',
     'preferenciasOk'     => 'Saved.',
     'actividades'        => 'Activities',
     'reservarActividad'  => 'Sign me up',

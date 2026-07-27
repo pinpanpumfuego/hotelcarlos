@@ -49,7 +49,11 @@
                         <td><?= esc($h['telefono'] ?? '') ?></td>
                         <td><?= esc($h['email'] ?? '') ?></td>
                         <td class="text-end">
-                            <a href="<?= site_url('huespedes/editar/' . $h['id']) ?>" class="btn btn-sm btn-outline-primary">
+                            <a href="<?= site_url('huespedes/ver/' . $h['id']) ?>" class="btn btn-sm btn-outline-secondary"
+                               title="Su ficha completa">
+                                <i class="bi bi-person-vcard"></i>
+                            </a>
+                            <a href="<?= site_url('huespedes/editar/' . $h['id']) ?>" class="btn btn-sm btn-outline-primary"
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form action="<?= site_url('huespedes/eliminar/' . $h['id']) ?>" method="post" class="d-inline"

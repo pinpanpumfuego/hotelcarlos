@@ -264,12 +264,23 @@ $routes->group('', ['filter' => ['auth', 'permiso:experiencias.gestionar']], sta
 // ── Huéspedes ───────────────────────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'permiso:huespedes.ver']], static function ($routes) {
     $routes->get('huespedes', 'Huespedes::index');
+    $routes->get('huespedes/ver/(:num)', 'Huespedes::ver/$1');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:huespedes.editar']], static function ($routes) {
     $routes->get('huespedes/nuevo', 'Huespedes::nuevo');
     $routes->post('huespedes/guardar', 'Huespedes::guardar');
     $routes->get('huespedes/editar/(:num)', 'Huespedes::editar/$1');
     $routes->post('huespedes/actualizar/(:num)', 'Huespedes::actualizar/$1');
+    // El permiso fino de lo sensible lo comprueba el controlador: aquí solo
+    // entra quien pueda editar la ficha.
+    $routes->post('huespedes/preferencia/(:num)', 'Huespedes::anadirPreferencia/$1');
+    $routes->post('huespedes/preferencia/borrar/(:num)', 'Huespedes::borrarPreferencia/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:consentimientos.gestionar']], static function ($routes) {
+    $routes->post('huespedes/consentimiento/(:num)', 'Huespedes::consentimiento/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:huespedes.fusionar']], static function ($routes) {
+    $routes->post('huespedes/fusionar/(:num)', 'Huespedes::fusionar/$1');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:huespedes.eliminar']], static function ($routes) {
     $routes->post('huespedes/eliminar/(:num)', 'Huespedes::eliminar/$1');
