@@ -402,6 +402,7 @@ $restaurante = $soloPermitidos([
     ['carta', 'carta', 'bi-journal-text', 'Carta', 0, ['carta.gestionar']],
     ['modificadores', 'modificadores', 'bi-sliders', 'Modificadores', 0, ['carta.gestionar']],
     ['insumos', 'insumos', 'bi-box-seam', 'Insumos y costes', 0, ['insumos.gestionar']],
+    ['almacen', 'almacen', 'bi-boxes', 'Almacén', 0, ['insumos.gestionar']],
     ['preparaciones', 'preparaciones', 'bi-stack', 'Preparaciones', 0, ['insumos.gestionar']],
 ]);
 if ($restaurante !== []) {

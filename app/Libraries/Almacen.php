@@ -188,6 +188,182 @@ class Almacen
         ]);
     }
 
+    // ── Enganche con las ventas ─────────────────────────────────────────
+
+    /**
+     * Descuenta del almacén los ingredientes de una línea de comanda.
+     *
+     * Se llama **al enviar a preparación**, no al cobrar: el ingrediente se
+     * gasta cuando el plato se hace, no cuando el cliente paga. Si la comanda
+     * se anula después, se devuelve con `devolverReceta()`.
+     *
+     * **Es idempotente.** Enviar dos veces la misma línea —cosa que pasa: el
+     * comandero reintenta cuando no hay cobertura— no puede descontar el doble.
+     * Se comprueba por la referencia antes de tocar nada.
+     *
+     * Si el producto no tiene receta, no hace nada: no todos los platos tienen
+     * escandallo, y no tenerlo no puede impedir venderlos.
+     *
+     * @return int cuántos insumos se descontaron
+     */
+    public function descontarReceta(int $comandaLineaId): int
+    {
+        $linea = db_connect()->table('comanda_lineas')
+            ->where('id', $comandaLineaId)
+            ->get()->getRowArray();
+
+        if ($linea === null || empty($linea['producto_id'])) {
+            return 0;
+        }
+
+        if ($this->yaMovido('comanda_linea', $comandaLineaId)) {
+            return 0;
+        }
+
+        $receta = db_connect()->table('receta_lineas')
+            ->select('receta_lineas.insumo_id, receta_lineas.cantidad')
+            ->where('receta_lineas.producto_id', (int) $linea['producto_id'])
+            ->get()->getResultArray();
+
+        if ($receta === []) {
+            return 0;
+        }
+
+        $bodegaId = $this->bodegaDeDestino($linea['destino'] ?? 'cocina');
+        if ($bodegaId === null) {
+            return 0;
+        }
+
+        // Una cortesía o una devolución también gastan producto: la cocina lo
+        // hizo igual. Lo que cambia es el motivo, para saber dónde se va.
+        $tipo = match ($linea['estado_linea'] ?? 'normal') {
+            'cortesia'  => 'cortesia',
+            'devuelta'  => 'merma',
+            default     => 'salida',
+        };
+
+        $cantidadPlatos = max(1, (int) $linea['cantidad']);
+        $movidos        = 0;
+
+        foreach ($receta as $ingrediente) {
+            $cantidad = (float) $ingrediente['cantidad'] * $cantidadPlatos;
+            if ($cantidad <= 0) {
+                continue;
+            }
+
+            $this->salida(
+                (int) $ingrediente['insumo_id'],
+                $bodegaId,
+                $cantidad,
+                $tipo,
+                $linea['nombre_producto'] ?? null,
+                'comanda_linea',
+                $comandaLineaId
+            );
+            $movidos++;
+        }
+
+        return $movidos;
+    }
+
+    /**
+     * Devuelve al almacén lo que gastó una línea que se anula.
+     *
+     * No borra los movimientos —eso rompería el libro— sino que apunta los
+     * contrarios. Después de esto, la línea puede volver a descontarse si se
+     * reenvía.
+     */
+    public function devolverReceta(int $comandaLineaId): int
+    {
+        $movimientos = $this->movimientos
+            ->where('referencia_tipo', 'comanda_linea')
+            ->where('referencia_id', $comandaLineaId)
+            ->findAll();
+
+        // Cuántas devoluciones hay ya apuntadas. Sin esta cuenta, llamar dos
+        // veces —cosa que pasa: anular una comanda recorre sus líneas y alguna
+        // puede haberse devuelto ya al quitarla— metería el stock dos veces.
+        $yaDevueltas = $this->movimientos
+            ->where('referencia_tipo', 'comanda_linea_anulada')
+            ->where('referencia_id', $comandaLineaId)
+            ->countAllResults();
+
+        $salidas = 0;
+        foreach ($movimientos as $m) {
+            if ((float) $m['cantidad'] < 0) {
+                $salidas++;
+            }
+        }
+
+        if ($yaDevueltas >= $salidas) {
+            return 0;
+        }
+
+        $devueltos = 0;
+
+        foreach ($movimientos as $m) {
+            // Solo se devuelve lo que salió; si ya hay una devolución apuntada,
+            // no se devuelve otra vez.
+            if ((float) $m['cantidad'] >= 0) {
+                continue;
+            }
+
+            $this->registrar([
+                'tipo'            => 'devolucion',
+                'insumo_id'       => (int) $m['insumo_id'],
+                'bodega_id'       => (int) $m['bodega_id'],
+                'cantidad'        => abs((float) $m['cantidad']),
+                'costo_unitario'  => (float) $m['costo_unitario'],
+                'motivo'          => 'Anulación de ' . ($m['motivo'] ?? 'comanda'),
+                'referencia_tipo' => 'comanda_linea_anulada',
+                'referencia_id'   => $comandaLineaId,
+            ]);
+            $devueltos++;
+        }
+
+        return $devueltos;
+    }
+
+    /**
+     * ¿Ya se movió stock por esta referencia?
+     *
+     * Cuenta salidas y devoluciones: si hay las mismas de cada, la línea está
+     * en paz y se puede volver a descontar.
+     */
+    private function yaMovido(string $tipo, int $id): bool
+    {
+        $salidas = $this->movimientos
+            ->where('referencia_tipo', $tipo)
+            ->where('referencia_id', $id)
+            ->countAllResults();
+
+        $devueltas = $this->movimientos
+            ->where('referencia_tipo', $tipo . '_anulada')
+            ->where('referencia_id', $id)
+            ->countAllResults();
+
+        return $salidas > 0 && $salidas > $devueltas;
+    }
+
+    /**
+     * De qué bodega sale cada cosa según a dónde va la comanda.
+     *
+     * Aprovecha el destino que ya lleva cada línea: lo de cocina sale de la
+     * bodega de cocina y lo de barra de la del bar. Si no hay bodega de ese
+     * tipo, se cae a la de por defecto.
+     */
+    public function bodegaDeDestino(string $destino): ?int
+    {
+        $tipo = match ($destino) {
+            'barra' => 'bar',
+            default => 'cocina',
+        };
+
+        $bodega = (new BodegaModel())->where('tipo', $tipo)->where('activa', 1)->first();
+
+        return $bodega !== null ? (int) $bodega['id'] : $this->bodegaPorDefecto();
+    }
+
     // ── Consultas ───────────────────────────────────────────────────────
 
     public function saldo(int $insumoId, int $bodegaId): float

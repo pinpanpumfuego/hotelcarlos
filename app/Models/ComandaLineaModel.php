@@ -74,6 +74,19 @@ class ComandaLineaModel extends Model
             $this->update($linea['id'], $destino === 'directo'
                 ? ['enviado_cocina' => 1, 'entregado' => 1, 'servido' => 1, 'listo_en' => $ahora]
                 : ['enviado_cocina' => 1]);
+
+            // Aquí se gasta el ingrediente: cuando el plato se hace, no cuando
+            // el cliente paga. Si el almacén falla, la comanda sale igual —un
+            // descuadre de stock no puede dejar a la cocina sin su comanda— y
+            // el problema queda en el log para cuadrarlo después.
+            try {
+                (new \App\Libraries\Almacen())->descontarReceta((int) $linea['id']);
+            } catch (\Throwable $e) {
+                log_message('error', 'Almacén: no se pudo descontar la línea {id}: {m}', [
+                    'id' => $linea['id'],
+                    'm'  => $e->getMessage(),
+                ]);
+            }
         }
 
         return $conteo;

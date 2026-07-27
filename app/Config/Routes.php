@@ -684,3 +684,20 @@ $routes->group('', ['filter' => ['auth', 'permiso:tarifas.editar']], static func
     $routes->post('planes/derecho/quitar/(:num)/(:num)', 'Planes::quitarDerecho/$1/$2');
     $routes->post('planes/franjas', 'Planes::guardarFranjas');
 });
+
+// ── Almacén ─────────────────────────────────────────────────────────
+// Se apoya en `insumos.gestionar`: quien lleva los escandallos es quien lleva
+// la despensa. Cuando el almacén tenga responsable propio, se le dará permiso
+// aparte sin tocar nada más.
+$routes->group('', ['filter' => ['auth', 'permiso:insumos.gestionar']], static function ($routes) {
+    $routes->get('almacen', 'Almacen::index');
+    $routes->get('almacen/bodega/(:num)', 'Almacen::bodega/$1');
+    $routes->get('almacen/insumo/(:num)', 'Almacen::insumo/$1');
+    $routes->get('almacen/movimientos', 'Almacen::movimientos');
+
+    $routes->post('almacen/entrada', 'Almacen::entrada');
+    $routes->post('almacen/salida', 'Almacen::salida');
+    $routes->post('almacen/traslado', 'Almacen::traslado');
+    $routes->post('almacen/conteo', 'Almacen::conteo');
+    $routes->post('almacen/recalcular/(:num)/(:num)', 'Almacen::recalcular/$1/$2');
+});

@@ -415,6 +415,8 @@ class Pos extends BaseController
                 // si no, el huésped se quedaría sin el desayuno que no llegó a
                 // tomarse.
                 (new \App\Libraries\Planes())->devolverConsumo($lineaId);
+                // Y lo que gastó del almacén, si ya se había enviado a cocina
+                (new \App\Libraries\Almacen())->devolverReceta($lineaId);
                 $this->lineas->delete($lineaId);
             } else {
                 $this->lineas->update($lineaId, ['cantidad' => $cantidad]);
@@ -917,6 +919,23 @@ class Pos extends BaseController
                 'Devuelto al anular la comanda ' . $comanda['numero'],
                 ['comanda_id' => $id]
             );
+        }
+
+        // Lo que gastó del almacén vuelve, y los derechos del plan también:
+        // una comanda anulada no puede dejar al huésped sin el desayuno que no
+        // llegó a tomarse ni a la cocina con un stock que no gastó.
+        $almacen = new \App\Libraries\Almacen();
+        $planes  = new \App\Libraries\Planes();
+
+        foreach ($this->lineas->where('comanda_id', $id)->findAll() as $linea) {
+            try {
+                $almacen->devolverReceta((int) $linea['id']);
+                $planes->devolverConsumo((int) $linea['id']);
+            } catch (\Throwable $e) {
+                log_message('error', 'Anulación: no se pudo devolver la línea {id}: {m}', [
+                    'id' => $linea['id'], 'm' => $e->getMessage(),
+                ]);
+            }
         }
 
         $this->comandas->update($id, [
