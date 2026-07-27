@@ -116,7 +116,14 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
                         <div class="fs-5 fw-semibold"><?= date('d/m/Y', strtotime($reserva['fecha_salida'])) ?></div>
                     </div>
                 </div>
-                <p class="mb-1"><i class="bi bi-door-open me-2 text-muted"></i><?= esc($reserva['unidad_nombre']) ?> · <?= esc($reserva['tipo_nombre']) ?></p>
+                <p class="mb-1">
+                    <i class="bi bi-door-open me-2 text-muted"></i>
+                    <?php if ($reserva['unidad_nombre'] === null): ?>
+                        <span class="badge text-bg-warning">Sin cabaña asignada</span>
+                    <?php else: ?>
+                        <?= esc($reserva['unidad_nombre']) ?> · <?= esc($reserva['tipo_nombre']) ?>
+                    <?php endif ?>
+                </p>
                 <p class="mb-1"><i class="bi bi-moon me-2 text-muted"></i><?= $noches ?> noche<?= $noches > 1 ? 's' : '' ?></p>
                 <p class="mb-1"><i class="bi bi-people me-2 text-muted"></i><?= esc($reserva['adultos']) ?> adulto<?= $reserva['adultos'] > 1 ? 's' : '' ?><?= $reserva['ninos'] > 0 ? ' y ' . esc($reserva['ninos']) . ' niño' . ($reserva['ninos'] > 1 ? 's' : '') : '' ?></p>
                 <?php if (trim((string) $reserva['notas']) !== ''): ?>
@@ -318,6 +325,37 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
                             </form>
                         </div>
                     </div>
+
+                    <?php if ($cobroOnline && $saldo > 0): ?>
+                        <?php $enlacePago = site_url('pago/reserva/' . $reserva['codigo'] . '/total'); ?>
+                        <hr>
+                        <h3 class="h6 text-muted mb-2"><i class="bi bi-credit-card me-1"></i>Cobrar en línea</h3>
+                        <p class="small text-muted">
+                            Mándale este enlace al huésped para que pague con tarjeta, PSE o Nequi.
+                            El pago entra solo en el folio; no hay que anotarlo a mano.
+                        </p>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control font-monospace small" id="enlacePago"
+                                   value="<?= esc($enlacePago) ?>" readonly onfocus="this.select()">
+                            <button class="btn btn-outline-secondary" type="button"
+                                    onclick="navigator.clipboard.writeText(document.getElementById('enlacePago').value);
+                                             this.innerHTML='<i class=\'bi bi-check-lg\'></i> Copiado';">
+                                <i class="bi bi-clipboard"></i> Copiar
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <?php if ($reserva['h_telefono']): ?>
+                                <a class="btn btn-success btn-sm"
+                                   href="https://wa.me/<?= esc(preg_replace('/\D/', '', $reserva['h_telefono'])) ?>?text=<?= rawurlencode('Hola ' . $reserva['h_nombre'] . ', aquí puedes pagar tu reserva ' . $reserva['codigo'] . ': ' . $enlacePago) ?>"
+                                   target="_blank" rel="noopener">
+                                    <i class="bi bi-whatsapp me-1"></i>Enviar por WhatsApp
+                                </a>
+                            <?php endif ?>
+                            <a class="btn btn-outline-secondary btn-sm" href="<?= esc($enlacePago) ?>" target="_blank" rel="noopener">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Abrirlo como el huésped
+                            </a>
+                        </div>
+                    <?php endif ?>
                 </div>
             <?php endif ?>
         </div>

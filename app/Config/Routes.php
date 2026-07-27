@@ -445,6 +445,7 @@ $routes->group('', ['filter' => ['auth', 'permiso:administracion.integraciones']
     $routes->post('administracion/correo', 'Administracion::guardarCorreo');
     $routes->post('administracion/correo/probar', 'Administracion::probarCorreo');
     $routes->post('administracion/wompi', 'Administracion::guardarWompi');
+    $routes->post('administracion/wompi/probar', 'Administracion::probarWompi');
     $routes->post('administracion/siigo', 'Administracion::guardarSiigo');
     $routes->post('administracion/siigo/probar', 'Administracion::probarSiigo');
 });
@@ -749,3 +750,17 @@ $routes->group('', ['filter' => ['auth', 'permiso:unidades.gestionar']], static 
     $routes->post('limpieza/checklist/eliminar/(:num)', 'Limpieza::eliminarPunto/$1');
     $routes->post('limpieza/politica', 'Limpieza::politica');
 });
+
+// ── Pagos en línea ──────────────────────────────────────────────────
+//
+// Públicas: el huésped no tiene cuenta. La seguridad no está en la sesión sino
+// en que **nada se da por pagado por lo que diga el navegador**: el estado se
+// pregunta siempre a la pasarela con nuestras credenciales.
+$routes->get('pago/reserva/(:segment)', 'Pagos::reserva/$1');
+// `/total` es el enlace que manda recepción: cobra todo el saldo del folio,
+// extras incluidos, en vez de quedarse en el anticipo del motor de reservas.
+$routes->get('pago/reserva/(:segment)/total', 'Pagos::reserva/$1/total');
+$routes->get('pago/volver', 'Pagos::volver');
+
+// El aviso de la pasarela es máquina a máquina: sin CSRF y con firma propia.
+$routes->post('pago/aviso', 'Pagos::aviso');

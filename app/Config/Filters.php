@@ -81,7 +81,11 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'csrf',
+            // El aviso de la pasarela de pagos es máquina a máquina: no hay
+            // navegador que pueda llevar un token CSRF. Va sin él **pero no va
+            // sin comprobar**: se valida la firma del propio aviso contra el
+            // secreto de eventos, que es más fuerte que un CSRF.
+            'csrf' => ['except' => ['pago/aviso']],
         ],
         'after' => [
             'secureheaders',

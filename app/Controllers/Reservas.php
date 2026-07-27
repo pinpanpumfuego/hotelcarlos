@@ -177,8 +177,11 @@ class Reservas extends BaseController
                       huespedes.email AS h_email, unidades.nombre AS unidad_nombre,
                       tipos_unidad.nombre AS tipo_nombre, tipos_unidad.capacidad')
             ->join('huespedes', 'huespedes.id = reservas.huesped_id')
-            ->join('unidades', 'unidades.id = reservas.unidad_id')
-            ->join('tipos_unidad', 'tipos_unidad.id = unidades.tipo_id')
+            // `left` a propósito: una reserva puede existir sin cabaña asignada
+            // todavía. Con `join` normal desaparecía de la pantalla y parecía
+            // que no existía, justo la que hay que abrir para asignarle una.
+            ->join('unidades', 'unidades.id = reservas.unidad_id', 'left')
+            ->join('tipos_unidad', 'tipos_unidad.id = unidades.tipo_id', 'left')
             ->where('reservas.id', $id)
             ->first();
 
@@ -202,6 +205,9 @@ class Reservas extends BaseController
             'registro'    => (new \App\Models\RegistroModel())->where('reserva_id', $id)->first(),
             'actividades' => (new \App\Models\ExperienciaReservaModel())->deReserva($id),
             'experiencias' => (new \App\Models\ExperienciaModel())->activas(),
+            // Sin pasarela configurada, el enlace de cobro no se enseña: mandar
+            // al huésped a una pantalla de error es peor que no ofrecerlo.
+            'cobroOnline' => (new \App\Libraries\Wompi())->activo(),
         ]);
     }
 

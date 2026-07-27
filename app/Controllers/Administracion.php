@@ -108,6 +108,10 @@ class Administracion extends BaseController
                 'llave_publica'       => $this->config->obtener('wompi_llave_publica', ''),
                 'privada_guardada'    => $this->config->existe('wompi_llave_privada'),
                 'integridad_guardada' => $this->config->existe('wompi_secreto_integridad'),
+                'eventos_guardado'    => $this->config->existe('wompi_secreto_eventos'),
+                'activo'              => $this->config->obtener('wompi_activo', '0') === '1',
+                'anticipo_pct'        => (int) $this->config->obtener('wompi_anticipo_pct', '0'),
+                'revision'            => (new \App\Libraries\Wompi())->revisarLlaves(),
             ],
         ]);
     }
@@ -411,8 +415,36 @@ class Administracion extends BaseController
             $pares['wompi_secreto_integridad'] = trim($integridad);
         }
 
+        // El secreto de eventos es el que permite comprobar que un aviso de
+        // pago viene de verdad de Wompi. Sin él, el webhook rechaza todo.
+        $eventos = (string) $this->request->getPost('secreto_eventos');
+        if ($eventos !== '') {
+            $pares['wompi_secreto_eventos'] = trim($eventos);
+        }
+
+        $pares['wompi_activo'] = $this->request->getPost('activo') !== null ? '1' : '0';
+        $pares['wompi_anticipo_pct'] = (string) max(0, min(100, (int) $this->request->getPost('anticipo_pct')));
+
         $this->config->guardarPares($pares);
 
-        return redirect()->to('administracion')->with('ok', 'Credenciales de Wompi guardadas.' . $aviso);
+        // Se avisa de las llaves que no cuadran con el ambiente elegido: pegar
+        // una de pruebas en producción significa que nadie cobra nada de verdad.
+        $fallos = (new \App\Libraries\Wompi())->revisarLlaves();
+        if ($fallos !== []) {
+            $aviso .= ' ' . implode(' ', $fallos);
+        }
+
+        return redirect()->to('administracion#wompi')->with(
+            $fallos === [] ? 'ok' : 'error',
+            'Credenciales de Wompi guardadas.' . $aviso
+        );
+    }
+
+    /** Comprueba que la pasarela responde con las llaves guardadas. */
+    public function probarWompi()
+    {
+        $r = (new \App\Libraries\Wompi())->probar();
+
+        return redirect()->to('administracion#wompi')->with($r['ok'] ? 'ok' : 'error', $r['mensaje']);
     }
 }

@@ -707,14 +707,14 @@
     </div>
 
     <!-- ═══ Wompi ═══ -->
-    <div class="col-lg-6">
+    <div class="col-lg-6" id="wompi">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white fw-semibold"><i class="bi bi-credit-card me-2 text-warning"></i>Pagos en línea (Wompi)</div>
             <div class="card-body">
                 <p class="text-muted small">
                     Credenciales de tu cuenta Wompi (comercios.wompi.co → Desarrolladores).
-                    Se guardan cifradas y se usarán cuando activemos el pago online del motor de reservas.
-                    Empieza con el ambiente de <strong>pruebas</strong>.
+                    Se guardan cifradas. <strong>Empieza siempre por el ambiente de pruebas</strong>: pegar una
+                    llave de pruebas en producción significa que nadie cobra nada de verdad.
                 </p>
                 <form method="post" action="<?= site_url('administracion/wompi') ?>">
                     <?= csrf_field() ?>
@@ -754,8 +754,71 @@
                         <input type="password" name="secreto_integridad" class="form-control" autocomplete="new-password"
                                placeholder="<?= $wompi['integridad_guardada'] ? 'En blanco = conservar el actual' : 'test_integrity_...' ?>">
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Secreto de eventos
+                            <?php if ($wompi['eventos_guardado']): ?>
+                                <span class="badge text-bg-success ms-1">Guardado (cifrado)</span>
+                            <?php else: ?>
+                                <span class="badge text-bg-warning ms-1">Falta</span>
+                            <?php endif ?>
+                        </label>
+                        <input type="password" name="secreto_eventos" class="form-control" autocomplete="new-password"
+                               placeholder="<?= $wompi['eventos_guardado'] ? 'En blanco = conservar el actual' : 'test_events_...' ?>">
+                        <div class="form-text">
+                            Es el que permite comprobar que un aviso de pago viene de verdad de Wompi.
+                            <strong>Sin él, los avisos se rechazan todos</strong> — y son la red que recoge
+                            los pagos que el huésped no llegó a confirmar en pantalla.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Anticipo al reservar por la web</label>
+                        <div class="input-group">
+                            <input type="number" name="anticipo_pct" class="form-control" min="0" max="100"
+                                   value="<?= (int) $wompi['anticipo_pct'] ?>">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text">
+                            Cuánto se cobra por adelantado. <strong>En 0 se cobra el total</strong> cuando
+                            se manda un enlace de pago a mano.
+                        </div>
+                    </div>
+
+                    <?php if ($wompi['revision'] !== []): ?>
+                        <div class="alert alert-warning small">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <?= esc(implode(' ', $wompi['revision'])) ?>
+                        </div>
+                    <?php endif ?>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="activo" value="1" id="wompiActivo"
+                               <?= $wompi['activo'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="wompiActivo">
+                            <strong>Cobrar en línea</strong>
+                            <span class="d-block form-text">
+                                Apagado, el motor de reservas sigue funcionando pero sin cobrar nada,
+                                como hasta ahora.
+                            </span>
+                        </label>
+                    </div>
+
                     <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar Wompi</button>
                 </form>
+
+                <form method="post" action="<?= site_url('administracion/wompi/probar') ?>" class="mt-2">
+                    <?= csrf_field() ?>
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-plug me-1"></i>Probar la conexión
+                    </button>
+                </form>
+
+                <div class="alert alert-light border small mt-3 mb-0">
+                    <i class="bi bi-broadcast me-1"></i>
+                    En el panel de Wompi, apunta esta dirección como <strong>URL de eventos</strong>:
+                    <code class="d-block mt-1" style="word-break: break-all;"><?= site_url('pago/aviso') ?></code>
+                </div>
             </div>
         </div>
     </div>
