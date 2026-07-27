@@ -10,7 +10,7 @@ class ComandaLineaModel extends Model
     protected $primaryKey    = 'id';
     protected $allowedFields = ['comanda_id', 'producto_id', 'nombre_producto', 'destino', 'precio_unitario',
         'cantidad', 'entregado', 'servido', 'listo_en', 'enviado_cocina', 'recibido', 'recibido_en',
-        'notas', 'composicion', 'empleado_id'];
+        'notas', 'composicion', 'empleado_id', 'estado_linea', 'motivo_linea', 'autorizo_id'];
 
     /** Minutos sin que cocina la mire antes de dar la voz de alarma en el TPV. */
     public const ALERTA_SIN_RECIBIR = 3;

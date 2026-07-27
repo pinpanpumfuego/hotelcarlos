@@ -112,7 +112,10 @@ class Pos extends BaseController
     /** Estado inicial: mesas, carta, huéspedes alojados y comandas sin mesa. */
     public function estado()
     {
-        $categorias = (new CartaCategoriaModel())->ordenadas();
+        // La carta que toca a esta hora. Sin franjas configuradas sale
+        // entera, que es lo que se espera de una carta recién montada.
+        $franja     = (new \App\Libraries\Planes())->franjaActual();
+        $categorias = (new CartaCategoriaModel())->deFranja($franja);
         $productos  = (new CartaProductoModel())->conCategoria(true);
 
         $porCategoria = [];
@@ -242,6 +245,15 @@ class Pos extends BaseController
      * Admite modificadores elegidos y, en productos divisibles, una segunda
      * mitad: el precio de la mitad y mitad es el de la más cara.
      */
+    /** La reserva a la que se carga una comanda, con lo que hace falta del plan. */
+    private function reservaDeComanda(int $reservaId): ?array
+    {
+        return (new \App\Models\ReservaModel())
+            ->select('reservas.id, reservas.adultos, reservas.ninos, reservas.plan_id, reservas.unidad_id')
+            ->where('reservas.id', $reservaId)
+            ->first();
+    }
+
     public function anadir(int $id)
     {
         $comanda = $this->comandas->find($id);
@@ -312,20 +324,55 @@ class Pos extends BaseController
             }
         }
 
+        // ── ¿Lo cubre el plan de la estancia? ──
+        //
+        // Si la tarifa incluye desayuno, esta línea sale a cero y se apunta
+        // contra el derecho. Se hace aquí y no al cobrar porque el camarero
+        // tiene que verlo en el momento: si se entera al final, ya le ha dicho
+        // al huésped un precio que no era.
+        $cubierto = null;
+        if (! empty($comanda['reserva_id'])) {
+            $reserva = $this->reservaDeComanda((int) $comanda['reserva_id']);
+            if ($reserva !== null) {
+                $cubierto = (new \App\Libraries\Planes())->cubre($reserva, $producto);
+            }
+        }
+
+        // Lo incluido no se agrupa con lo normal: en la cuenta tienen que
+        // aparecer separados o no se entiende por qué unos se cobran y otros no.
+        if ($cubierto !== null) {
+            $existente = null;
+        }
+
         if ($existente !== null) {
             $this->lineas->update($existente['id'], ['cantidad' => $existente['cantidad'] + $cantidad]);
         } else {
+            // Solo entran gratis las que quepan en el derecho que queda
+            $incluidas = $cubierto === null ? 0 : min($cantidad, (int) $cubierto['quedan']);
+
             $lineaId = $this->lineas->insert([
                 'comanda_id'      => $id,
                 'producto_id'     => $producto['id'],
                 'nombre_producto' => $nombre,
                 'composicion'     => $composicion,
                 'destino'         => $producto['destino'] ?? 'cocina',
-                'precio_unitario' => $precio,
+                'precio_unitario' => $incluidas >= $cantidad ? 0.0 : $precio,
                 'cantidad'        => $cantidad,
+                'estado_linea'    => $incluidas >= $cantidad ? 'incluida' : 'normal',
+                'motivo_linea'    => $incluidas >= $cantidad ? 'Incluido en el plan' : null,
                 'notas'           => $notas,
                 'empleado_id'     => $this->camareroId(),
             ]);
+
+            if ($incluidas > 0) {
+                (new \App\Libraries\Planes())->apuntarConsumo(
+                    (int) $comanda['reserva_id'],
+                    (int) $cubierto['linea']['id'],
+                    $incluidas,
+                    $precio * $incluidas,
+                    (int) $lineaId
+                );
+            }
 
             if ($elegidos !== []) {
                 $modelo = new LineaModificadorModel();
@@ -364,6 +411,10 @@ class Pos extends BaseController
                 ]);
             }
             if ($cantidad === 0) {
+                // Si esa línea había gastado un derecho del plan, se devuelve:
+                // si no, el huésped se quedaría sin el desayuno que no llegó a
+                // tomarse.
+                (new \App\Libraries\Planes())->devolverConsumo($lineaId);
                 $this->lineas->delete($lineaId);
             } else {
                 $this->lineas->update($lineaId, ['cantidad' => $cantidad]);
@@ -373,6 +424,73 @@ class Pos extends BaseController
         if (array_key_exists('notas', $datos)) {
             $this->lineas->update($lineaId, ['notas' => trim((string) $datos['notas']) ?: null]);
         }
+
+        $this->comandas->recalcularTotal((int) $comanda['id']);
+
+        return $this->response->setJSON(['ok' => true, 'comanda' => $this->comandaDetalle((int) $comanda['id'])]);
+    }
+
+    /**
+     * Invita a una línea o la da por devuelta.
+     *
+     * **No es lo mismo que anularla.** Al anular, el consumo desaparece y el
+     * escandallo deja de saber que ese plato salió de la cocina. Aquí la línea
+     * se queda, con su motivo y con quién lo autorizó: no se cobra, pero se
+     * sabe que se hizo y cuánto costó regalarlo.
+     *
+     * Exige PIN de encargado, igual que un descuento: si cualquiera puede
+     * invitar, invitar deja de significar nada.
+     */
+    public function estadoLinea(int $lineaId)
+    {
+        $linea = $this->lineas->find($lineaId);
+        if ($linea === null) {
+            return $this->response->setStatusCode(404)->setJSON(['ok' => false, 'error' => 'Línea no encontrada.']);
+        }
+
+        $comanda = $this->comandas->find($linea['comanda_id']);
+        if ($comanda === null || $comanda['estado'] !== 'abierta') {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda ya está cerrada.']);
+        }
+
+        $datos  = $this->request->getJSON(true) ?? [];
+        $estado = (string) ($datos['estado'] ?? '');
+
+        if (! in_array($estado, ['normal', 'cortesia', 'devuelta'], true)) {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'Estado no válido.']);
+        }
+
+        // Lo que paga el plan no se toca desde aquí: se deshace quitando la
+        // línea, que es lo que devuelve el derecho.
+        if ($linea['estado_linea'] === 'incluida') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok' => false, 'error' => 'Esa línea la paga el plan del huésped. Quítala si no la quiere.',
+            ]);
+        }
+
+        $autorizo = null;
+        if ($estado !== 'normal') {
+            $permiso = $this->tpv->autorizar('cortesia', (string) ($datos['pin_encargado'] ?? ''));
+            if (! $permiso['ok']) {
+                return $this->response->setStatusCode(403)->setJSON(['ok' => false, 'error' => $permiso['mensaje']]);
+            }
+            $autorizo = $permiso['autorizo']['id'] ?? null;
+        }
+
+        $motivo = trim((string) ($datos['motivo'] ?? ''));
+        if ($estado !== 'normal' && $motivo === '') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok' => false, 'error' => 'Di por qué: sin motivo, dentro de un mes nadie sabrá qué pasó.',
+            ]);
+        }
+
+        // El precio no se borra: se guarda a cero para el cobro, pero la línea
+        // conserva cuánto costaba. Sin eso no se puede saber cuánto se regaló.
+        $this->lineas->update($lineaId, [
+            'estado_linea' => $estado,
+            'motivo_linea' => $estado === 'normal' ? null : mb_substr($motivo, 0, 200),
+            'autorizo_id'  => $autorizo,
+        ]);
 
         $this->comandas->recalcularTotal((int) $comanda['id']);
 

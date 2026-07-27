@@ -215,9 +215,15 @@ class Portal extends BaseController
             return redirect()->to($this->ruta($token))->with('error', lang('Portal.eligeQueNecesitas'));
         }
 
+        // Solo lo que se sirve a esta hora: pedir una cena a las diez de la
+        // mañana no lleva a nada bueno.
+        $franja      = (new \App\Libraries\Planes())->franjaActual();
+        $idsCategoria = array_column((new \App\Models\CartaCategoriaModel())->deFranja($franja), 'id');
+
         $productos = (new CartaProductoModel())
             ->select('carta_productos.*, carta_categorias.nombre AS categoria')
             ->join('carta_categorias', 'carta_categorias.id = carta_productos.categoria_id', 'left')
+            ->whereIn('carta_productos.categoria_id', $idsCategoria ?: [0])
             ->where('carta_productos.disponible', 1)
             ->orderBy('carta_categorias.orden')
             ->orderBy('carta_productos.nombre')

@@ -96,10 +96,17 @@ class Carta extends BaseController
 
     public function guardarCategoria()
     {
+        // Sin franjas marcadas, la categoría se vende a cualquier hora.
+        $franjas = array_values(array_intersect(
+            (array) ($this->request->getPost('franjas') ?? []),
+            array_keys(\App\Libraries\Planes::FRANJAS)
+        ));
+
         $datos = [
-            'nombre' => trim((string) $this->request->getPost('nombre')),
-            'orden'  => (int) $this->request->getPost('orden'),
-            'color'  => $this->colorValido((string) $this->request->getPost('color')),
+            'nombre'  => trim((string) $this->request->getPost('nombre')),
+            'orden'   => (int) $this->request->getPost('orden'),
+            'color'   => $this->colorValido((string) $this->request->getPost('color')),
+            'franjas' => $franjas === [] ? null : implode(',', $franjas),
         ];
 
         if (! $this->categorias->insert($datos)) {
@@ -115,10 +122,17 @@ class Carta extends BaseController
             return redirect()->to('carta')->with('error', 'La categoría no existe.');
         }
 
+        // Sin franjas marcadas, la categoría se vende a cualquier hora.
+        $franjas = array_values(array_intersect(
+            (array) ($this->request->getPost('franjas') ?? []),
+            array_keys(\App\Libraries\Planes::FRANJAS)
+        ));
+
         $datos = [
-            'nombre' => trim((string) $this->request->getPost('nombre')),
-            'orden'  => (int) $this->request->getPost('orden'),
-            'color'  => $this->colorValido((string) $this->request->getPost('color')),
+            'nombre'  => trim((string) $this->request->getPost('nombre')),
+            'orden'   => (int) $this->request->getPost('orden'),
+            'color'   => $this->colorValido((string) $this->request->getPost('color')),
+            'franjas' => $franjas === [] ? null : implode(',', $franjas),
         ];
 
         if (! $this->categorias->update($id, $datos)) {

@@ -432,6 +432,7 @@ $gestion = $soloPermitidos([
     ['reportes', 'reportes', 'bi-graph-up', 'Reportes', 0, ['reportes.ocupacion', 'reportes.ingresos']],
     ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0, ['facturas.ver']],
     ['tarifas', 'tarifas', 'bi-tags', 'Tarifas', 0, ['tarifas.ver']],
+    ['planes', 'planes', 'bi-basket', 'Planes incluidos', 0, ['tarifas.ver']],
     ['canales', 'canales', 'bi-diagram-3', 'Portales y canales', 0, ['canales.gestionar']],
     ['traducciones', 'traducciones', 'bi-translate', 'Traducciones', 0, ['traducciones.gestionar']],
     ['cupones', 'cupones', 'bi-ticket-perforated', 'Cupones', 0, ['cupones.gestionar']],

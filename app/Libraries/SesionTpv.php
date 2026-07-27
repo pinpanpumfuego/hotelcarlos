@@ -22,7 +22,7 @@ class SesionTpv
     private ConfiguracionModel $config;
 
     /** Acciones que un camarero no puede hacer sin que las autorice un encargado. */
-    public const REQUIEREN_ENCARGADO = ['anular', 'descuento', 'cupon'];
+    public const REQUIEREN_ENCARGADO = ['anular', 'descuento', 'cupon', 'cortesia'];
 
     public function __construct()
     {

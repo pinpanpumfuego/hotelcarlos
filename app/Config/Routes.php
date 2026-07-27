@@ -322,6 +322,7 @@ $routes->group('pos/api', ['filter' => ['auth', 'tokenjson', 'tpv', 'permiso:pos
     $routes->post('comanda/(:num)/cliente', 'Pos::cliente/$1');
     $routes->post('linea/(:num)', 'Pos::linea/$1');
     $routes->post('linea/(:num)/servir', 'Pos::servir/$1');
+    $routes->post('linea/(:num)/estado', 'Pos::estadoLinea/$1');
 });
 $routes->group('pos/api', ['filter' => ['auth', 'tokenjson', 'tpv', 'permiso:pos.mover']], static function ($routes) {
     $routes->post('comanda/(:num)/mover', 'Pos::mover/$1');
@@ -667,3 +668,19 @@ $routes->get('estancia/(:segment)/comprobante', 'Portal::comprobante/$1');
 $routes->get("estancia/(:segment)/minibar", "Portal::minibar/$1");
 $routes->post("estancia/(:segment)/minibar", "Portal::declararMinibar/$1");
 $routes->post("estancia/(:segment)/minibar/reponer", "Portal::reponerMinibar/$1");
+
+// ── Planes incluidos en la tarifa ───────────────────────────────────
+// Van con las tarifas: qué incluye el precio de la noche es una decisión de
+// precio, no de restaurante.
+$routes->group('', ['filter' => ['auth', 'permiso:tarifas.ver']], static function ($routes) {
+    $routes->get('planes', 'Planes::index');
+    $routes->get('planes/ver/(:num)', 'Planes::ver/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:tarifas.editar']], static function ($routes) {
+    $routes->post('planes/guardar', 'Planes::guardar');
+    $routes->post('planes/actualizar/(:num)', 'Planes::actualizar/$1');
+    $routes->post('planes/eliminar/(:num)', 'Planes::eliminar/$1');
+    $routes->post('planes/derecho/(:num)', 'Planes::anadirDerecho/$1');
+    $routes->post('planes/derecho/quitar/(:num)/(:num)', 'Planes::quitarDerecho/$1/$2');
+    $routes->post('planes/franjas', 'Planes::guardarFranjas');
+});

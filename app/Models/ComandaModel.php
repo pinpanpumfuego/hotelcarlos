@@ -115,9 +115,14 @@ class ComandaModel extends Model
     /** Recalcula y guarda el total a partir de sus líneas. */
     public function recalcularTotal(int $comandaId): float
     {
+        // Solo se cobra lo `normal`. Lo `incluida` lo paga el plan, lo
+        // `cortesia` lo regala la casa y lo `devuelta` volvió a cocina — pero
+        // las tres siguen ahí, con su precio, porque el consumo existió y el
+        // escandallo tiene que saberlo.
         $fila = $this->db->table('comanda_lineas')
             ->select('SUM(precio_unitario * cantidad) AS subtotal', false)
             ->where('comanda_id', $comandaId)
+            ->where('estado_linea', 'normal')
             ->get()->getRowArray();
 
         $total = (float) ($fila['subtotal'] ?? 0);
