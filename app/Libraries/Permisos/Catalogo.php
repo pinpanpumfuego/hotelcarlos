@@ -86,6 +86,13 @@ final class Catalogo
         // Cambiar una plantilla cambia lo que se le dice a todo el mundo.
         'comunicaciones.plantillas' => ['modulo' => 'huespedes', 'nombre' => 'Editar plantillas y automatizaciones', 'sensible' => true],
         'comunicaciones.enviar' => ['modulo' => 'huespedes', 'nombre' => 'Mandar mensajes a mano', 'sensible' => false],
+        // Mandarle algo a media base de datos de golpe no lo hace cualquiera.
+        'campanas.gestionar'   => ['modulo' => 'huespedes', 'nombre' => 'Crear y lanzar campañas', 'sensible' => true],
+        // Las PQR llevan plazo legal (Ley 1755/2015). Cualquiera puede
+        // recoger una; contestarla en nombre del hotel, no.
+        'pqr.ver'              => ['modulo' => 'huespedes', 'nombre' => 'Ver quejas y peticiones', 'sensible' => false],
+        'pqr.gestionar'        => ['modulo' => 'huespedes', 'nombre' => 'Registrar y repartir PQR', 'sensible' => false],
+        'pqr.responder'        => ['modulo' => 'huespedes', 'nombre' => 'Responder y cerrar PQR', 'sensible' => true],
 
         // ── Caja ────────────────────────────────────────────────────────
         'caja.ver'        => ['modulo' => 'caja', 'nombre' => 'Ver el turno', 'sensible' => false],
@@ -227,6 +234,8 @@ final class Catalogo
                 'registros.ver', 'registros.aprobar', 'registros.documentos', 'registros.reporte',
                 'huespedes.sensibles', 'huespedes.fusionar', 'consentimientos.gestionar',
                 'comunicaciones.ver', 'comunicaciones.enviar',
+                'campanas.gestionar',
+                'pqr.ver', 'pqr.gestionar', 'pqr.responder',
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento',
                 'pos.usar', 'pos.cobrar', 'pos.mover',
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',
@@ -272,6 +281,7 @@ final class Catalogo
                 'mantenimiento.crear',
                 // Sin ver las alergias, la cocina puede mandar a alguien al hospital.
                 'huespedes.ver', 'huespedes.sensibles',
+                'pqr.ver', 'pqr.gestionar',
                 // El cuadrante lo necesita para organizar el servicio. Las horas
                 // trabajadas son dato laboral y se quedan en gerencia.
                 'turnos.ver',
@@ -287,6 +297,7 @@ final class Catalogo
                 'limpieza.ver', 'limpieza.trabajar', 'limpieza.reportar',
                 'unidades.estado', 'unidades.revisar', 'unidades.foto',
                 'mantenimiento.ver', 'mantenimiento.crear', 'activos.ver',
+                'pqr.ver', 'pqr.gestionar',
                 'turnos.ver',
             ],
         ],
@@ -304,6 +315,7 @@ final class Catalogo
                 'mantenimiento.asignar', 'mantenimiento.costos', 'mantenimiento.planes',
                 'activos.ver', 'activos.gestionar',
                 'medidores.ver', 'medidores.leer',
+                'pqr.ver', 'pqr.gestionar',
                 'turnos.ver',
             ],
         ],

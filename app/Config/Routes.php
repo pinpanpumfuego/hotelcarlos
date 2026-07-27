@@ -302,6 +302,35 @@ $routes->group('', ['filter' => ['auth', 'permiso:comunicaciones.plantillas']], 
     $routes->post('comunicaciones/regla/(:num)', 'Comunicaciones::guardarRegla/$1');
 });
 
+// ── Campañas ────────────────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:campanas.gestionar']], static function ($routes) {
+    $routes->get('campanas', 'Campanas::index');
+    $routes->get('campanas/nueva', 'Campanas::nueva');
+    $routes->get('campanas/ver/(:num)', 'Campanas::ver/$1');
+    $routes->post('campanas/guardar', 'Campanas::guardar');
+    $routes->post('campanas/enviar/(:num)', 'Campanas::enviar/$1');
+    $routes->post('campanas/cancelar/(:num)', 'Campanas::cancelar/$1');
+});
+
+// ── PQR ─────────────────────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:pqr.ver']], static function ($routes) {
+    $routes->get('pqr', 'Pqr::index');
+    $routes->get('pqr/ver/(:num)', 'Pqr::ver/$1');
+    $routes->get('pqr/informe', 'Pqr::informe');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:pqr.gestionar']], static function ($routes) {
+    $routes->post('pqr/guardar', 'Pqr::guardar');
+    $routes->post('pqr/asignar/(:num)', 'Pqr::asignar/$1');
+    $routes->post('pqr/nota/(:num)', 'Pqr::nota/$1');
+    $routes->get('pqr/buscar-huesped', 'Pqr::buscarHuesped');
+});
+// Contestar en nombre del hotel y cerrar una queja no lo hace cualquiera.
+$routes->group('', ['filter' => ['auth', 'permiso:pqr.responder']], static function ($routes) {
+    $routes->post('pqr/responder/(:num)', 'Pqr::responder/$1');
+    $routes->post('pqr/cerrar/(:num)', 'Pqr::cerrar/$1');
+    $routes->post('pqr/reabrir/(:num)', 'Pqr::reabrir/$1');
+});
+
 // ── Baja de correos ─────────────────────────────────────────────────
 //
 // Públicas y sin sesión a propósito: pedirle una contraseña a alguien que
