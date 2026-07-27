@@ -468,7 +468,11 @@ class Reservas extends BaseController
         }
 
         $this->reservas->update($id, ['estado' => 'checkout']);
-        $this->unidades->update($reserva['unidad_id'], ['estado' => 'limpieza']);
+        // Abre la tarea de limpieza con su checklist en vez de tocar el
+        // estado a mano: así la cabaña no vuelve a estar vendible hasta que
+        // alguien la haya limpiado y, si toca, inspeccionado.
+        (new \App\Libraries\Housekeeping())->abrirTarea((int) $reserva['unidad_id'], 'salida');
+        $this->unidades->update($reserva['unidad_id'], ['estado' => 'disponible']);
 
         return redirect()->to('reservas')->with('ok', 'Check-out realizado: la unidad pasa a limpieza.');
     }

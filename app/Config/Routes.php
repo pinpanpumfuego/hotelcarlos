@@ -126,8 +126,6 @@ $routes->group('', ['filter' => ['auth', 'permiso:limpieza.ver']], static functi
     $routes->get('limpieza', 'Limpieza::index');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:limpieza.trabajar']], static function ($routes) {
-    $routes->post('limpieza/iniciar/(:num)', 'Limpieza::iniciar/$1');
-    $routes->post('limpieza/finalizar/(:num)', 'Limpieza::finalizar/$1');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:limpieza.reportar']], static function ($routes) {
     $routes->post('limpieza/reportar/(:num)', 'Limpieza::reportar/$1');
@@ -716,4 +714,38 @@ $routes->group('', ['filter' => ['auth', 'permiso:insumos.gestionar']], static f
     $routes->post('compras/anular/(:num)', 'Compras::anular/$1');
     $routes->post('compras/proveedores', 'Compras::guardarProveedor');
     $routes->post('compras/proveedores/migrar', 'Compras::migrarProveedores');
+});
+
+// ── Limpieza: tareas, inspección, objetos y checklist ───────────────
+$routes->group('', ['filter' => ['auth', 'permiso:limpieza.ver']], static function ($routes) {
+    $routes->get('limpieza/tarea/(:num)', 'Limpieza::tarea/$1');
+    $routes->get('limpieza/objetos', 'Limpieza::objetos');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:limpieza.trabajar']], static function ($routes) {
+    $routes->post('limpieza/abrir/(:num)', 'Limpieza::abrir/$1');
+    $routes->post('limpieza/empezar/(:num)', 'Limpieza::empezar/$1');
+    $routes->post('limpieza/punto/(:num)/(:num)', 'Limpieza::punto/$1/$2');
+    $routes->post('limpieza/terminar/(:num)', 'Limpieza::terminar/$1');
+    $routes->post('limpieza/no-molestar/(:num)', 'Limpieza::noMolestar/$1');
+});
+// Quien reporta una incidencia también puede apuntar un objeto olvidado
+$routes->group('', ['filter' => ['auth', 'permiso:limpieza.reportar']], static function ($routes) {
+    $routes->post('limpieza/objeto', 'Limpieza::guardarObjeto');
+    $routes->post('limpieza/objeto/estado/(:num)', 'Limpieza::estadoObjeto/$1');
+});
+// Inspeccionar y bloquear son decisiones, no trabajo de campo: van con
+// `unidades.estado`, que es quien decide si la cabaña se puede vender.
+$routes->group('', ['filter' => ['auth', 'permiso:unidades.estado']], static function ($routes) {
+    $routes->post('limpieza/aprobar/(:num)', 'Limpieza::aprobar/$1');
+    $routes->post('limpieza/rechazar/(:num)', 'Limpieza::rechazar/$1');
+    $routes->post('limpieza/bloquear/(:num)', 'Limpieza::bloquear/$1');
+    $routes->post('limpieza/desbloquear/(:num)', 'Limpieza::desbloquear/$1');
+});
+// Configurar el checklist y la política es cosa de quien organiza, no de quien
+// limpia: se apoya en el permiso de gestionar cabañas.
+$routes->group('', ['filter' => ['auth', 'permiso:unidades.gestionar']], static function ($routes) {
+    $routes->get('limpieza/checklist', 'Limpieza::checklist');
+    $routes->post('limpieza/checklist/guardar', 'Limpieza::guardarPunto');
+    $routes->post('limpieza/checklist/eliminar/(:num)', 'Limpieza::eliminarPunto/$1');
+    $routes->post('limpieza/politica', 'Limpieza::politica');
 });

@@ -8,7 +8,13 @@ class UnidadModel extends Model
 {
     protected $table         = 'unidades';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['tipo_id', 'nombre', 'descripcion', 'ubicacion', 'orden', 'estado', 'notas', 'token_ical', 'minibar'];
+    // `estado` dice si la cabaña se vende; `estado_limpieza`, en qué punto de
+    // la limpieza está. Son dos ejes distintos: una cabaña ocupada puede estar
+    // sucia, y una limpia puede estar bloqueada por una gotera.
+    protected $allowedFields = [
+        'tipo_id', 'nombre', 'descripcion', 'ubicacion', 'orden', 'estado', 'notas',
+        'token_ical', 'minibar', 'estado_limpieza', 'motivo_bloqueo', 'nota_bloqueo', 'bloqueada_hasta',
+    ];
     protected $useTimestamps = true;
 
     protected $validationRules = [
