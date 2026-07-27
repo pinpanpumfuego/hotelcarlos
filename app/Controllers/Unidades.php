@@ -124,10 +124,11 @@ class Unidades extends BaseController
             return redirect()->to('unidades')->with('error', 'La cabaña no existe.');
         }
 
-        // El personal de limpieza solo puede cambiar el estado, no el resto de la ficha
-        $datos = session()->get('usuario_rol') === 'limpieza'
-            ? ['estado' => (string) $this->request->getPost('estado')]
-            : $this->datos();
+        // Quien solo puede tocar el estado no debe poder reescribir la ficha entera
+        // aunque llegue aquí con el formulario manipulado.
+        $datos = service('permisos')->puede('unidades.gestionar')
+            ? $this->datos()
+            : ['estado' => (string) $this->request->getPost('estado')];
 
         if (! $this->unidades->update($id, $datos)) {
             return redirect()->back()->withInput()->with('errores', $this->unidades->errors());

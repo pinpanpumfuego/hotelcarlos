@@ -32,7 +32,7 @@
                 <div class="card-body text-center py-5">
                     <i class="bi bi-journal-x fs-3 d-block mb-2 text-muted opacity-50"></i>
                     <p class="text-muted mb-3">La carta está vacía. Añade categorías y productos para poder vender.</p>
-                    <?php if (session()->get('usuario_rol') === 'gerencia'): ?>
+                    <?php if (puede('carta.gestionar')): ?>
                         <a href="<?= site_url('carta') ?>" class="btn btn-primary">Configurar la carta</a>
                     <?php endif ?>
                 </div>

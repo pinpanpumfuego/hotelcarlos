@@ -72,7 +72,7 @@ $coloresA = \App\Models\AusenciaModel::COLORES;
                     <tr><td class="text-muted">Cuenta del sistema</td><td>
                         <?php if ($empleado['usuario_id']): ?>
                             <?= esc($empleado['usuario_nombre']) ?>
-                            <span class="badge text-bg-light border"><?= esc(\App\Models\UsuarioModel::ROLES[$empleado['usuario_rol']] ?? '') ?></span>
+                            <span class="badge text-bg-light border"><?= esc($empleado['usuario_perfil'] ?? '') ?></span>
                         <?php else: ?>
                             <span class="text-muted">Sin acceso</span>
                         <?php endif ?>

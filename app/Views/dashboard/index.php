@@ -8,7 +8,7 @@ $coloresUnidad = [
     'limpieza'   => ['warning', 'bi-bucket-fill', 'En limpieza'],
     'bloqueada'  => ['secondary', 'bi-slash-circle-fill', 'Bloqueada'],
 ];
-$puedeVerDinero = in_array(session()->get('usuario_rol'), ['gerencia', 'recepcion'], true);
+$puedeVerDinero = puede_alguno(['reportes.ingresos', 'caja.ver']);
 $hora           = (int) date('H');
 $saludo         = $hora < 12 ? 'Buenos días' : ($hora < 19 ? 'Buenas tardes' : 'Buenas noches');
 $nombreCorto    = explode(' ', trim((string) session()->get('usuario_nombre')))[0];

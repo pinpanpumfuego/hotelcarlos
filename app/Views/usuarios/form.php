@@ -4,12 +4,7 @@
 <?php
 $editando = isset($usuario['id']);
 $esYo     = $editando && (int) $usuario['id'] === (int) session()->get('usuario_id');
-$permisos = [
-    'gerencia'  => ['Gerencia', 'Acceso total: reportes, tarifas, usuarios y configuración.', 'bi-briefcase'],
-    'recepcion' => ['Recepción', 'Reservas, huéspedes, caja, restaurante y registros de llegada.', 'bi-person-badge'],
-    'limpieza'  => ['Limpieza', 'Solo su tablero de limpieza y el estado de las cabañas.', 'bi-bucket'],
-];
-$rolActual = old('rol', $usuario['rol'] ?? 'recepcion');
+$perfilActual = (int) old('rol_id', $usuario['rol_id'] ?? 0);
 ?>
 
 <div class="mb-4">
@@ -41,15 +36,21 @@ $rolActual = old('rol', $usuario['rol'] ?? 'recepcion');
                 </div>
             </div>
 
-            <label class="form-label fw-semibold">Qué podrá hacer</label>
+            <div class="d-flex justify-content-between align-items-end mb-2">
+                <label class="form-label fw-semibold mb-0">Qué podrá hacer</label>
+                <a href="<?= site_url('roles') ?>" class="small text-decoration-none">
+                    <i class="bi bi-sliders me-1"></i>Gestionar perfiles
+                </a>
+            </div>
             <div class="row g-2 mb-3">
-                <?php foreach ($permisos as $valor => [$titulo, $detalle, $icono]): ?>
+                <?php foreach ($perfiles as $p): ?>
                     <div class="col-12">
-                        <input type="radio" class="btn-check" name="rol" value="<?= $valor ?>"
-                               id="r<?= $valor ?>" <?= $rolActual === $valor ? 'checked' : '' ?> <?= $esYo ? 'disabled' : '' ?>>
-                        <label class="btn btn-outline-primary w-100 text-start p-3" for="r<?= $valor ?>">
-                            <i class="bi <?= $icono ?> me-1"></i><strong><?= $titulo ?></strong>
-                            <span class="d-block small opacity-75"><?= $detalle ?></span>
+                        <input type="radio" class="btn-check" name="rol_id" value="<?= (int) $p['id'] ?>"
+                               id="r<?= (int) $p['id'] ?>" <?= $perfilActual === (int) $p['id'] ? 'checked' : '' ?> <?= $esYo ? 'disabled' : '' ?>>
+                        <label class="btn btn-outline-primary w-100 text-start p-3" for="r<?= (int) $p['id'] ?>">
+                            <strong><?= esc($p['nombre']) ?></strong>
+                            <span class="badge text-bg-light border ms-1"><?= (int) $p['permisos'] ?> permisos</span>
+                            <span class="d-block small opacity-75"><?= esc($p['descripcion'] ?? '') ?></span>
                         </label>
                     </div>
                 <?php endforeach ?>
@@ -57,7 +58,7 @@ $rolActual = old('rol', $usuario['rol'] ?? 'recepcion');
             <?php if ($esYo): ?>
                 <div class="alert alert-info py-2 small">
                     <i class="bi bi-info-circle me-1"></i>
-                    Es tu propia cuenta: no puedes cambiarte el rol ni desactivarte, para no quedarte fuera del sistema.
+                    Es tu propia cuenta: no puedes cambiarte el perfil ni desactivarte, para no quedarte fuera del sistema.
                 </div>
             <?php else: ?>
                 <div class="form-check form-switch mb-3">

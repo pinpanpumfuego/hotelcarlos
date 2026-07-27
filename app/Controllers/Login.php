@@ -51,8 +51,12 @@ class Login extends BaseController
             'usuario_rol_id' => $usuario['rol_id'] ?? null,
         ]);
 
-        // El equipo de limpieza entra directo a su tablero de trabajo
-        $porDefecto = $usuario['rol'] === 'limpieza' ? site_url('limpieza') : site_url('panel');
+        // Quien solo limpia entra directo a su tablero: el panel general no le
+        // dice nada y le obligaría a un clic más cada mañana.
+        $soloLimpia = service('permisos')->puede('limpieza.trabajar')
+            && ! service('permisos')->puede('reservas.ver');
+
+        $porDefecto = $soloLimpia ? site_url('limpieza') : site_url('panel');
         $destino    = session()->get('url_destino') ?? $porDefecto;
         session()->remove('url_destino');
 

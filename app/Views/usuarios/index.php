@@ -15,7 +15,7 @@
                 <tr>
                     <th>Nombre</th>
                     <th class="d-none d-md-table-cell">Email</th>
-                    <th>Rol</th>
+                    <th>Perfil</th>
                     <th>Estado</th>
                     <th class="d-none d-lg-table-cell">Último acceso</th>
                     <th class="text-end">Acciones</th>
@@ -32,7 +32,7 @@
                         </td>
                         <td class="d-none d-md-table-cell"><?= esc($u['email']) ?></td>
                         <td>
-                            <?= esc(\App\Models\UsuarioModel::ROLES[$u['rol']] ?? $u['rol']) ?>
+                            <?= esc($u['perfil'] ?? '— sin perfil —') ?>
                             <div class="small text-muted d-md-none"><?= esc($u['email']) ?></div>
                         </td>
                         <td>

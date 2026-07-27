@@ -18,7 +18,11 @@ class Usuarios extends BaseController
         return view('usuarios/index', [
             'titulo'   => 'Usuarios',
             'seccion'  => 'usuarios',
-            'usuarios' => $this->usuarios->orderBy('nombre')->findAll(),
+            'usuarios' => $this->usuarios
+                ->select('usuarios.*, roles.nombre AS perfil')
+                ->join('roles', 'roles.id = usuarios.rol_id', 'left')
+                ->orderBy('usuarios.nombre')
+                ->findAll(),
         ]);
     }
 
@@ -27,13 +31,21 @@ class Usuarios extends BaseController
         return view('usuarios/form', [
             'titulo'  => 'Nuevo usuario',
             'seccion' => 'usuarios',
+            'perfiles' => (new \App\Models\RolModel())->listado(),
         ]);
     }
 
     public function guardar()
     {
-        $datos = $this->request->getPost(['nombre', 'email', 'rol']);
+        $datos = $this->request->getPost(['nombre', 'email']);
         $clave = (string) $this->request->getPost('clave');
+
+        $perfil = $this->perfilPedido();
+        if ($perfil === null) {
+            return redirect()->back()->withInput()->with('errores', ['Elige un perfil de acceso.']);
+        }
+        $datos['rol_id'] = $perfil['id'];
+        $datos['rol']    = $this->rolVestigio($perfil);
 
         if (strlen($clave) < 8) {
             return redirect()->back()->withInput()->with('errores', ['La contraseña debe tener al menos 8 caracteres.']);
@@ -65,6 +77,7 @@ class Usuarios extends BaseController
             'titulo'  => 'Editar usuario',
             'seccion' => 'usuarios',
             'usuario' => $usuario,
+            'perfiles' => (new \App\Models\RolModel())->listado(),
         ]);
     }
 
@@ -75,14 +88,20 @@ class Usuarios extends BaseController
             return redirect()->to('usuarios')->with('error', 'El usuario no existe.');
         }
 
-        $datos          = $this->request->getPost(['nombre', 'email', 'rol']);
+        $datos          = $this->request->getPost(['nombre', 'email']);
         $datos['email'] = strtolower(trim($datos['email']));
 
-        // Nadie puede desactivarse ni quitarse el rol de gerencia a sí mismo.
+        // Nadie puede cambiarse el perfil ni desactivarse a sí mismo: es la
+        // forma más fácil de quedarse fuera del sistema sin poder volver.
         if ($id === (int) session()->get('usuario_id')) {
-            $datos['rol']    = $usuario['rol'];
             $datos['activo'] = 1;
         } else {
+            $perfil = $this->perfilPedido();
+            if ($perfil === null) {
+                return redirect()->back()->withInput()->with('errores', ['Elige un perfil de acceso.']);
+            }
+            $datos['rol_id'] = $perfil['id'];
+            $datos['rol']    = $this->rolVestigio($perfil);
             $datos['activo'] = $this->request->getPost('activo') ? 1 : 0;
         }
 
@@ -103,6 +122,29 @@ class Usuarios extends BaseController
         }
 
         return redirect()->to('usuarios')->with('ok', 'Usuario actualizado correctamente.');
+    }
+
+    /** El perfil que llega del formulario, o null si no es válido. */
+    private function perfilPedido(): ?array
+    {
+        $id = (int) $this->request->getPost('rol_id');
+
+        return $id > 0 ? (new \App\Models\RolModel())->find($id) : null;
+    }
+
+    /**
+     * Valor para la columna `rol`, que es un vestigio.
+     *
+     * El ENUM antiguo solo admite tres valores y ya no decide nada: quien manda
+     * es `rol_id`. Se sigue rellenando porque la columna es NOT NULL y porque
+     * una migración a medias es peor que un vestigio bien documentado. El día
+     * que se elimine, no habrá que tocar nada más.
+     */
+    private function rolVestigio(array $perfil): string
+    {
+        return $perfil['clave'] === \App\Libraries\Permisos\Catalogo::ROL_TOTAL
+            ? 'gerencia'
+            : 'recepcion';
     }
 
     public function eliminar(int $id)

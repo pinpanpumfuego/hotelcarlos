@@ -433,6 +433,7 @@ $gestion = $soloPermitidos([
     ['servicios', 'servicios', 'bi-stars', 'Servicios', 0, ['servicios.gestionar']],
     ['inventario-cabanas', 'inventario-cabanas', 'bi-box-seam', 'Enseres de cabañas', 0, ['servicios.gestionar']],
     ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0, ['usuarios.gestionar']],
+    ['roles', 'roles', 'bi-shield-lock', 'Perfiles de acceso', 0, ['roles.gestionar']],
     ['administracion', 'administracion', 'bi-gear', 'Administración', 0, ['administracion.ver']],
 ]);
 if ($gestion !== []) {

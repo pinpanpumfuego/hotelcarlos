@@ -123,8 +123,12 @@ class Personal extends BaseController
     public function ver(int $id)
     {
         $empleado = $this->empleados
-            ->select('empleados.*, usuarios.nombre AS usuario_nombre, usuarios.email AS usuario_email, usuarios.rol AS usuario_rol')
+            // El perfil sale de `roles`; si el usuario aún no tiene uno asignado
+            // se cae al rol antiguo, para no dejar la ficha con un hueco.
+            ->select('empleados.*, usuarios.nombre AS usuario_nombre, usuarios.email AS usuario_email,
+                      COALESCE(roles.nombre, usuarios.rol) AS usuario_perfil')
             ->join('usuarios', 'usuarios.id = empleados.usuario_id', 'left')
+            ->join('roles', 'roles.id = usuarios.rol_id', 'left')
             ->where('empleados.id', $id)
             ->first();
 

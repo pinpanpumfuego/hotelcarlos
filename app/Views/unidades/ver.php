@@ -4,8 +4,7 @@
 <?php
 use App\Models\MantenimientoModel;
 
-$rol      = session()->get('usuario_rol');
-$esGestor = in_array($rol, ['gerencia', 'recepcion'], true);
+$esGestor = puede('unidades.gestionar');
 
 $colores   = ['disponible' => 'success', 'ocupada' => 'danger', 'limpieza' => 'warning', 'bloqueada' => 'secondary'];
 $etiquetas = ['disponible' => 'Disponible', 'ocupada' => 'Ocupada', 'limpieza' => 'En limpieza', 'bloqueada' => 'Bloqueada'];

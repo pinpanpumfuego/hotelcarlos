@@ -330,9 +330,9 @@ del §5 antes de empezar el 3.
 | 2 · Motor de permisos: `Catalogo`, `Permisos`, helper `puede()` | ✅ hecho |
 | 3 · Cambiar el filtro en las rutas | ✅ hecho · 251 rutas con `permiso:`, 0 con `rol:` |
 | 4 · Menú según permisos | ✅ hecho · el layout ya no mira el rol |
-| 5 · Pantalla de perfiles | ⬜ pendiente |
+| 5 · Pantalla de perfiles y alta de usuarios | ✅ hecho |
 | 6 · Auditoría de las acciones sensibles | ⬜ pendiente |
-| 7 · Pruebas por perfil | ✅ 53 de rutas + 25 del motor. 122 en total |
+| 7 · Pruebas por perfil | ✅ 131 pruebas en total |
 
 **Los pasos 1 y 2 no cambian el comportamiento de nada.** La columna `rol`
 antigua sigue en su sitio, las 296 rutas siguen usando el filtro `rol:`, y a
@@ -369,3 +369,23 @@ adelante— pero impide reconstruir la base de pruebas de un tirón. Queda anota
 Se quitaron además `tests/database/ExampleDatabaseTest.php` y
 `tests/session/ExampleSessionTest.php`: son los de fábrica de CodeIgniter, no
 prueban nada de este sistema, y su `$seed` forzaba justo ese refresh.
+
+### Paso 5 · qué se puede hacer ya
+
+- **Gestión → Perfiles de acceso**: una tarjeta por perfil con cuántos permisos
+  tiene y a cuánta gente afecta. Gerencia sale marcada como intocable.
+- **Configurar un perfil**: las 82 casillas agrupadas en los 10 módulos, con
+  «marcar todo el bloque» para no morir a clics, y el triángulo de aviso en los
+  26 sensibles. Al abrir un perfil se avisa a quién afecta el cambio.
+- **Crear un perfil nuevo** partiendo de otro que ya existe. La clave interna se
+  deriva del nombre, sin tildes ni espacios.
+- **Usuarios**: el formulario ya pide **perfil**, no el rol de tres valores.
+
+Lo que ya no decide nada: `usuarios.rol`. Se sigue rellenando porque la columna
+es NOT NULL, pero no se consulta en ningún sitio para decidir. Los seis puntos
+que aún miraban el rol —el panel de inicio, la ficha de cabañas, el TPV, el
+destino tras iniciar sesión— pasaron a preguntar por permisos.
+
+Los cambios de permisos **surten efecto en el siguiente clic**, sin volver a
+entrar: los permisos se consultan en cada petición y no se guardan en la sesión.
+Hay una prueba que lo comprueba.

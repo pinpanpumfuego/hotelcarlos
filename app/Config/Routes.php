@@ -600,3 +600,15 @@ $routes->group('', ['filter' => ['auth', 'permiso:usuarios.gestionar']], static 
     $routes->post('usuarios/actualizar/(:num)', 'Usuarios::actualizar/$1');
     $routes->post('usuarios/eliminar/(:num)', 'Usuarios::eliminar/$1');
 });
+
+// ── Perfiles de acceso ──────────────────────────────────────────────
+// Solo gerencia: quien puede editar perfiles puede darse a sí mismo cualquier
+// permiso. Es la llave maestra y no se reparte.
+$routes->group('', ['filter' => ['auth', 'permiso:roles.gestionar']], static function ($routes) {
+    $routes->get('roles', 'Roles::index');
+    $routes->get('roles/nuevo', 'Roles::nuevo');
+    $routes->post('roles/guardar', 'Roles::guardar');
+    $routes->get('roles/editar/(:num)', 'Roles::editar/$1');
+    $routes->post('roles/actualizar/(:num)', 'Roles::actualizar/$1');
+    $routes->post('roles/eliminar/(:num)', 'Roles::eliminar/$1');
+});
