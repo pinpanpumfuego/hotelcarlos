@@ -96,6 +96,11 @@ final class Catalogo
         'pqr.ver'              => ['modulo' => 'huespedes', 'nombre' => 'Ver quejas y peticiones', 'sensible' => false],
         'pqr.gestionar'        => ['modulo' => 'huespedes', 'nombre' => 'Registrar y repartir PQR', 'sensible' => false],
         'pqr.responder'        => ['modulo' => 'huespedes', 'nombre' => 'Responder y cerrar PQR', 'sensible' => true],
+        // El panel de cumplimiento enseña qué está vencido o a punto.
+        'cumplimiento.ver'      => ['modulo' => 'sistema', 'nombre' => 'Panel de cumplimiento', 'sensible' => false],
+        'cumplimiento.gestionar' => ['modulo' => 'sistema', 'nombre' => 'Datos legales y políticas', 'sensible' => true],
+        // Entregarle a alguien todo lo que tenemos de él, o borrarlo.
+        'datos.derechos'        => ['modulo' => 'sistema', 'nombre' => 'Atender derechos del titular', 'sensible' => true],
 
         // ── Caja ────────────────────────────────────────────────────────
         'caja.ver'        => ['modulo' => 'caja', 'nombre' => 'Ver el turno', 'sensible' => false],
@@ -245,6 +250,7 @@ final class Catalogo
                 'comunicaciones.ver', 'comunicaciones.enviar',
                 'campanas.gestionar',
                 'pqr.ver', 'pqr.gestionar', 'pqr.responder',
+                'cumplimiento.ver',
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento',
                 'pos.usar', 'pos.cobrar', 'pos.mover',
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',

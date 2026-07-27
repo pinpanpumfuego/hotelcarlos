@@ -338,6 +338,31 @@ $routes->group('', ['filter' => ['auth', 'permiso:pqr.responder']], static funct
     $routes->post('pqr/reabrir/(:num)', 'Pqr::reabrir/$1');
 });
 
+// ── Cumplimiento ────────────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:cumplimiento.ver']], static function ($routes) {
+    $routes->get('legal', 'Legal::index');
+    $routes->get('legal/derechos', 'Legal::derechos');
+    $routes->get('legal/derecho/(:num)', 'Legal::verDerecho/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:cumplimiento.gestionar']], static function ($routes) {
+    $routes->get('legal/datos', 'Legal::datos');
+    $routes->post('legal/datos', 'Legal::guardarDatos');
+    $routes->post('legal/copia', 'Legal::copiaHecha');
+    $routes->get('legal/politicas', 'Legal::politicas');
+    $routes->get('legal/politica', 'Legal::editarPolitica');
+    $routes->get('legal/politica/(:num)', 'Legal::editarPolitica/$1');
+    $routes->post('legal/politica', 'Legal::guardarPolitica');
+    $routes->post('legal/politica/(:num)', 'Legal::guardarPolitica/$1');
+});
+// Entregar los datos de alguien, o borrarlos, va en su propio permiso.
+$routes->group('', ['filter' => ['auth', 'permiso:datos.derechos']], static function ($routes) {
+    $routes->post('legal/derecho', 'Legal::registrarDerecho');
+    $routes->post('legal/derecho/identificar/(:num)', 'Legal::identificar/$1');
+    $routes->get('legal/derecho/expediente/(:num)', 'Legal::expediente/$1');
+    $routes->post('legal/derecho/atender/(:num)', 'Legal::atenderDerecho/$1');
+    $routes->post('legal/derecho/rechazar/(:num)', 'Legal::rechazarDerecho/$1');
+});
+
 // ── Baja de correos ─────────────────────────────────────────────────
 //
 // Públicas y sin sesión a propósito: pedirle una contraseña a alguien que

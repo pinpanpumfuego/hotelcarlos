@@ -388,6 +388,7 @@ $recepcion = $soloPermitidos([
     ['campanas', 'campanas', 'bi-megaphone', 'Campañas', 0, ['campanas.gestionar']],
     ['pqr', 'pqr', 'bi-chat-square-heart', 'Quejas y peticiones', 0, ['pqr.ver']],
     ['niveles', 'niveles', 'bi-award', 'Niveles y referidos', 0, ['niveles.gestionar']],
+    ['legal', 'legal', 'bi-shield-check', 'Cumplimiento', 0, ['cumplimiento.ver']],
     ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada', $porRevisar, ['registros.ver']],
     ['solicitudes', 'solicitudes', 'bi-hand-index', 'Peticiones de huéspedes', $porAtender, ['limpieza.ver', 'mantenimiento.ver']],
     ['experiencias', 'experiencias', 'bi-compass', 'Experiencias', 0, ['experiencias.vender']],
