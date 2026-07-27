@@ -23,8 +23,18 @@ class CrearUsuario extends BaseCommand
     protected $name        = 'usuario:crear';
     protected $description = 'Crea un usuario del panel pidiendo la contraseña por teclado, sin dejarla escrita en ningún sitio.';
 
-    /** Lo mínimo para que no sea una contraseña de juguete. */
-    private const LARGO_MINIMO = 12;
+    /**
+     * Mínimo que exige Javier.
+     *
+     * El login tiene freno de 5 intentos por minuto y por IP, que es lo que
+     * hace viable un mínimo tan corto: probar un millón de combinaciones desde
+     * una sola dirección llevaría meses. Aun así, por debajo de 12 se avisa,
+     * porque un atacante con muchas direcciones sí puede repartirse el trabajo.
+     */
+    private const LARGO_MINIMO = 6;
+
+    /** A partir de aquí ya no se avisa. */
+    private const LARGO_COMODO = 12;
 
     public function run(array $params)
     {
@@ -93,6 +103,14 @@ class CrearUsuario extends BaseCommand
             CLI::error('No coinciden.');
 
             return null;
+        }
+
+        // Avisa, pero no impide: la longitud la decide quien monta el hotel
+        if (strlen($primera) < self::LARGO_COMODO) {
+            CLI::newLine();
+            CLI::write('Aviso: es una contraseña corta para una cuenta que da acceso a', 'yellow');
+            CLI::write('los datos de los huéspedes. El login frena a 5 intentos por minuto,', 'yellow');
+            CLI::write('así que sirve, pero conviene alargarla cuando puedas.', 'yellow');
         }
 
         return $primera;
