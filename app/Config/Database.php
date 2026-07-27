@@ -162,18 +162,36 @@ class Database extends Config
      *
      * @var array<string, mixed>
      */
+    /*
+     * Base de datos de pruebas: **una aparte, nunca la de trabajo**.
+     *
+     * CodeIgniter trae aquí SQLite en memoria, que es más cómodo, pero XAMPP no
+     * carga la extensión sqlite3 y además el sistema usa cosas de MySQL que
+     * SQLite no tiene (ENUM, JSON, `ORDER BY` en un UPDATE con LIMIT). Probar
+     * contra un motor distinto al de producción da una falsa tranquilidad.
+     *
+     * Se llama `hotelcarlos_test` y se crea una sola vez con:
+     *
+     *   CREATE DATABASE hotelcarlos_test
+     *     CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+     *
+     * Las tablas las monta PHPUnit solo, la primera vez que corre una prueba
+     * con base de datos. Es importante que sea **otra** base: PHPUnit puede
+     * vaciarla entera entre pruebas, y si apuntara a `hotelcarlos` se llevaría
+     * por delante el trabajo del día.
+     */
     public array $tests = [
         'DSN'         => '',
         'hostname'    => '127.0.0.1',
-        'username'    => '',
+        'username'    => 'root',
         'password'    => '',
-        'database'    => ':memory:',
-        'DBDriver'    => 'SQLite3',
-        'DBPrefix'    => 'db_',  // Needed to ensure we're working correctly with prefixes live. DO NOT REMOVE FOR CI DEVS
+        'database'    => 'hotelcarlos_test',
+        'DBDriver'    => 'MySQLi',
+        'DBPrefix'    => '',
         'pConnect'    => false,
         'DBDebug'     => true,
-        'charset'     => 'utf8',
-        'DBCollat'    => '',
+        'charset'     => 'utf8mb4',
+        'DBCollat'    => 'utf8mb4_general_ci',
         'swapPre'     => '',
         'encrypt'     => false,
         'compress'    => false,

@@ -711,6 +711,72 @@ tuyo con ellos**, no de Beds24. ¿Tienes ya alta y ficha activa en Booking?
 
 ---
 
+## 12 bis · Respuestas recibidas (27-07-2026) y qué cambian
+
+| Pregunta | Respuesta | Consecuencia |
+|---|---|---|
+| **P1** · Cuenta Beds24 | **No existe todavía** | Todo se construye contra la especificación y se prueba con dobles. `CHANNEL_MANAGER_ENABLED=false` de fábrica |
+| **P2** · Las 7 cabañas | **Como una sola** → 1 room en Beds24 con `numAvail: 7` | Cambia el mapeo. Ver C1, C2, C3 |
+| **P3** · Contratos con OTAs | **Ninguno todavía** | No hay nada que conectar aún. El módulo queda listo y apagado |
+
+### C1 · El mapeo es por **tipo de cabaña**, no por cabaña
+
+Con un solo room en Beds24 representando las 7 cabañas, el índice único
+`(channel, external_unit_id)` que propuse en la sección 6.1 **está mal**: siete
+unidades locales apuntarían al mismo room externo y el índice lo impediría.
+
+`channel_unit_mappings` pasa a mapear **`local_room_type_id` → `external_unit_id`**,
+con `local_unit_id` **nullable** para el día que haga falta mapear cabaña a
+cabaña (cuando tengan precios distintos). Único: `(channel, local_room_type_id, local_unit_id)`.
+
+Encaja bien con lo que ya hay: `MotorTarifas` **ya cotiza por tipo**, y
+`ReservaModel::libresPorNoche()` **ya devuelve las libres agrupadas por tipo**.
+Es exactamente el `numAvail` que hay que empujar, sin escribir nada nuevo.
+
+### C2 · Las reservas de OTA no dicen qué cabaña · y `reservas.unidad_id` es NOT NULL
+
+Si Beds24 vende «una cabaña» sin más, **la reserva entrante no trae cabaña
+concreta**. La asigna nuestro sistema, que es el único que sabe de limpieza y
+mantenimiento.
+
+Y si **no queda ninguna libre** —sobreventa real, la OTA vendió una noche que ya
+estaba vendida— la reserva **no se rechaza**: ya está vendida, rechazarla aquí no
+la deshace. Se crea **sin cabaña asignada** y salta un aviso en el panel para que
+una persona lo resuelva.
+
+Eso exige que `reservas.unidad_id` admita `NULL`, **y hoy es `NOT NULL`**.
+
+> Es el mismo fallo que ya me mordió una vez en este proyecto: `comandas.usuario_id`
+> era `NOT NULL`, el `insert()` devolvía 0 en silencio y las comandas del móvil se
+> perdían. Esta vez sale antes de escribir el código. `ReservaModel::libresPorNoche()`
+> ya filtra con `where('unidad_id IS NOT NULL')`, así que la consulta está
+> preparada; lo que falta es la columna.
+
+### C3 · Qué `numAvail` se empuja
+
+El número de cabañas libres del tipo esa noche, que es justo lo que devuelve
+`libresPorNoche()`. Con una salvedad: si hay una reserva **sin cabaña asignada**
+(caso C2), ocupa igual y hay que descontarla, aunque no tenga `unidad_id`. Se
+resuelve en `AvailabilityService`, no tocando el modelo.
+
+### C4 · Sin cuenta y sin contratos: qué significa de verdad
+
+El módulo se puede escribir entero y probar entero contra dobles, pero **no se
+puede verificar contra la realidad**: ni el formato del webhook, ni la zona
+horaria de `modifiedTime`, ni el coste en créditos, ni las cabeceras. Los nueve
+`TODO_BEDS24_DOCUMENTATION` siguen abiertos hasta que haya cuenta.
+
+Dicho de otra forma: al terminar la Etapa 5 tendrás un módulo completo, probado y
+**apagado**, esperando un invite code. Es una forma perfectamente razonable de
+trabajar —el código estará listo el día que contrates— pero conviene saberlo:
+hasta ese día no aporta nada al hotel.
+
+Lo que **sí** aporta desde hoy, y es independiente de Beds24, es el arreglo del
+riesgo **R1**: la sobreventa por falta de transacción en `Reservar::confirmar()`.
+Ese fallo existe ahora mismo, con la web propia sola.
+
+---
+
 ## 13 · Plan de las etapas siguientes
 
 | Etapa | Contenido | Se puede hacer sin credenciales |
