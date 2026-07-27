@@ -87,6 +87,38 @@ class Mantenimiento extends BaseController
         ]);
     }
 
+    /**
+     * Los números que sirven para decidir algo.
+     *
+     * Un informe que solo cuenta órdenes no vale nada: siempre hay órdenes.
+     */
+    public function informes()
+    {
+        $desde = (string) ($this->request->getGet('desde') ?: date('Y-m-d', strtotime('-12 months')));
+        $hasta = (string) ($this->request->getGet('hasta') ?: date('Y-m-d'));
+
+        // Un rango al revés devuelve cero de todo y parece que no pasó nada
+        if ($desde > $hasta) {
+            [$desde, $hasta] = [$hasta, $desde];
+        }
+
+        $informes = new \App\Libraries\InformesMantenimiento();
+
+        return view('mantenimiento/informes', [
+            'titulo'    => 'Informes de mantenimiento',
+            'seccion'   => 'mantenimiento',
+            'desde'     => $desde,
+            'hasta'     => $hasta,
+            'resumen'   => $informes->resumen($desde, $hasta),
+            'activos'   => $informes->porActivo($desde, $hasta),
+            'parados'   => $informes->fueraDeServicio($desde, $hasta),
+            'origenes'  => $informes->porOrigen($desde, $hasta),
+            'vida'      => $informes->agotandoVida(),
+            'etiquetas' => MantenimientoModel::ORIGENES,
+            'categorias' => ActivoModel::CATEGORIAS,
+        ]);
+    }
+
     // ── Abrir ───────────────────────────────────────────────────────────
 
     public function guardar()

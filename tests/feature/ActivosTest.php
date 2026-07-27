@@ -395,6 +395,29 @@ final class ActivosTest extends CIUnitTestCase
         $this->assertSame('resuelta', $this->incidencias->find($inc['id'])['estado']);
     }
 
+    public function testLasPantallasNuevasSeAbren(): void
+    {
+        // Una vista con una variable que el controlador no pasa revienta al
+        // pintarse, no al guardarse: solo se ve entrando de verdad.
+        $sesion = $this->como('mantenimiento');
+
+        foreach (['preventivos', 'preventivos/nuevo', 'medidores', 'mantenimiento/informes'] as $ruta) {
+            $r = $this->withSession($sesion)->get($ruta);
+
+            $this->assertFalse($r->isRedirect(), "/{$ruta} rebotó.");
+            $r->assertOK();
+        }
+    }
+
+    public function testRestauranteNoLlegaAlPlanPreventivoNiALosMedidores(): void
+    {
+        $sesion = $this->como('restaurante');
+
+        foreach (['preventivos', 'medidores'] as $ruta) {
+            $this->assertTrue($this->withSession($sesion)->get($ruta)->isRedirect(), "/{$ruta} se abrió.");
+        }
+    }
+
     // ── El plazo interno ────────────────────────────────────────────────
 
     public function testCadaPrioridadTieneSuPlazo(): void

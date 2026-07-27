@@ -117,6 +117,9 @@ final class Catalogo
         // criterio que ya se usa en la inspección de limpieza.
         'mantenimiento.verificar' => ['modulo' => 'mantenimiento', 'nombre' => 'Dar por buena una reparación', 'sensible' => false],
         'mantenimiento.costos'    => ['modulo' => 'mantenimiento', 'nombre' => 'Ver costos y materiales', 'sensible' => true],
+        'mantenimiento.planes'    => ['modulo' => 'mantenimiento', 'nombre' => 'Plan de preventivos', 'sensible' => false],
+        'medidores.ver'           => ['modulo' => 'mantenimiento', 'nombre' => 'Ver medidores y consumos', 'sensible' => false],
+        'medidores.leer'          => ['modulo' => 'mantenimiento', 'nombre' => 'Apuntar lecturas', 'sensible' => false],
         'activos.ver'             => ['modulo' => 'mantenimiento', 'nombre' => 'Ver el inventario de equipos', 'sensible' => false],
         // Separado de `ver` a propósito: el técnico consulta la ficha del
         // calentador todos los días, pero dar de baja un equipo borra su
@@ -217,7 +220,7 @@ final class Catalogo
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',
                 'mantenimiento.ver', 'mantenimiento.crear', 'mantenimiento.prioridad',
                 'mantenimiento.asignar', 'mantenimiento.verificar',
-                'activos.ver',
+                'activos.ver', 'medidores.ver', 'medidores.leer',
                 // Sin ver las tarifas no puede cotizar por teléfono.
                 'tarifas.ver', 'experiencias.vender', 'turnos.ver',
                 // Ocupación sí, ingresos no.
@@ -284,8 +287,9 @@ final class Catalogo
                 'unidades.estado', 'unidades.foto',
                 'mantenimiento.ver', 'mantenimiento.crear',
                 'mantenimiento.trabajar', 'mantenimiento.prioridad',
-                'mantenimiento.asignar', 'mantenimiento.costos',
+                'mantenimiento.asignar', 'mantenimiento.costos', 'mantenimiento.planes',
                 'activos.ver', 'activos.gestionar',
+                'medidores.ver', 'medidores.leer',
                 'turnos.ver',
             ],
         ],

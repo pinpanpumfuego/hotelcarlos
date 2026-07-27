@@ -77,21 +77,26 @@ class Ordenes
             $unidadId = (int) $activo['unidad_id'];
         }
 
+        $tipo = in_array($datos['tipo'] ?? '', ['correctiva', 'preventiva'], true) ? $datos['tipo'] : 'correctiva';
+
         $prioridad = $datos['prioridad'] ?? 'media';
 
         if (! array_key_exists($prioridad, MantenimientoModel::PRIORIDADES)) {
             $prioridad = 'media';
         }
 
-        // Lo que rompe un equipo crítico no se abre como «media» por descuido
-        if ($activo !== null && (int) $activo['critico'] === 1 && in_array($prioridad, ['baja', 'media'], true)) {
+        // Lo que rompe un equipo crítico no se abre como «media» por descuido.
+        // Solo vale para lo correctivo: una revisión programada de la planta
+        // eléctrica no es una urgencia por el hecho de estar programada.
+        if ($tipo === 'correctiva' && $activo !== null && (int) $activo['critico'] === 1
+            && in_array($prioridad, ['baja', 'media'], true)) {
             $prioridad = 'alta';
         }
 
         $this->ordenes->insert([
             'titulo'       => mb_substr($titulo, 0, 150),
             'descripcion'  => isset($datos['descripcion']) ? (trim((string) $datos['descripcion']) ?: null) : null,
-            'tipo'         => in_array($datos['tipo'] ?? '', ['correctiva', 'preventiva'], true) ? $datos['tipo'] : 'correctiva',
+            'tipo'         => $tipo,
             'origen'       => array_key_exists($datos['origen'] ?? '', MantenimientoModel::ORIGENES) ? $datos['origen'] : 'otro',
             'activo_id'    => $activoId,
             'unidad_id'    => $unidadId,
@@ -116,8 +121,10 @@ class Ordenes
         }
 
         // Un equipo con avería abierta deja de estar «en servicio»: si no, el
-        // inventario diría que todo va bien mientras el tablero dice lo contrario.
-        if ($activo !== null && $activo['estado'] === 'activo') {
+        // inventario diría que todo va bien mientras el tablero dice lo
+        // contrario. Solo lo correctivo: revisar algo no es que esté roto, y
+        // marcarlo averiado bloquearía equipos cada trimestre sin motivo.
+        if ($tipo === 'correctiva' && $activo !== null && $activo['estado'] === 'activo') {
             $this->activos->update($activoId, ['estado' => 'averiado']);
         }
 
@@ -451,9 +458,13 @@ class Ordenes
             return;
         }
 
-        // Darlo por bueno con otra avería sin cerrar sería mentir
+        // Darlo por bueno con otra avería sin cerrar sería mentir. Se cuentan
+        // solo las correctivas: una revisión programada abierta no significa
+        // que el equipo esté roto, y si contara, el equipo se quedaría
+        // «averiado» hasta que alguien hiciera el preventivo del trimestre.
         $quedan = $this->ordenes
             ->where('activo_id', $orden['activo_id'])
+            ->where('tipo', 'correctiva')
             ->whereIn('estado', MantenimientoModel::ABIERTAS)
             ->countAllResults();
 

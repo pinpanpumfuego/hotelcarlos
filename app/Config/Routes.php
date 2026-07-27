@@ -114,6 +114,30 @@ $routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.ver']], static f
     $routes->get('mantenimiento', 'Mantenimiento::index');
     $routes->get('mantenimiento/ver/(:num)', 'Mantenimiento::ver/$1');
     $routes->get('mantenimiento/foto/(:num)', 'Mantenimiento::verFoto/$1');
+    $routes->get('mantenimiento/informes', 'Mantenimiento::informes');
+});
+
+// ── Plan preventivo ─────────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.planes']], static function ($routes) {
+    $routes->get('preventivos', 'Preventivos::index');
+    $routes->get('preventivos/nuevo', 'Preventivos::nuevo');
+    $routes->get('preventivos/editar/(:num)', 'Preventivos::editar/$1');
+    $routes->post('preventivos/guardar', 'Preventivos::guardar');
+    $routes->post('preventivos/guardar/(:num)', 'Preventivos::guardar/$1');
+    $routes->post('preventivos/eliminar/(:num)', 'Preventivos::eliminar/$1');
+    $routes->post('preventivos/generar', 'Preventivos::generarAhora');
+});
+
+// ── Medidores ───────────────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:medidores.ver']], static function ($routes) {
+    $routes->get('medidores', 'Medidores::index');
+    $routes->get('medidores/ver/(:num)', 'Medidores::ver/$1');
+    $routes->post('medidores/guardar', 'Medidores::guardar');
+    $routes->post('medidores/guardar/(:num)', 'Medidores::guardar/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:medidores.leer']], static function ($routes) {
+    $routes->post('medidores/leer/(:num)', 'Medidores::leer/$1');
+    $routes->post('medidores/lectura/borrar/(:num)', 'Medidores::borrarLectura/$1');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.crear']], static function ($routes) {
     $routes->post('mantenimiento/guardar', 'Mantenimiento::guardar');

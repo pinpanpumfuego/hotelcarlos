@@ -196,6 +196,11 @@ class Administracion extends BaseController
                     'cuando' => 'Cada hora',
                     'orden'  => 'php ' . ROOTPATH . 'spark canales:sincronizar',
                 ],
+                [
+                    'que'    => 'Abrir las revisiones del plan preventivo',
+                    'cuando' => 'Una vez al día, de madrugada',
+                    'orden'  => 'php ' . ROOTPATH . 'spark mantenimiento:preventivo',
+                ],
             ],
         ];
     }

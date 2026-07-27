@@ -9,7 +9,7 @@ class MantenimientoModel extends Model
     protected $table         = 'mantenimientos';
     protected $primaryKey    = 'id';
     protected $allowedFields = [
-        'unidad_id', 'activo_id', 'ubicacion', 'titulo', 'tipo', 'origen', 'solicitud_id',
+        'unidad_id', 'activo_id', 'ubicacion', 'titulo', 'tipo', 'origen', 'solicitud_id', 'plan_id',
         'descripcion', 'prioridad', 'estado', 'reporto_id', 'asignado_a', 'vence_en',
         'iniciada_en', 'resolvio_id', 'resuelta_en', 'minutos', 'costo_materiales',
         'costo_mano_obra', 'bloqueo_unidad', 'solucion',
