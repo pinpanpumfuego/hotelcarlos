@@ -494,6 +494,21 @@ $routes->group('', ['filter' => ['auth', 'permiso:pos.anular']], static function
 // ── Caja ────────────────────────────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'permiso:caja.ver']], static function ($routes) {
     $routes->get('caja', 'Caja::index');
+    $routes->get('caja/turno/(:num)', 'Caja::turno/$1');
+});
+// Retirar plata del cajón no es lo mismo que apuntar un gasto: quien puede
+// hacerlo puede vaciar la caja.
+$routes->group('', ['filter' => ['auth', 'permiso:caja.retirar']], static function ($routes) {
+    $routes->post('caja/retirar', 'Caja::retirar');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:caja.puntos']], static function ($routes) {
+    $routes->get('caja/configurar', 'Caja::configurar');
+    $routes->post('caja/punto', 'Caja::guardarPunto');
+    $routes->post('caja/punto/(:num)', 'Caja::guardarPunto/$1');
+});
+// Cambiar si un medio «afecta caja» descuadra todos los arqueos siguientes.
+$routes->group('', ['filter' => ['auth', 'permiso:medios.gestionar']], static function ($routes) {
+    $routes->post('caja/medio/(:num)', 'Caja::guardarMedio/$1');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:caja.abrir']], static function ($routes) {
     $routes->post('caja/abrir', 'Caja::abrir');

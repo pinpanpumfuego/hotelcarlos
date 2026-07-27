@@ -103,6 +103,12 @@ final class Catalogo
         'caja.cerrar'     => ['modulo' => 'caja', 'nombre' => 'Cerrar turno y cuadrar', 'sensible' => true],
         'caja.movimiento' => ['modulo' => 'caja', 'nombre' => 'Entradas y salidas de efectivo', 'sensible' => false],
         'caja.arqueo'     => ['modulo' => 'caja', 'nombre' => 'Ver descuadres de otros turnos', 'sensible' => true],
+        // Un retiro saca plata del cajón sin ser un gasto: va a la caja
+        // fuerte. Quien puede hacerlo puede vaciar la caja.
+        'caja.retirar'    => ['modulo' => 'caja', 'nombre' => 'Retirar efectivo a la caja fuerte', 'sensible' => true],
+        'caja.puntos'     => ['modulo' => 'caja', 'nombre' => 'Configurar los puntos de caja', 'sensible' => true],
+        // Cambiar si un medio «afecta caja» descuadra todos los arqueos.
+        'medios.gestionar' => ['modulo' => 'caja', 'nombre' => 'Medios de pago', 'sensible' => true],
 
         // ── Restaurante ─────────────────────────────────────────────────
         'pos.usar'          => ['modulo' => 'restaurante', 'nombre' => 'Usar el POS', 'sensible' => false],
@@ -263,6 +269,7 @@ final class Catalogo
                 'folio.descuento.sintope', 'folio.cupon', 'folio.bono',
                 'huespedes.ver',
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento', 'caja.arqueo',
+                'caja.retirar',
                 'pos.cobrar',
                 // Quien cobra la propina no la reparte.
                 'propinas.liquidar', 'bonos.gestionar',
