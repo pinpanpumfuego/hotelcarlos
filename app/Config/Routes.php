@@ -701,3 +701,19 @@ $routes->group('', ['filter' => ['auth', 'permiso:insumos.gestionar']], static f
     $routes->post('almacen/conteo', 'Almacen::conteo');
     $routes->post('almacen/recalcular/(:num)/(:num)', 'Almacen::recalcular/$1/$2');
 });
+
+// ── Compras y costes de cocina ──────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:insumos.gestionar']], static function ($routes) {
+    $routes->get('compras', 'Compras::index');
+    $routes->get('compras/ver/(:num)', 'Compras::ver/$1');
+    $routes->get('compras/costes', 'Compras::costes');
+
+    $routes->post('compras/crear', 'Compras::crear');
+    $routes->post('compras/linea/(:num)', 'Compras::anadirLinea/$1');
+    $routes->post('compras/linea/quitar/(:num)/(:num)', 'Compras::quitarLinea/$1/$2');
+    $routes->post('compras/enviar/(:num)', 'Compras::enviar/$1');
+    $routes->post('compras/recibir/(:num)', 'Compras::recibir/$1');
+    $routes->post('compras/anular/(:num)', 'Compras::anular/$1');
+    $routes->post('compras/proveedores', 'Compras::guardarProveedor');
+    $routes->post('compras/proveedores/migrar', 'Compras::migrarProveedores');
+});
