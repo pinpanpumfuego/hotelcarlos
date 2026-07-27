@@ -170,6 +170,57 @@ PINs. Se limita por IP desde el panel o desde el `.htaccess`.
 
 ---
 
+## Actualizar producción (esto es lo del día a día)
+
+Los pasos de arriba son de una sola vez. Cuando ya está montado y solo hay
+cambios nuevos que subir, es **una orden**:
+
+```
+cd ~/hotelcarlos && git pull && php spark migrate && php spark cache:clear
+```
+
+Qué hace cada trozo, para que sepas qué estás lanzando:
+
+| Trozo | Para qué |
+|---|---|
+| `git pull` | Trae el código nuevo desde GitHub |
+| `php spark migrate` | Crea o cambia tablas si el cambio traía alguna. Si no hay nada nuevo dice «Migrations complete» y no toca nada |
+| `php spark cache:clear` | Vacía la caché, para que no siga sirviendo pantallas viejas |
+
+**Se puede lanzar siempre, aunque no haya cambios.** Ninguno de los tres
+hace daño si no hay nada que hacer.
+
+### Si el cambio traía dependencias nuevas
+
+Solo si te lo digo expresamente:
+
+```
+cd ~/hotelcarlos && composer install --no-dev --optimize-autoloader
+```
+
+### Comprobar que subió bien
+
+```
+cd ~/hotelcarlos && git log --oneline -1
+```
+
+Te enseña el último cambio que tiene el servidor. Tiene que coincidir con el
+último que aparece en GitHub.
+
+### Si `git pull` se queja
+
+Si dice *«local changes would be overwritten»*, es que alguien editó un
+fichero directamente en el servidor. Mira **qué** cambió antes de tirarlo:
+
+```
+cd ~/hotelcarlos && git status && git diff
+```
+
+Y me lo mandas. **No lances `git reset --hard` sin mirar primero**: borra ese
+cambio para siempre, y puede ser algo que hiciera falta.
+
+---
+
 ## Si algo sale mal
 
 Pantalla en blanco casi siempre es PHP en versión vieja o una extensión que
