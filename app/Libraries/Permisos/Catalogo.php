@@ -112,6 +112,11 @@ final class Catalogo
         'mantenimiento.crear'     => ['modulo' => 'mantenimiento', 'nombre' => 'Abrir órdenes', 'sensible' => false],
         'mantenimiento.trabajar'  => ['modulo' => 'mantenimiento', 'nombre' => 'Iniciar y resolver', 'sensible' => false],
         'mantenimiento.prioridad' => ['modulo' => 'mantenimiento', 'nombre' => 'Cambiar la prioridad', 'sensible' => false],
+        'mantenimiento.asignar'   => ['modulo' => 'mantenimiento', 'nombre' => 'Repartir el trabajo', 'sensible' => false],
+        // Quien arregla no se firma a sí mismo el visto bueno: el mismo
+        // criterio que ya se usa en la inspección de limpieza.
+        'mantenimiento.verificar' => ['modulo' => 'mantenimiento', 'nombre' => 'Dar por buena una reparación', 'sensible' => false],
+        'mantenimiento.costos'    => ['modulo' => 'mantenimiento', 'nombre' => 'Ver costos y materiales', 'sensible' => true],
         'activos.ver'             => ['modulo' => 'mantenimiento', 'nombre' => 'Ver el inventario de equipos', 'sensible' => false],
         // Separado de `ver` a propósito: el técnico consulta la ficha del
         // calentador todos los días, pero dar de baja un equipo borra su
@@ -211,6 +216,7 @@ final class Catalogo
                 'pos.usar', 'pos.cobrar', 'pos.mover',
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',
                 'mantenimiento.ver', 'mantenimiento.crear', 'mantenimiento.prioridad',
+                'mantenimiento.asignar', 'mantenimiento.verificar',
                 'activos.ver',
                 // Sin ver las tarifas no puede cotizar por teléfono.
                 'tarifas.ver', 'experiencias.vender', 'turnos.ver',
@@ -278,6 +284,7 @@ final class Catalogo
                 'unidades.estado', 'unidades.foto',
                 'mantenimiento.ver', 'mantenimiento.crear',
                 'mantenimiento.trabajar', 'mantenimiento.prioridad',
+                'mantenimiento.asignar', 'mantenimiento.costos',
                 'activos.ver', 'activos.gestionar',
                 'turnos.ver',
             ],

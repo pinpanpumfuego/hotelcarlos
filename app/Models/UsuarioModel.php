@@ -37,4 +37,30 @@ class UsuarioModel extends Model
     {
         return $this->where('email', strtolower(trim($email)))->first();
     }
+
+    /**
+     * Quién puede hacer algo, para poder repartirle trabajo.
+     *
+     * Se pregunta por el permiso y no por el perfil a propósito: si mañana se
+     * crea un perfil «técnico externo» con `mantenimiento.trabajar`, aparece en
+     * el desplegable sin tocar una línea. Gerencia entra siempre, porque tiene
+     * todos los permisos por definición y no cuelgan de la tabla.
+     *
+     * @return list<array{id: int, nombre: string}>
+     */
+    public function conPermiso(string $clave): array
+    {
+        return $this->select('usuarios.id, usuarios.nombre')
+            ->join('roles', 'roles.id = usuarios.rol_id')
+            ->join('rol_permisos', 'rol_permisos.rol_id = roles.id', 'left')
+            ->join('permisos', 'permisos.id = rol_permisos.permiso_id', 'left')
+            ->where('usuarios.activo', 1)
+            ->groupStart()
+                ->where('permisos.clave', $clave)
+                ->orWhere('roles.clave', \App\Libraries\Permisos\Catalogo::ROL_TOTAL)
+            ->groupEnd()
+            ->groupBy('usuarios.id')
+            ->orderBy('usuarios.nombre')
+            ->findAll();
+    }
 }

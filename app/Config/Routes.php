@@ -112,13 +112,32 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
 // ── Mantenimiento ───────────────────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.ver']], static function ($routes) {
     $routes->get('mantenimiento', 'Mantenimiento::index');
+    $routes->get('mantenimiento/ver/(:num)', 'Mantenimiento::ver/$1');
+    $routes->get('mantenimiento/foto/(:num)', 'Mantenimiento::verFoto/$1');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.crear']], static function ($routes) {
     $routes->post('mantenimiento/guardar', 'Mantenimiento::guardar');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.trabajar']], static function ($routes) {
     $routes->post('mantenimiento/iniciar/(:num)', 'Mantenimiento::iniciar/$1');
+    $routes->post('mantenimiento/pausar/(:num)', 'Mantenimiento::pausar/$1');
     $routes->post('mantenimiento/resolver/(:num)', 'Mantenimiento::resolver/$1');
+    $routes->post('mantenimiento/foto/subir/(:num)', 'Mantenimiento::foto/$1');
+    $routes->post('mantenimiento/material/(:num)', 'Mantenimiento::material/$1');
+    $routes->post('mantenimiento/material/quitar/(:num)', 'Mantenimiento::quitarMaterial/$1');
+});
+// El visto bueno lo da otra persona: por eso va en su propio permiso y no
+// dentro de `trabajar`. Quien arregla no se firma a sí mismo.
+$routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.verificar']], static function ($routes) {
+    $routes->post('mantenimiento/verificar/(:num)', 'Mantenimiento::verificar/$1');
+    $routes->post('mantenimiento/rechazar/(:num)', 'Mantenimiento::rechazar/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.asignar']], static function ($routes) {
+    $routes->post('mantenimiento/asignar/(:num)', 'Mantenimiento::asignar/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.prioridad']], static function ($routes) {
+    $routes->post('mantenimiento/prioridad/(:num)', 'Mantenimiento::prioridad/$1');
+    $routes->post('mantenimiento/anular/(:num)', 'Mantenimiento::anular/$1');
 });
 
 // ── Activos y equipos ───────────────────────────────────────────────
@@ -468,6 +487,7 @@ $routes->group('', ['filter' => ['auth', 'permiso:administracion.integraciones']
     $routes->post('administracion/correo/probar', 'Administracion::probarCorreo');
     $routes->post('administracion/wompi', 'Administracion::guardarWompi');
     $routes->post('administracion/wompi/probar', 'Administracion::probarWompi');
+    $routes->post('administracion/mantenimiento', 'Administracion::guardarMantenimiento');
     $routes->post('administracion/siigo', 'Administracion::guardarSiigo');
     $routes->post('administracion/siigo/probar', 'Administracion::probarSiigo');
 });

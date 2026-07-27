@@ -323,12 +323,76 @@ final class ActivosTest extends CIUnitTestCase
             'solucion'       => 'PRUEBA-Cambiada la manguera',
         ]);
 
+        // Todavía no: era urgente y bloqueó la cabaña, así que hace falta que
+        // otra persona lo dé por bueno. Volver a venderla esa misma tarde con
+        // la palabra de quien arregló la fuga de gas es justo lo que no puede
+        // pasar.
+        $this->assertSame('bloqueada', $unidades->find($this->unidadId)['estado']);
+
+        $otra               = $this->como('recepcion');
+        $otra['usuario_id'] = 2;
+
+        $this->withSession($otra)->post('mantenimiento/verificar/' . $inc['id'], [
+            'csrf_test_name' => csrf_hash(),
+        ]);
+
         $unidad = $unidades->find($this->unidadId);
         $this->assertSame('disponible', $unidad['estado']);
         // Después de una reparación queda polvo: si saliera directa a
         // disponible y limpia, el siguiente huésped se la encuentra así.
         $this->assertSame('sucia', $unidad['estado_limpieza']);
+    }
 
+    // ── La pantalla de la orden ─────────────────────────────────────────
+
+    public function testLaPantallaDeLaOrdenSeAbre(): void
+    {
+        $id     = $this->crearActivo();
+        $sesion = $this->como('mantenimiento');
+
+        $this->withSession($sesion)->post('mantenimiento/guardar', [
+            'csrf_test_name' => csrf_hash(),
+            'titulo'         => 'PRUEBA-No calienta',
+            'activo_id'      => $id,
+        ]);
+
+        $inc = $this->incidencias->where('activo_id', $id)->first();
+        $r   = $this->withSession($sesion)->get('mantenimiento/ver/' . $inc['id']);
+
+        $r->assertOK();
+        $r->assertSee('PRUEBA-No calienta');
+        $r->assertSee('Qué hacer ahora');
+    }
+
+    public function testHousekeepingNoPuedeDarPorBuenaUnaReparacion(): void
+    {
+        // No es solo que no salga el botón: la ruta tampoco se puede llamar.
+        $id     = $this->crearActivo();
+        $sesion = $this->como('mantenimiento');
+
+        $this->withSession($sesion)->post('mantenimiento/guardar', [
+            'csrf_test_name' => csrf_hash(),
+            'titulo'         => 'PRUEBA-Fuga',
+            'activo_id'      => $id,
+            'prioridad'      => 'urgente',
+        ]);
+
+        $inc = $this->incidencias->where('activo_id', $id)->first();
+
+        $this->withSession($sesion)->post('mantenimiento/resolver/' . $inc['id'], [
+            'csrf_test_name' => csrf_hash(),
+            'solucion'       => 'PRUEBA-Hecho',
+        ]);
+
+        $limpieza               = $this->como('housekeeping');
+        $limpieza['usuario_id'] = 3;
+
+        $r = $this->withSession($limpieza)->post('mantenimiento/verificar/' . $inc['id'], [
+            'csrf_test_name' => csrf_hash(),
+        ]);
+
+        $this->assertTrue($r->isRedirect());
+        $this->assertSame('resuelta', $this->incidencias->find($inc['id'])['estado']);
     }
 
     // ── El plazo interno ────────────────────────────────────────────────

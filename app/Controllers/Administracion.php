@@ -113,6 +113,19 @@ class Administracion extends BaseController
                 'anticipo_pct'        => (int) $this->config->obtener('wompi_anticipo_pct', '0'),
                 'revision'            => (new \App\Libraries\Wompi())->revisarLlaves(),
             ],
+
+            // Mantenimiento
+            'mantenimiento' => [
+                'sla' => [
+                    'urgente' => (int) $this->config->obtener('mant_sla_urgente', '4'),
+                    'alta'    => (int) $this->config->obtener('mant_sla_alta', '24'),
+                    'media'   => (int) $this->config->obtener('mant_sla_media', '72'),
+                    'baja'    => (int) $this->config->obtener('mant_sla_baja', '168'),
+                ],
+                'costo_hora' => (float) $this->config->obtener('mant_costo_hora', '0'),
+                'verifica'   => $this->config->obtener('mant_verifica_urgentes', '1') === '1',
+                'prefijo'    => $this->config->obtener('mant_prefijo', 'SAL'),
+            ],
         ]);
     }
 
@@ -446,5 +459,49 @@ class Administracion extends BaseController
         $r = (new \App\Libraries\Wompi())->probar();
 
         return redirect()->to('administracion#wompi')->with($r['ok'] ? 'ok' : 'error', $r['mensaje']);
+    }
+
+    /**
+     * Plazos internos, coste de la hora y doble firma.
+     *
+     * Los plazos no son una promesa a nadie de fuera: sirven para que en el
+     * tablero se vea de un vistazo qué se está quedando atrás, que es lo que
+     * de verdad pasa. No que nadie arregle nada, sino que algo lleve tres
+     * semanas ahí sin que nadie se dé cuenta.
+     */
+    public function guardarMantenimiento()
+    {
+        $pares = [];
+
+        foreach (['urgente' => 4, 'alta' => 24, 'media' => 72, 'baja' => 168] as $prioridad => $porDefecto) {
+            $horas = (int) $this->request->getPost('sla_' . $prioridad);
+            // Entre una hora y un mes: un plazo de cero minutos deja todo
+            // marcado en rojo desde el primer segundo y deja de significar nada.
+            $pares['mant_sla_' . $prioridad] = (string) ($horas > 0 ? min($horas, 720) : $porDefecto);
+        }
+
+        $pares['mant_costo_hora'] = (string) max(0, (float) $this->request->getPost('costo_hora'));
+        $pares['mant_verifica_urgentes'] = $this->request->getPost('verifica') !== null ? '1' : '0';
+
+        $anterior = (string) $this->config->obtener('mant_prefijo', 'SAL');
+
+        $prefijo = strtoupper(trim((string) $this->request->getPost('prefijo')));
+        $prefijo = preg_replace('/[^A-Z0-9]/', '', $prefijo);
+
+        if ($prefijo !== '') {
+            $prefijo                 = mb_substr($prefijo, 0, 6);
+            $pares['mant_prefijo']   = $prefijo;
+        }
+
+        // El aviso se decide antes de guardar: después, el valor viejo ya no
+        // está y la comparación siempre daría que no cambió nada.
+        $aviso = $prefijo !== '' && $prefijo !== $anterior
+            ? ' Los equipos ya dados de alta conservan su código: sus etiquetas están pegadas.'
+            : '';
+
+        $this->config->guardarPares($pares);
+
+        return redirect()->to('administracion#mantenimiento')
+            ->with('ok', 'Ajustes de mantenimiento guardados.' . $aviso);
     }
 }

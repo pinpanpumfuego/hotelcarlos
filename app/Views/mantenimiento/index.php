@@ -74,6 +74,40 @@ $coloresPrioridad = ['baja' => 'secondary', 'media' => 'info', 'alta' => 'warnin
     </div>
 </div>
 
+<?php // Va antes que lo abierto a propósito: son las más fáciles de olvidar.
+      // Quien las arregló ya las dio por hechas, y si nadie mira esta lista la
+      // cabaña se queda bloqueada sin que nadie sepa por qué. ?>
+<?php if ($porVerificar !== []): ?>
+    <div class="card border-0 shadow-sm mb-4 border-start border-4 border-info">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-clipboard-check me-2 text-info"></i>Esperando el visto bueno
+            <span class="badge text-bg-info ms-1"><?= count($porVerificar) ?></span>
+        </div>
+        <div class="list-group list-group-flush">
+            <?php foreach ($porVerificar as $i): ?>
+                <div class="list-group-item d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                    <div>
+                        <a href="<?= site_url('mantenimiento/ver/' . $i['id']) ?>" class="fw-semibold text-decoration-none">
+                            <?= esc($i['titulo']) ?>
+                        </a>
+                        <div class="small text-muted">
+                            <?= esc($i['unidad_nombre'] ?? $i['ubicacion'] ?? 'Sin ubicación') ?>
+                            · lo resolvió <?= esc($i['resolvio_nombre'] ?? '—') ?>
+                            el <?= date('d/m H:i', strtotime($i['resuelta_en'])) ?>
+                            <?php if ((int) $i['bloqueo_unidad'] === 1): ?>
+                                <span class="badge text-bg-danger ms-1">La cabaña sigue bloqueada</span>
+                            <?php endif ?>
+                        </div>
+                    </div>
+                    <a href="<?= site_url('mantenimiento/ver/' . $i['id']) ?>" class="btn btn-sm btn-outline-info text-nowrap">
+                        <i class="bi bi-eye me-1"></i>Revisarla
+                    </a>
+                </div>
+            <?php endforeach ?>
+        </div>
+    </div>
+<?php endif ?>
+
 <!-- ═══ Incidencias abiertas ═══ -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white fw-semibold"><i class="bi bi-tools me-2 text-warning"></i>Incidencias abiertas</div>
@@ -88,8 +122,12 @@ $coloresPrioridad = ['baja' => 'secondary', 'media' => 'info', 'alta' => 'warnin
                         <span class="badge text-bg-<?= $coloresPrioridad[$i['prioridad']] ?>"><?= esc($prioridades[$i['prioridad']]) ?></span>
                         <?php if ($i['estado'] === 'en_proceso'): ?>
                             <span class="badge text-bg-primary">En proceso</span>
+                        <?php elseif ($i['estado'] === 'pausada'): ?>
+                            <span class="badge text-bg-secondary">En espera</span>
                         <?php endif ?>
-                        <span class="fw-semibold ms-1"><?= esc($i['titulo']) ?></span>
+                        <a href="<?= site_url('mantenimiento/ver/' . $i['id']) ?>" class="fw-semibold ms-1 text-decoration-none">
+                            <?= esc($i['titulo']) ?>
+                        </a>
                         <div class="small text-muted mt-1">
                             <i class="bi bi-geo-alt me-1"></i><?= esc($i['unidad_nombre'] ?? $i['ubicacion'] ?? 'Sin ubicación') ?>
                             <?php if ($i['activo_nombre'] !== null): ?>
@@ -104,17 +142,27 @@ $coloresPrioridad = ['baja' => 'secondary', 'media' => 'info', 'alta' => 'warnin
                         </div>
                     </div>
                     <div class="d-flex gap-2 align-items-center flex-wrap">
-                        <?php if ($i['estado'] === 'abierta'): ?>
+                        <?php if (puede('mantenimiento.trabajar') && in_array($i['estado'], ['abierta', 'pausada'], true)): ?>
                             <form action="<?= site_url('mantenimiento/iniciar/' . $i['id']) ?>" method="post">
                                 <?= csrf_field() ?>
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-play-fill me-1"></i>Atender</button>
+                                <input type="hidden" name="volver_al_tablero" value="1">
+                                <button class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-play-fill me-1"></i><?= $i['estado'] === 'pausada' ? 'Retomar' : 'Atender' ?>
+                                </button>
                             </form>
                         <?php endif ?>
-                        <form action="<?= site_url('mantenimiento/resolver/' . $i['id']) ?>" method="post" class="d-flex gap-2">
-                            <?= csrf_field() ?>
-                            <input type="text" name="solucion" class="form-control form-control-sm" placeholder="¿Qué se hizo?" required style="min-width: 170px;">
-                            <button class="btn btn-sm btn-success text-nowrap"><i class="bi bi-check-lg me-1"></i>Resolver</button>
-                        </form>
+                        <?php if (puede('mantenimiento.trabajar') && $i['estado'] === 'en_proceso'): ?>
+                            <form action="<?= site_url('mantenimiento/resolver/' . $i['id']) ?>" method="post" class="d-flex gap-2">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="volver_al_tablero" value="1">
+                                <input type="text" name="solucion" class="form-control form-control-sm" placeholder="¿Qué se hizo?" required style="min-width: 170px;">
+                                <button class="btn btn-sm btn-success text-nowrap"><i class="bi bi-check-lg me-1"></i>Resolver</button>
+                            </form>
+                        <?php endif ?>
+                        <a href="<?= site_url('mantenimiento/ver/' . $i['id']) ?>" class="btn btn-sm btn-outline-secondary"
+                           title="Abrir la orden: fotos, materiales y reparto">
+                            <i class="bi bi-arrows-angle-expand"></i>
+                        </a>
                     </div>
                 </div>
             </div>

@@ -822,6 +822,80 @@
             </div>
         </div>
     </div>
+
+    <!-- ═══ Mantenimiento ═══ -->
+    <div class="col-lg-6" id="mantenimiento">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-wrench-adjustable me-2 text-secondary"></i>Mantenimiento
+            </div>
+            <form method="post" action="<?= site_url('administracion/mantenimiento') ?>">
+                <?= csrf_field() ?>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Los plazos no son una promesa a nadie de fuera. Sirven para ver de un vistazo
+                        <strong>qué se está quedando atrás</strong>, que es lo que de verdad pasa: no
+                        que nadie arregle nada, sino que algo lleve tres semanas ahí sin que nadie
+                        se dé cuenta.
+                    </p>
+
+                    <label class="form-label">Plazo por prioridad</label>
+                    <div class="row g-2 mb-3">
+                        <?php foreach (['urgente' => 'Urgente', 'alta' => 'Alta', 'media' => 'Media', 'baja' => 'Baja'] as $p => $etiqueta): ?>
+                            <div class="col-6 col-sm-3">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text" style="min-width: 62px;"><?= $etiqueta ?></span>
+                                    <input type="number" name="sla_<?= $p ?>" class="form-control" min="1" max="720"
+                                           value="<?= (int) $mantenimiento['sla'][$p] ?>">
+                                    <span class="input-group-text">h</span>
+                                </div>
+                            </div>
+                        <?php endforeach ?>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Coste de una hora de técnico</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="costo_hora" class="form-control" min="0" step="any"
+                                       value="<?= (float) $mantenimiento['costo_hora'] ?>">
+                            </div>
+                            <div class="form-text">
+                                <strong>En 0 no se suma nada</strong>, que es mejor que sumar
+                                una cifra inventada. Sirve para comparar reparar contra cambiar.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Prefijo de los códigos</label>
+                            <input type="text" name="prefijo" class="form-control text-uppercase font-monospace"
+                                   maxlength="6" value="<?= esc($mantenimiento['prefijo']) ?>">
+                            <div class="form-text">
+                                El siguiente equipo será <span class="font-monospace"><?= esc($mantenimiento['prefijo']) ?>-0001</span>.
+                                Los ya dados de alta no cambian: sus etiquetas están pegadas.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" type="checkbox" name="verifica" value="1" id="mantVerifica"
+                               <?= $mantenimiento['verifica'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="mantVerifica">
+                            <strong>Doble firma en lo urgente</strong>
+                            <span class="d-block form-text">
+                                Las averías urgentes y las que bloquean una cabaña necesitan que
+                                <strong>otra persona</strong> las dé por buenas antes de cerrarlas.
+                                Dar por arreglada una fuga de gas con la palabra de quien la arregló
+                                y volver a vender la cabaña esa tarde es lo que esto impide.
+                            </span>
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary mt-3"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <?= $this->endSection() ?>
