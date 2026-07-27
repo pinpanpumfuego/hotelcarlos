@@ -112,6 +112,11 @@ final class Catalogo
         'mantenimiento.crear'     => ['modulo' => 'mantenimiento', 'nombre' => 'Abrir órdenes', 'sensible' => false],
         'mantenimiento.trabajar'  => ['modulo' => 'mantenimiento', 'nombre' => 'Iniciar y resolver', 'sensible' => false],
         'mantenimiento.prioridad' => ['modulo' => 'mantenimiento', 'nombre' => 'Cambiar la prioridad', 'sensible' => false],
+        'activos.ver'             => ['modulo' => 'mantenimiento', 'nombre' => 'Ver el inventario de equipos', 'sensible' => false],
+        // Separado de `ver` a propósito: el técnico consulta la ficha del
+        // calentador todos los días, pero dar de baja un equipo borra su
+        // historial de la vista y eso no lo hace cualquiera.
+        'activos.gestionar'       => ['modulo' => 'mantenimiento', 'nombre' => 'Alta, baja y edición de equipos', 'sensible' => true],
 
         // ── Configuración ───────────────────────────────────────────────
         'tarifas.ver'             => ['modulo' => 'configuracion', 'nombre' => 'Ver tarifas y reglas', 'sensible' => false],
@@ -206,6 +211,7 @@ final class Catalogo
                 'pos.usar', 'pos.cobrar', 'pos.mover',
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',
                 'mantenimiento.ver', 'mantenimiento.crear', 'mantenimiento.prioridad',
+                'activos.ver',
                 // Sin ver las tarifas no puede cotizar por teléfono.
                 'tarifas.ver', 'experiencias.vender', 'turnos.ver',
                 // Ocupación sí, ingresos no.
@@ -257,7 +263,7 @@ final class Catalogo
                 'calendario.ocupacion',
                 'limpieza.ver', 'limpieza.trabajar', 'limpieza.reportar',
                 'unidades.estado', 'unidades.revisar', 'unidades.foto',
-                'mantenimiento.ver', 'mantenimiento.crear',
+                'mantenimiento.ver', 'mantenimiento.crear', 'activos.ver',
                 'turnos.ver',
             ],
         ],
@@ -272,6 +278,7 @@ final class Catalogo
                 'unidades.estado', 'unidades.foto',
                 'mantenimiento.ver', 'mantenimiento.crear',
                 'mantenimiento.trabajar', 'mantenimiento.prioridad',
+                'activos.ver', 'activos.gestionar',
                 'turnos.ver',
             ],
         ],

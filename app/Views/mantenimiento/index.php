@@ -34,6 +34,16 @@ $coloresPrioridad = ['baja' => 'secondary', 'media' => 'info', 'alta' => 'warnin
                         </select>
                     </div>
                     <div class="col-md-3">
+                        <label class="form-label">Equipo (opcional)</label>
+                        <select name="activo_id" class="form-select">
+                            <option value="">No es un equipo concreto</option>
+                            <?php foreach ($equipos as $e): ?>
+                                <option value="<?= $e["id"] ?>"><?= esc($e["codigo"] . " · " . $e["nombre"]) ?></option>
+                            <?php endforeach ?>
+                        </select>
+                        <div class="form-text">O escanea su etiqueta y repórtalo desde ahí.</div>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">Prioridad</label>
                         <select name="prioridad" class="form-select">
                             <?php foreach ($prioridades as $valor => $etiqueta): ?>
@@ -82,7 +92,14 @@ $coloresPrioridad = ['baja' => 'secondary', 'media' => 'info', 'alta' => 'warnin
                         <span class="fw-semibold ms-1"><?= esc($i['titulo']) ?></span>
                         <div class="small text-muted mt-1">
                             <i class="bi bi-geo-alt me-1"></i><?= esc($i['unidad_nombre'] ?? $i['ubicacion'] ?? 'Sin ubicación') ?>
-                            · reportó <?= esc($i['reporto_nombre']) ?> el <?= date('d/m H:i', strtotime($i['created_at'])) ?>
+                            <?php if ($i['activo_nombre'] !== null): ?>
+                                · <a href="<?= site_url('activos/ver/' . $i['activo_id']) ?>" class="text-decoration-none">
+                                    <i class="bi bi-box-seam me-1"></i><?= esc($i['activo_nombre']) ?></a>
+                            <?php endif ?>
+                            <?php if ($i['vence_en'] !== null && $i['vence_en'] < date('Y-m-d H:i:s')): ?>
+                                <span class="badge text-bg-danger ms-1" title="Pasó el plazo interno para esta prioridad">Fuera de plazo</span>
+                            <?php endif ?>
+                            · reportó <?= esc($i['reporto_nombre'] ?? 'el huésped') ?> el <?= date('d/m H:i', strtotime($i['created_at'])) ?>
                             <?= $i['descripcion'] ? '· ' . esc($i['descripcion']) : '' ?>
                         </div>
                     </div>

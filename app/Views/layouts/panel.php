@@ -413,6 +413,7 @@ if ($restaurante !== []) {
 $operacion = $soloPermitidos([
     ['limpieza', 'limpieza', 'bi-bucket', 'Limpieza', 0, ['limpieza.ver']],
     ['mantenimiento', 'mantenimiento', 'bi-wrench-adjustable', 'Mantenimiento', 0, ['mantenimiento.ver']],
+    ['activos', 'activos', 'bi-qr-code', 'Equipos y activos', 0, ['activos.ver']],
     ['unidades', 'unidades', 'bi-door-open', 'Cabañas', 0, ['unidades.estado', 'unidades.gestionar']],
 ]);
 if ($operacion !== []) {

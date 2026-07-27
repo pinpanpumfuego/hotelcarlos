@@ -121,6 +121,28 @@ $routes->group('', ['filter' => ['auth', 'permiso:mantenimiento.trabajar']], sta
     $routes->post('mantenimiento/resolver/(:num)', 'Mantenimiento::resolver/$1');
 });
 
+// ── Activos y equipos ───────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:activos.ver']], static function ($routes) {
+    $routes->get('activos', 'Activos::index');
+    $routes->get('activos/ver/(:num)', 'Activos::ver/$1');
+    $routes->get('activos/qr/(:num)', 'Activos::qr/$1');
+    $routes->get('activos/documento/(:num)', 'Activos::documento/$1');
+
+    // Lo que sale al escanear la etiqueta. Pide sesión como todo lo demás: el
+    // QR no es una llave, y quien lo fotografíe sin cuenta no ve nada.
+    $routes->get('activo/(:segment)', 'Activos::escanear/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:activos.gestionar']], static function ($routes) {
+    $routes->get('activos/nuevo', 'Activos::nuevo');
+    $routes->get('activos/editar/(:num)', 'Activos::editar/$1');
+    $routes->get('activos/etiquetas', 'Activos::etiquetas');
+    $routes->post('activos/guardar', 'Activos::guardar');
+    $routes->post('activos/guardar/(:num)', 'Activos::guardar/$1');
+    $routes->post('activos/baja/(:num)', 'Activos::darDeBaja/$1');
+    $routes->post('activos/documento/subir/(:num)', 'Activos::subirDocumento/$1');
+    $routes->post('activos/documento/borrar/(:num)', 'Activos::borrarDocumento/$1');
+});
+
 // ── Limpieza ────────────────────────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'permiso:limpieza.ver']], static function ($routes) {
     $routes->get('limpieza', 'Limpieza::index');
