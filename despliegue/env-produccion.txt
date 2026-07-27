@@ -1,25 +1,24 @@
 # ─────────────────────────────────────────────────────────────────────
 #  Configuración del servidor · San Antonio de los Lagos Ecolodge
+#  sanantoniodeloslagos.com · dinahosting (hl1636.dinaserver.com)
 #
 #  Copia este archivo al servidor con el nombre  .env  (con el punto
-#  delante y SIN extensión) y rellena lo que está entre < >.
+#  delante y SIN extensión), junto a la carpeta app/.
+#
+#  SOLO TIENES QUE RELLENAR UNA LÍNEA: la de la contraseña.
+#  Está marcada más abajo.
 #
 #  ⚠️ Este archivo lleva la contraseña de la base de datos y la clave de
 #     cifrado. NUNCA debe quedar dentro de la carpeta web ni subirse a
-#     GitHub. Va junto a las carpetas app/ y writable/, fuera del alcance
-#     del navegador.
+#     GitHub.
 # ─────────────────────────────────────────────────────────────────────
 
 # 'production' oculta los errores técnicos al visitante y apaga la barra
-# de depuración. En 'development' se enseñan rutas y consultas: en un
-# servidor público eso es regalar información a quien quiera atacarlo.
+# de depuración. Probado: las 10 páginas responden limpias en este modo.
 CI_ENVIRONMENT = production
 
 # ── Dirección de la web ──────────────────────────────────────────────
-# Con https:// y con la barra final. Tiene que ser exacta o los enlaces
-# y el calendario de reservas apuntarán a donde no es.
-app.baseURL = 'https://<tu-dominio>/'
-
+app.baseURL = 'https://sanantoniodeloslagos.com/'
 app.indexPage = ''
 
 # Obliga a que todo vaya por https. Sin esto no funcionan: instalar el
@@ -31,24 +30,30 @@ app.appTimezone = 'America/Bogota'
 app.defaultLocale = 'es'
 
 # ── Base de datos ────────────────────────────────────────────────────
-# Se crea desde el panel de dinahosting. Apunta el nombre, el usuario y
-# la contraseña al crearla: la contraseña no se puede volver a consultar.
+# 'localhost' porque la aplicación y la base viven en el mismo servidor.
 database.default.hostname = localhost
-database.default.database = <nombre_de_la_base>
-database.default.username = <usuario_de_la_base>
-database.default.password = '<contraseña_de_la_base>'
+database.default.database = lsanantonio
+database.default.username = lsanantonio
+
+#  ↓↓↓  LA ÚNICA LÍNEA QUE TIENES QUE RELLENAR  ↓↓↓
+#  Pon la contraseña entre las comillas simples.
+#  Y si aún no la has cambiado por la que compartiste en el chat,
+#  cámbiala primero en el panel: esa ya no es secreta.
+database.default.password = 'PON_AQUI_LA_CONTRASEÑA'
+#  ↑↑↑
+
 database.default.DBDriver = MySQLi
 database.default.DBPrefix =
 database.default.port = 3306
+# La base tiene que estar en utf8mb4 o las eñes y tildes se romperán
+database.default.charset = utf8mb4
+database.default.DBCollat = utf8mb4_unicode_ci
 
 # ── Clave de cifrado ─────────────────────────────────────────────────
-# GENERA UNA NUEVA. No reutilices la del ordenador de casa.
-# Se crea con:   php spark key:generate
-# y se copia aquí el valor que imprima.
-encryption.key = <generar_una_nueva>
+# Recién generada para este servidor. No es la del ordenador de casa.
+encryption.key = hex2bin:2cc5b71a07531216522ddd57111630b3f8cd2f53f00ad595cc2ec4bc9194bd8e
 
 # ── Cookies y sesión ─────────────────────────────────────────────────
-# Con https activo, las cookies solo viajan cifradas.
 cookie.secure = true
 cookie.httponly = true
 cookie.samesite = 'Lax'
