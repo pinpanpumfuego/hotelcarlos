@@ -612,3 +612,11 @@ $routes->group('', ['filter' => ['auth', 'permiso:roles.gestionar']], static fun
     $routes->post('roles/actualizar/(:num)', 'Roles::actualizar/$1');
     $routes->post('roles/eliminar/(:num)', 'Roles::eliminar/$1');
 });
+
+// ── Auditoría ───────────────────────────────────────────────────────
+// Solo lectura: no hay ruta para editar ni para borrar. Una auditoría que se
+// puede retocar no sirve para lo único que sirve una auditoría.
+$routes->group('', ['filter' => ['auth', 'permiso:auditoria.ver']], static function ($routes) {
+    $routes->get('auditoria', 'Auditoria::index');
+    $routes->get('auditoria/referencia/(:segment)', 'Auditoria::referencia/$1');
+});

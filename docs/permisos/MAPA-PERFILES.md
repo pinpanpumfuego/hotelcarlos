@@ -331,8 +331,8 @@ del §5 antes de empezar el 3.
 | 3 · Cambiar el filtro en las rutas | ✅ hecho · 251 rutas con `permiso:`, 0 con `rol:` |
 | 4 · Menú según permisos | ✅ hecho · el layout ya no mira el rol |
 | 5 · Pantalla de perfiles y alta de usuarios | ✅ hecho |
-| 6 · Auditoría de las acciones sensibles | ⬜ pendiente |
-| 7 · Pruebas por perfil | ✅ 131 pruebas en total |
+| 6 · Auditoría de las acciones sensibles | ✅ hecho |
+| 7 · Pruebas por perfil | ✅ 144 pruebas en total |
 
 **Los pasos 1 y 2 no cambian el comportamiento de nada.** La columna `rol`
 antigua sigue en su sitio, las 296 rutas siguen usando el filtro `rol:`, y a
@@ -389,3 +389,45 @@ destino tras iniciar sesión— pasaron a preguntar por permisos.
 Los cambios de permisos **surten efecto en el siguiente clic**, sin volver a
 entrar: los permisos se consultan en cada petición y no se guardan en la sesión.
 Hay una prueba que lo comprueba.
+
+### Paso 6 · la auditoría
+
+**Gestión → Auditoría.** Solo gerencia. Registra **únicamente los 26 permisos
+sensibles**: lo que mueve dinero, toca datos personales o cambia la
+configuración. Registrarlo todo daría una tabla enorme donde lo importante no se
+encuentra, que es la forma más eficaz de no tener auditoría teniéndola.
+
+De cada cosa queda: **quién** (con el nombre copiado, no solo el id — una
+auditoría que dice «el usuario 7» deja de servir el día que el usuario 7 se
+borra), **su perfil en ese momento**, **qué permiso ejerció**, **la ruta**,
+**sobre qué** (`reservas:34`), **el resultado** y **la IP**.
+
+Tres decisiones:
+
+- **Se registra desde el filtro, no desde cada controlador.** Un permiso nuevo
+  queda auditado sin que nadie se acuerde de añadir la línea.
+- **Los intentos denegados también.** Dicen que alguien buscó una puerta que no
+  le corresponde. Salen destacados arriba, agrupados, de los últimos 7 días;
+  casi siempre es un enlace viejo, pero conviene poder verlo.
+- **Se distingue «lo hizo» de «lo intentó y no pudo»**, mirando si la respuesta
+  acabó en error.
+
+**No hay forma de editar ni de borrar** desde la aplicación: no existe ninguna
+ruta POST sobre la auditoría, y hay una prueba que lo comprueba pidiéndolas de
+verdad. Lo único que la vacía es la purga por antigüedad:
+
+```
+php /home/USUARIO/hotelcarlos/spark auditoria:purgar
+```
+
+Conserva **dos años** —de sobra para una revisión contable— y admite `--simular`
+para ver qué borraría sin borrarlo. Conviene programarla una vez al mes. No
+guardar de más también es parte de tratar bien los datos de las personas.
+
+---
+
+## Fase A · terminada
+
+Los siete pasos, hechos. **144 pruebas verdes.** Lo que queda es la Fase B, que
+no son permisos sino módulos que no existen: Comercial (CRM), Seguridad,
+Agencia/Empresa y el portal del huésped completo.

@@ -434,6 +434,7 @@ $gestion = $soloPermitidos([
     ['inventario-cabanas', 'inventario-cabanas', 'bi-box-seam', 'Enseres de cabañas', 0, ['servicios.gestionar']],
     ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0, ['usuarios.gestionar']],
     ['roles', 'roles', 'bi-shield-lock', 'Perfiles de acceso', 0, ['roles.gestionar']],
+    ['auditoria', 'auditoria', 'bi-clipboard-check', 'Auditoría', 0, ['auditoria.ver']],
     ['administracion', 'administracion', 'bi-gear', 'Administración', 0, ['administracion.ver']],
 ]);
 if ($gestion !== []) {
