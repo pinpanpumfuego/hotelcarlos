@@ -221,9 +221,16 @@ class Reservas extends BaseController
 
         if ($completa !== null && ! empty($completa['email'])) {
             $registro = (new \App\Models\RegistroModel())->paraReserva($completa);
+
+            // El portal de la estancia nace aquí y acompaña al huésped hasta dos
+            // semanas después de irse: todavía quiere su comprobante, y la
+            // encuesta de salida se contesta cuando ya se ha ido.
+            $accesos = new \App\Models\PortalAccesoModel();
+            $acceso  = $accesos->asegurar($completa);
+
             $correo   = new \App\Libraries\Correo();
 
-            if ($correo->confirmacionReserva($completa, site_url('registro/' . $registro['token']))) {
+            if ($correo->confirmacionReserva($completa, site_url('registro/' . $registro['token']), $accesos->enlace($acceso))) {
                 $aviso = ' Se envió la confirmación por correo a ' . $completa['email'] . ' con su enlace de registro.';
             } elseif (! $correo->configurado()) {
                 $aviso = ' El correo no está configurado todavía: envíale el enlace de registro por WhatsApp desde esta ficha.';

@@ -90,7 +90,7 @@ class Correo
     }
 
     /** Confirmación de reserva al huésped, con su enlace de registro. */
-    public function confirmacionReserva(array $reserva, ?string $enlaceRegistro = null): bool
+    public function confirmacionReserva(array $reserva, ?string $enlaceRegistro = null, ?string $enlacePortal = null): bool
     {
         return $this->enviar([
             'tipo'       => 'confirmacion_reserva',
@@ -98,7 +98,7 @@ class Correo
             'asunto'     => 'Tu reserva ' . $reserva['codigo'] . ' está confirmada',
             'vista'      => 'confirmacion_reserva',
             'reserva_id' => $reserva['id'] ?? null,
-            'datos'      => ['reserva' => $reserva, 'enlaceRegistro' => $enlaceRegistro],
+            'datos'      => ['reserva' => $reserva, 'enlaceRegistro' => $enlaceRegistro, 'enlacePortal' => $enlacePortal],
         ]);
     }
 

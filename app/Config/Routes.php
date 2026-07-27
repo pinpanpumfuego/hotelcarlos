@@ -620,3 +620,35 @@ $routes->group('', ['filter' => ['auth', 'permiso:auditoria.ver']], static funct
     $routes->get('auditoria', 'Auditoria::index');
     $routes->get('auditoria/referencia/(:segment)', 'Auditoria::referencia/$1');
 });
+
+// ── Portal del huésped: su estancia, en su móvil ────────────────────
+//
+// Sin sesión y sin contraseña: **el enlace es la credencial**. Nadie se crea
+// una cuenta para pedir toallas, y una contraseña más es una contraseña que
+// acaba apuntada en un papel. A cambio, el token es largo, aleatorio, caduca
+// solo y se puede revocar desde recepción.
+//
+// Cada método del controlador vuelve a validarlo; ninguno se fía de que el
+// anterior lo hiciera.
+$routes->get('estancia/(:segment)', 'Portal::index/$1');
+$routes->get('estancia/(:segment)/cuenta', 'Portal::cuenta/$1');
+$routes->get('estancia/(:segment)/info', 'Portal::info/$1');
+$routes->get('estancia/(:segment)/solicitudes', 'Portal::solicitudes/$1');
+$routes->post('estancia/(:segment)/pedir', 'Portal::pedir/$1');
+$routes->get('estancia/(:segment)/encuesta', 'Portal::encuesta/$1');
+$routes->post('estancia/(:segment)/encuesta', 'Portal::responderEncuesta/$1');
+
+// ── Peticiones de huéspedes, desde el panel ─────────────────────────
+//
+// Sin esta pantalla el portal sería un buzón sin cartero: el huésped pediría
+// toallas y la petición se quedaría en una tabla que nadie mira.
+//
+// Se apoya en los permisos que ya existen —quien atiende el tablero de
+// limpieza es quien lleva las toallas— en vez de inventar unos nuevos.
+$routes->group('', ['filter' => ['auth', 'permiso:limpieza.ver,mantenimiento.ver']], static function ($routes) {
+    $routes->get('solicitudes', 'Solicitudes::index');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:limpieza.trabajar,mantenimiento.trabajar,reservas.editar']], static function ($routes) {
+    $routes->post('solicitudes/atender/(:num)', 'Solicitudes::atender/$1');
+    $routes->post('solicitudes/encuesta/(:num)', 'Solicitudes::leerEncuesta/$1');
+});

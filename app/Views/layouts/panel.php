@@ -352,6 +352,11 @@ $nombreUsuario = (string) session()->get('usuario_nombre');
 $iniciales     = mb_strtoupper(mb_substr($nombreUsuario, 0, 1));
 
 // Avisos que se muestran como insignia en el menú
+$porAtender = 0;
+if (puede_alguno(['limpieza.ver', 'mantenimiento.ver'])) {
+    try { $porAtender = (new \App\Models\SolicitudModel())->sinAtender(); } catch (\Throwable $e) { $porAtender = 0; }
+}
+
 $porRevisar = 0;
 if (puede('registros.ver')) {
     try { $porRevisar = (new \App\Models\RegistroModel())->pendientesDeRevision(); } catch (\Throwable $e) { $porRevisar = 0; }
@@ -380,6 +385,7 @@ $recepcion = $soloPermitidos([
     ['reservas', 'reservas', 'bi-calendar-check', 'Reservas', 0, ['reservas.ver']],
     ['huespedes', 'huespedes', 'bi-people', 'Huéspedes', 0, ['huespedes.ver']],
     ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada', $porRevisar, ['registros.ver']],
+    ['solicitudes', 'solicitudes', 'bi-hand-index', 'Peticiones de huéspedes', $porAtender, ['limpieza.ver', 'mantenimiento.ver']],
     ['experiencias', 'experiencias', 'bi-compass', 'Experiencias', 0, ['experiencias.vender']],
     ['caja', 'caja', 'bi-cash-coin', 'Caja', 0, ['caja.ver']],
     ['bonos', 'bonos', 'bi-gift', 'Bonos regalo', 0, ['folio.bono', 'bonos.gestionar']],

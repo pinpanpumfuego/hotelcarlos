@@ -56,5 +56,29 @@ $noches = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($reserva[
     </p>
 <?php endif ?>
 
+<?php if (! empty($enlacePortal)): ?>
+    <?php // Este enlace acompaña toda la estancia, no solo el registro: sirve
+          // para ver la cuenta, pedir cosas y contarnos qué tal fue. ?>
+    <p style="margin:0 0 12px;"><strong>Tu estancia, en tu móvil</strong></p>
+    <p style="margin:0 0 16px; color:#4a5450;">
+        Guarda este enlace. Desde él puedes ver tu reserva, consultar lo que llevas
+        consumido, pedirnos lo que necesites y contarnos qué tal va todo.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">
+        <tr>
+            <td style="background:#1f4d36; border-radius:10px;">
+                <a href="<?= esc($enlacePortal) ?>"
+                   style="display:inline-block; padding:14px 26px; color:#ffffff; text-decoration:none; font-weight:600;">
+                    Abrir mi estancia
+                </a>
+            </td>
+        </tr>
+    </table>
+    <p style="margin:0 0 22px; font-size:12px; color:#8b958f;">
+        Es personal: no lo compartas con nadie.<br>
+        <span style="word-break:break-all;"><?= esc($enlacePortal) ?></span>
+    </p>
+<?php endif ?>
+
 <p style="margin:0 0 6px;">Cualquier cosa que necesites, escríbenos por WhatsApp al <?= esc($hotel->telefono) ?>.</p>
 <p style="margin:0;">¡Te esperamos!</p>
