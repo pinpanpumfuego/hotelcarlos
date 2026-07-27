@@ -19,6 +19,22 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    /**
+     * Quién puede hacer qué.
+     *
+     * Compartido a propósito: así la caché de permisos vive una sola vez por
+     * petición y consultar `puede()` cincuenta veces al pintar un menú cuesta
+     * una consulta, no cincuenta.
+     */
+    public static function permisos(bool $getShared = true): \App\Libraries\Permisos\Permisos
+    {
+        if ($getShared) {
+            return static::getSharedInstance('permisos');
+        }
+
+        return new \App\Libraries\Permisos\Permisos();
+    }
+
     /*
      * public static function example($getShared = true)
      * {

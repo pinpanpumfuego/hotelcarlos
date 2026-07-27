@@ -8,7 +8,11 @@ class UsuarioModel extends Model
 {
     protected $table         = 'usuarios';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['nombre', 'email', 'clave_hash', 'rol', 'activo', 'ultimo_acceso'];
+    // `rol` es el ENUM antiguo y `rol_id` el perfil nuevo. Conviven mientras
+    // las rutas pasan de `rol:` a `permiso:`. Si `rol_id` no estuviera aquí,
+    // CodeIgniter lo descartaría en silencio al guardar y el perfil no se
+    // asignaría nunca, sin dar ningún error.
+    protected $allowedFields = ['nombre', 'email', 'clave_hash', 'rol', 'rol_id', 'activo', 'ultimo_acceso'];
     protected $useTimestamps = true;
 
     public const ROLES = [

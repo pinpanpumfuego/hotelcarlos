@@ -218,7 +218,9 @@ tenerlo el menor número de personas posible.*
 | `administracion.integraciones` | ⚠️ Siigo, Wompi, correo, TPV | ✅ | — | — | — | — | — | — |
 | `auditoria.ver` | ⚠️ Quién hizo qué | ✅ | — | — | — | — | — | — |
 
-**Total: 68 permisos en 10 módulos.**
+**Total: 82 permisos en 10 módulos**, 26 de ellos sensibles.
+
+*(El catálogo definitivo, ya implementado, está en `app/Libraries/Permisos/Catalogo.php`. Sube de 68 a 82 por el desglose de la decisión 1 y 2: reportes partidos en ocupación e ingresos, y el descuento con y sin tope.)*
 
 Los marcados **⚠️** son *sensibles*: mueven dinero, tocan datos personales o
 cambian la configuración. Van marcados en la tabla `permisos` para que al
@@ -262,25 +264,35 @@ permisos son los mismos, cambia solo quién los lleva colgados.
 
 ---
 
-## 5 · Lo que necesito que decidas
+## 5 · Decisiones · resueltas el 27-07-2026
 
-Son las casillas que he marcado 🔸 porque dependen de cómo quieras llevar el
-hotel, no de cómo esté hecho el software.
+Las 🔸 del catálogo quedan así. Las cuatro primeras las decidió Javier; las
+cuatro últimas las decidí yo con su encargo de *«lo que sea más conveniente»*,
+y quedan escritas aquí para que se puedan cambiar viéndolas.
 
-1. **¿Recepción ve los reportes de ingresos y márgenes?** Ver la ocupación es
-   necesario para su trabajo; ver el margen de cada cabaña, no tanto.
-2. **¿Recepción puede aplicar descuentos en el folio?** Y si sí, ¿con tope? Sin
-   tope, un descuento del 100 % es un cobro que desaparece.
-3. **¿El encargado de sala cierra su propio turno de caja, o lo cierra caja?**
-4. **¿Quién liquida las propinas?** Que las reparta quien las cobra tiene un
-   conflicto de interés evidente.
-5. **¿Recepción ve las tarifas y las reglas de precio, aunque no pueda
-   cambiarlas?** Ayuda a cotizar por teléfono.
-6. **¿El encargado de restaurante ve fichajes y turnos de su equipo?** Es lo
-   normal en un restaurante, pero son datos laborales.
-7. **¿Housekeeping y mantenimiento pueden ver el nombre del huésped, o solo
-   «cabaña 3, sale mañana»?** Mi propuesta es lo segundo.
-8. **¿Unificamos usuarios y empleados (§4)?** Mi recomendación: no, todavía no.
+| # | Decisión | Cómo queda |
+|---|---|---|
+| 1 | Reportes de recepción | **Solo ocupación.** Recepción no ve ingresos ni márgenes. Se parte `reportes.ver` en dos: `reportes.ocupacion` y `reportes.ingresos` |
+| 2 | Descuentos de recepción | **Sí, con tope configurable.** Nuevo permiso `folio.descuento.sintope` para quien pueda saltárselo |
+| 3 | Liquidación de propinas | **Caja y gerencia. El restaurante no.** Quien cobra la propina no la reparte: es la separación de funciones de toda la vida, y evita una conversación desagradable el día que alguien sospeche |
+| 4 | Datos del huésped para housekeeping | **Solo la ocupación.** «Cabaña 3, sale mañana». Sin nombre, sin importe, sin teléfono |
+| 5 | Recepción y las tarifas | **Las ve, no las toca.** Sin verlas no puede cotizar por teléfono, y cotizar a ojo sale más caro que el riesgo de que las mire |
+| 6 | Encargado de sala y su equipo | **Ve turnos, no ve fichajes.** El cuadrante lo necesita para organizar el servicio; las horas trabajadas son dato laboral y se quedan en gerencia y administración |
+| 7 | Turno de caja del restaurante | **Abre y cierra el suyo.** El restaurante cierra a otra hora que recepción, y hacerle esperar no aporta control. Los arqueos ajenos, no |
+| 8 | Unificar usuarios y empleados | **No, todavía no.** Ver §4. Se puede hacer más adelante sin tirar nada de esto |
+
+### Lo que cambia en el catálogo
+
+- `reportes.ver` → se parte en **`reportes.ocupacion`** (Ger, Adm, Rec, Caj) y
+  **`reportes.ingresos`** (Ger, Adm, Caj).
+- Nuevo **`folio.descuento.sintope`** (Ger, Caj). Sin él, el descuento queda
+  limitado por el tope de `configuracion.descuento_tope`.
+- `propinas.liquidar` → Ger y **Caj**. Se le quita al restaurante.
+- `tarifas.ver` → se le añade **Rec**.
+- `turnos.ver` mantiene a Res; **`fichajes.ver` se le quita**.
+- `caja.abrir` y `caja.cerrar` mantienen a Res; `caja.arqueo` no.
+
+**Total: 82 permisos.**
 
 ---
 
@@ -307,3 +319,30 @@ del §5 antes de empezar el 3.
 ---
 
 *Borrador del 27-07-2026. Inventario: 296 rutas. Nada implementado.*
+
+---
+
+## 7 · Estado de la implementación · 27-07-2026
+
+| Paso | Estado |
+|---|---|
+| 1 · Tablas `roles`, `permisos`, `rol_permisos`, `usuarios.rol_id` | ✅ hecho |
+| 2 · Motor de permisos: `Catalogo`, `Permisos`, helper `puede()` | ✅ hecho |
+| 3 · Cambiar el filtro en las 296 rutas | ⬜ pendiente |
+| 4 · Menú y botones según permisos | ⬜ pendiente |
+| 5 · Pantalla de perfiles | ⬜ pendiente |
+| 6 · Auditoría de las acciones sensibles | ⬜ pendiente |
+| 7 · Pruebas por perfil | 🟡 25 del motor; faltan las de rutas |
+
+**Los pasos 1 y 2 no cambian el comportamiento de nada.** La columna `rol`
+antigua sigue en su sitio, las 296 rutas siguen usando el filtro `rol:`, y a
+cada usuario se le asignó su perfil equivalente al migrar. Todo lo nuevo está
+al lado, esperando a que el paso 3 se haga ruta por ruta.
+
+Comprobado tras migrar: los 7 perfiles sembrados, los 82 permisos en la tabla,
+los 2 usuarios enlazados a `gerencia`, el tope de descuento en 15 %, y las
+pantallas de siempre respondiendo 200.
+
+```bash
+php vendor/bin/phpunit tests/unit/ --no-coverage
+```

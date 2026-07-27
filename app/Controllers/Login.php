@@ -45,6 +45,10 @@ class Login extends BaseController
             'usuario_id'     => $usuario['id'],
             'usuario_nombre' => $usuario['nombre'],
             'usuario_rol'    => $usuario['rol'],
+            // El perfil nuevo. Va junto al rol antiguo mientras las rutas se
+            // pasan de `rol:` a `permiso:`; quien no tenga perfil asignado
+            // sigue trabajando con la equivalencia de siempre.
+            'usuario_rol_id' => $usuario['rol_id'] ?? null,
         ]);
 
         // El equipo de limpieza entra directo a su tablero de trabajo

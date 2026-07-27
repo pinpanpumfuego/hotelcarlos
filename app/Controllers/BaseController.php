@@ -36,7 +36,10 @@ abstract class BaseController extends Controller
         // públicas como la pantalla de traducciones del panel. Se carga aquí y
         // no en la plantilla porque en CodeIgniter la vista hija se ejecuta
         // **antes** que el layout: cargarlo allí llegaba tarde.
-        $this->helpers = ['web'];
+        // Se cargan aquí y no en el layout porque en CodeIgniter la vista hija
+        // se ejecuta **antes** que el layout: si `puede()` se cargara allí, la
+        // primera vista que lo usara reventaría con «función no definida».
+        $this->helpers = ['web', 'permisos'];
 
         // Caution: Do not edit this line.
         parent::initController($request, $response, $logger);
