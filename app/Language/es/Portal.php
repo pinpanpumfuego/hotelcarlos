@@ -121,4 +121,11 @@ return [
     'donde'              => '¿Dónde te lo llevamos?',
     'enLaCabana'         => 'A la cabaña',
     'enElRestaurante'    => 'Voy al restaurante',
+
+    // ── Minibar ──────────────────────────────────────────────────────
+    'minibar'            => 'Minibar',
+    'minibarTexto'       => 'Apunta lo que te has tomado y se carga a tu cuenta. Sin sorpresas al salir.',
+    'minibarApuntado'    => 'Apuntado en tu cuenta. Gracias por decírnoslo.',
+    'minibarReponer'     => 'Pedir que lo repongan',
+    'yaApuntado'         => 'Ya apuntado',
 ];

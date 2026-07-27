@@ -116,4 +116,11 @@ return [
     'donde'              => 'Wohin bringen wir es?',
     'enLaCabana'         => 'Zur Hütte',
     'enElRestaurante'    => 'Ich komme ins Restaurant',
+
+    // ── Minibar ──────────────────────────────────────────────────────
+    'minibar'            => 'Minibar',
+    'minibarTexto'       => 'Notieren Sie, was Sie genommen haben; es kommt auf Ihre Rechnung. Keine Überraschungen bei der Abreise.',
+    'minibarApuntado'    => 'Ihrer Rechnung hinzugefügt. Danke für den Hinweis.',
+    'minibarReponer'     => 'Um Auffüllen bitten',
+    'yaApuntado'         => 'Bereits notiert',
 ];

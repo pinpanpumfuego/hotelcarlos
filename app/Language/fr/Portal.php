@@ -116,4 +116,11 @@ return [
     'donde'              => 'Où vous l’apportons-nous ?',
     'enLaCabana'         => 'À la cabane',
     'enElRestaurante'    => 'Je viens au restaurant',
+
+    // ── Minibar ──────────────────────────────────────────────────────
+    'minibar'            => 'Minibar',
+    'minibarTexto'       => 'Notez ce que vous avez pris, c’est porté sur votre note. Pas de surprise au départ.',
+    'minibarApuntado'    => 'Ajouté à votre note. Merci de nous l’avoir dit.',
+    'minibarReponer'     => 'Demander à le réapprovisionner',
+    'yaApuntado'         => 'Déjà noté',
 ];

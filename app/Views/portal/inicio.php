@@ -122,6 +122,12 @@ $registroPendiente = $fase !== 'despues'
         <a class="btn btn-bosque" href="<?= site_url('estancia/' . $token . '/carta') ?>">
             <i class="bi bi-cup-hot me-1"></i><?= esc(lang('Portal.pedirCarta')) ?>
         </a>
+        <?php // Solo si el hotel lo tiene encendido Y esta cabaña lo tiene ?>
+        <?php if ($minibar): ?>
+            <a class="btn btn-outline-secondary" href="<?= site_url('estancia/' . $token . '/minibar') ?>">
+                <i class="bi bi-cup-straw me-1"></i><?= esc(lang('Portal.minibar')) ?>
+            </a>
+        <?php endif ?>
     </div>
 <?php endif ?>
 

@@ -417,6 +417,7 @@ class Carta extends BaseController
             }
             $datos['picante']   = min(3, max(0, (int) $this->request->getPost('picante')));
             $datos['divisible'] = $this->request->getPost('divisible') ? 1 : 0;
+            $datos['en_minibar'] = $this->request->getPost('en_minibar') ? 1 : 0;
 
             $marcados = (array) ($this->request->getPost('alergenos') ?? []);
             $validos   = array_values(array_intersect($marcados, array_keys(CartaProductoModel::ALERGENOS)));

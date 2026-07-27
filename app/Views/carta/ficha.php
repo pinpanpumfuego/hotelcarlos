@@ -65,6 +65,15 @@
                         </div>
                         <div class="col-12">
                             <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="en_minibar" value="1" id="en_minibar" <?= ! empty($producto['en_minibar']) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="en_minibar">
+                                    <strong>Está en el minibar de las cabañas</strong>
+                                    <span class="d-block small text-muted">El huésped puede apuntarlo desde su móvil y se le carga a la cuenta.</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="divisible" value="1" id="divisible" <?= ! empty($producto['divisible']) ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="divisible">
                                     <strong>Se puede vender por mitades</strong>

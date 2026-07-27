@@ -158,6 +158,7 @@ class Unidades extends BaseController
             'orden'       => (int) $this->request->getPost('orden'),
             'estado'      => (string) $this->request->getPost('estado'),
             'notas'       => trim((string) $this->request->getPost('notas')) ?: null,
+            'minibar'     => $this->request->getPost('minibar') ? 1 : 0,
         ];
     }
 

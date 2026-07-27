@@ -662,3 +662,8 @@ $routes->post('estancia/(:segment)/apuntarse', 'Portal::apuntarse/$1');
 $routes->get('estancia/(:segment)/carta', 'Portal::carta/$1');
 $routes->post('estancia/(:segment)/pedido', 'Portal::pedido/$1');
 $routes->get('estancia/(:segment)/comprobante', 'Portal::comprobante/$1');
+
+// ── Minibar del portal (solo si el hotel y la cabaña lo tienen) ─────
+$routes->get("estancia/(:segment)/minibar", "Portal::minibar/$1");
+$routes->post("estancia/(:segment)/minibar", "Portal::declararMinibar/$1");
+$routes->post("estancia/(:segment)/minibar/reponer", "Portal::reponerMinibar/$1");

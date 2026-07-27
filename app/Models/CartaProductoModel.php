@@ -11,7 +11,7 @@ class CartaProductoModel extends Model
     protected $allowedFields = [
         'categoria_id', 'nombre', 'descripcion', 'precio', 'destino', 'disponible',
         'apto_vegano', 'apto_vegetariano', 'sin_gluten', 'sin_lactosa', 'picante',
-        'alergenos', 'divisible',
+        'alergenos', 'divisible', 'en_minibar',
     ];
 
     public const DESTINOS = [

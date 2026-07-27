@@ -18,6 +18,7 @@ use App\Models\RegistroModel;
 use App\Models\ReservaModel;
 use App\Models\ServicioModel;
 use App\Models\SolicitudModel;
+use App\Models\UnidadModel;
 
 /**
  * Portal del huésped: su estancia, en su móvil.
@@ -57,6 +58,7 @@ class Portal extends BaseController
             'noches'     => $this->noches($ctx['reserva']),
             'fase'       => $this->fase($ctx['reserva']),
             'pendientes' => (new SolicitudModel())->deReserva((int) $ctx['reserva']['id']),
+            'minibar' => $this->hayMinibar($ctx['reserva']),
             // Los nombres de quienes vienen, no solo el número: ya están en la
             // base de datos desde el registro y no enseñarlos era desperdiciarlos.
             'acompanantes' => $registro === null
@@ -324,6 +326,129 @@ class Portal extends BaseController
         }
 
         return redirect()->to($this->ruta($token, 'cuenta'))->with('ok', lang('Portal.pedidoEnviado'));
+    }
+
+    // ── Minibar ─────────────────────────────────────────────────────────
+
+    /**
+     * ¿Tiene minibar esta estancia?
+     *
+     * Hacen falta las dos cosas: que el alojamiento lo tenga encendido y que
+     * **esta cabaña concreta** lo tenga. En un ecolodge de siete cabañas es
+     * normal que unas tengan nevera y otras no, y enseñarle un minibar a quien
+     * no lo tiene en la cabaña es una promesa que no se puede cumplir.
+     */
+    private function hayMinibar(array $reserva): bool
+    {
+        if ((new ConfiguracionModel())->obtener('portal_minibar', '0') !== '1') {
+            return false;
+        }
+
+        if (empty($reserva['unidad_id'])) {
+            return false;
+        }
+
+        $unidad = (new UnidadModel())->find((int) $reserva['unidad_id']);
+
+        return $unidad !== null && (int) ($unidad['minibar'] ?? 0) === 1;
+    }
+
+    public function minibar(string $token)
+    {
+        $ctx = $this->contexto($token);
+        if ($ctx === null) {
+            return $this->caducado();
+        }
+
+        if (! $this->hayMinibar($ctx['reserva'])) {
+            return redirect()->to($this->ruta($token));
+        }
+
+        return view('portal/minibar', $ctx + [
+            'productos' => (new CartaProductoModel())
+                ->where('en_minibar', 1)->where('disponible', 1)
+                ->orderBy('nombre')->findAll(),
+            'consumido' => (new FolioModel())
+                ->where('reserva_id', (int) $ctx['reserva']['id'])
+                ->like('concepto', 'Minibar', 'after')
+                ->orderBy('id', 'DESC')->findAll(20),
+        ]);
+    }
+
+    /**
+     * El huésped declara lo que se ha tomado.
+     *
+     * Se carga a la cuenta en el acto y con su nombre en el concepto, para que
+     * al salir no haya sorpresas ni discusiones sobre qué es cada línea. Es más
+     * honesto que apuntarlo en un papel y cobrarlo al final.
+     */
+    public function declararMinibar(string $token)
+    {
+        $ctx = $this->contexto($token);
+        if ($ctx === null) {
+            return $this->caducado();
+        }
+
+        if (! $this->hayMinibar($ctx['reserva'])) {
+            return redirect()->to($this->ruta($token));
+        }
+
+        $productos = new CartaProductoModel();
+        $folio     = new FolioModel();
+        $reservaId = (int) $ctx['reserva']['id'];
+        $apuntados = 0;
+
+        foreach ((array) $this->request->getPost('cantidad') as $productoId => $cantidad) {
+            $cantidad = max(0, min(20, (int) $cantidad));
+            if ($cantidad === 0) {
+                continue;
+            }
+
+            // El precio, de la base. Nunca del formulario.
+            $producto = $productos->where('id', (int) $productoId)
+                ->where('en_minibar', 1)->where('disponible', 1)->first();
+
+            if ($producto === null) {
+                continue;
+            }
+
+            $folio->insert([
+                'reserva_id' => $reservaId,
+                'tipo'       => 'cargo',
+                'concepto'   => 'Minibar: ' . $cantidad . ' × ' . $producto['nombre'],
+                'valor'      => (float) $producto['precio'] * $cantidad,
+            ]);
+            $apuntados++;
+        }
+
+        if ($apuntados === 0) {
+            return redirect()->to($this->ruta($token, 'minibar'))->with('error', lang('Portal.pedidoVacio'));
+        }
+
+        return redirect()->to($this->ruta($token, 'cuenta'))->with('ok', lang('Portal.minibarApuntado'));
+    }
+
+    /** Pedir que lo repongan. Va como petición, no como cargo. */
+    public function reponerMinibar(string $token)
+    {
+        $ctx = $this->contexto($token);
+        if ($ctx === null) {
+            return $this->caducado();
+        }
+
+        if (! $this->hayMinibar($ctx['reserva'])) {
+            return redirect()->to($this->ruta($token));
+        }
+
+        (new SolicitudModel())->insert([
+            'reserva_id' => (int) $ctx['reserva']['id'],
+            'unidad_id'  => $ctx['reserva']['unidad_id'] ?? null,
+            'tipo'       => 'minibar',
+            'detalle'    => mb_substr(trim((string) $this->request->getPost('detalle')), 0, 500) ?: null,
+            'estado'     => 'pendiente',
+        ]);
+
+        return redirect()->to($this->ruta($token, 'minibar'))->with('ok', lang('Portal.recibida'));
     }
 
     // ── Comprobante ─────────────────────────────────────────────────────

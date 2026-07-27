@@ -87,6 +87,18 @@ $actual = old('estado', $unidad['estado'] ?? 'disponible');
                 Normalmente no hace falta tocarlo: el estado cambia solo con los check-in, check-out y la limpieza.
             </div>
 
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" name="minibar" value="1" id="minibar"
+                       <?= ! empty($unidad['minibar']) ? 'checked' : '' ?>>
+                <label class="form-check-label" for="minibar">
+                    <strong>Esta cabaña tiene minibar</strong>
+                    <span class="d-block form-text">
+                        No todas tienen por qué. Si el minibar está apagado en Administración,
+                        esto no hace nada.
+                    </span>
+                </label>
+            </div>
+
             <label class="form-label fw-semibold">Notas internas</label>
             <textarea name="notas" class="form-control" rows="2"
                       placeholder="Detalles que solo ve el personal: acceso, particularidades…"><?= esc(old('notas', $unidad['notas'] ?? '')) ?></textarea>

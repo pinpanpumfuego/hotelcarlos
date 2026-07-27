@@ -308,6 +308,42 @@
                                 <strong>En 0 se apagan los pedidos desde el portal.</strong>
                             </div>
                         </div>
+                        <div class="col-12">
+                            <hr class="my-1">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="minibar" value="1" id="minibarOn"
+                                       <?= $portal['minibar'] ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="minibarOn">
+                                    <strong>Hay minibar</strong>
+                                    <span class="d-block form-text">
+                                        El huésped apunta lo que se ha tomado y se le carga a la cuenta en el acto,
+                                        sin sorpresas al salir. <strong>Apagado, no aparece por ninguna parte.</strong>
+                                    </span>
+                                </label>
+                            </div>
+                            <?php if ($portal['minibar']): ?>
+                                <div class="alert alert-light border small mt-2 mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Hace falta además marcar <strong>qué cabañas lo tienen</strong> —no todas tienen
+                                    por qué— y <strong>qué productos hay dentro</strong>.
+                                    <div class="mt-2">
+                                        <a href="<?= site_url('unidades') ?>" class="badge text-decoration-none
+                                           <?= $portal['cabanas_minibar'] > 0 ? 'text-bg-success' : 'text-bg-warning' ?>">
+                                            <?= (int) $portal['cabanas_minibar'] ?> cabaña(s) con minibar
+                                        </a>
+                                        <a href="<?= site_url('carta') ?>" class="badge text-decoration-none ms-1
+                                           <?= $portal['productos_minibar'] > 0 ? 'text-bg-success' : 'text-bg-warning' ?>">
+                                            <?= (int) $portal['productos_minibar'] ?> producto(s) en el minibar
+                                        </a>
+                                    </div>
+                                    <?php if ($portal['cabanas_minibar'] === 0 || $portal['productos_minibar'] === 0): ?>
+                                        <div class="mt-2 text-warning-emphasis">
+                                            Mientras falte una de las dos cosas, el minibar no se le enseña a nadie.
+                                        </div>
+                                    <?php endif ?>
+                                </div>
+                            <?php endif ?>
+                        </div>
                     </div>
                     <button class="btn btn-primary mt-3">
                         <i class="bi bi-check-lg me-1"></i>Guardar textos del portal

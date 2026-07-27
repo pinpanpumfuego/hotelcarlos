@@ -116,4 +116,11 @@ return [
     'donde'              => 'Where shall we bring it?',
     'enLaCabana'         => 'To the cabin',
     'enElRestaurante'    => 'I will come to the restaurant',
+
+    // ── Minibar ──────────────────────────────────────────────────────
+    'minibar'            => 'Minibar',
+    'minibarTexto'       => 'Note down what you have had and it goes on your bill. No surprises when you leave.',
+    'minibarApuntado'    => 'Added to your bill. Thanks for telling us.',
+    'minibarReponer'     => 'Ask us to restock it',
+    'yaApuntado'         => 'Already noted',
 ];

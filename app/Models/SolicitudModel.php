@@ -33,6 +33,7 @@ class SolicitudModel extends Model
         'decoracion'   => 'Decoración para una ocasión especial',
         'salida_tarde' => 'Salir más tarde el último día',
         'transporte'   => 'Transporte o traslado',
+        'minibar'      => 'Reponer el minibar',
         'otro'         => 'Otra cosa',
     ];
 

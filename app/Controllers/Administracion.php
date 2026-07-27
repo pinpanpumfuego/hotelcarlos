@@ -66,6 +66,9 @@ class Administracion extends BaseController
                 'rutas'           => $this->config->obtener('portal_rutas', ''),
                 'recomendaciones' => $this->config->obtener('portal_recomendaciones', ''),
                 'tope_cargo'      => (int) $this->config->obtener('portal_tope_cargo', '300000'),
+                'minibar'         => $this->config->obtener('portal_minibar', '0') === '1',
+                'cabanas_minibar' => (new \App\Models\UnidadModel())->where('minibar', 1)->countAllResults(),
+                'productos_minibar' => (new \App\Models\CartaProductoModel())->where('en_minibar', 1)->countAllResults(),
             ],
 
             // Control de jornada
@@ -256,6 +259,8 @@ class Administracion extends BaseController
             // Hasta cuánto puede cargar el huésped a la cabaña sin que nadie lo
             // apruebe. En 0 se apagan los pedidos desde el portal.
             'portal_tope_cargo'            => (string) max(0, (int) $this->request->getPost('tope_cargo')),
+            // Si el alojamiento no tiene minibar, no aparece por ninguna parte
+            'portal_minibar'               => $this->request->getPost('minibar') !== null ? '1' : '0',
         ]);
 
         return redirect()->to('administracion#portal')->with('ok', 'Textos del portal del huésped guardados.');
