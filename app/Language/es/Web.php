@@ -21,6 +21,8 @@ return [
     'reservar'      => 'Reservar',
     'abrirMenu'     => 'Abrir menú',
     'cambiarIdioma' => 'Cambiar idioma',
+    'cambiarMoneda' => 'Cambiar moneda',
+    'cobroEnPesos'  => 'Los precios son en pesos colombianos. Las demás monedas son orientativas: el cobro se realiza siempre en COP.',
 
     // ── Pie ──
     'pieReservas'      => 'Reservas',

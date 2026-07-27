@@ -12,6 +12,8 @@ return [
     'reservar'      => 'Book',
     'abrirMenu'     => 'Open menu',
     'cambiarIdioma' => 'Change language',
+    'cambiarMoneda' => 'Change currency',
+    'cobroEnPesos'  => 'Prices are in Colombian pesos. Other currencies are approximate: you will always be charged in COP.',
 
     // ── Footer ──
     'pieReservas'      => 'Bookings',

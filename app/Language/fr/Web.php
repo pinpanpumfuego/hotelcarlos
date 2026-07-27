@@ -12,6 +12,8 @@ return [
     'reservar'      => 'Réserver',
     'abrirMenu'     => 'Ouvrir le menu',
     'cambiarIdioma' => 'Changer de langue',
+    'cambiarMoneda' => 'Changer de devise',
+    'cobroEnPesos'  => 'Les prix sont en pesos colombiens. Les autres devises sont indicatives : le paiement se fait toujours en COP.',
 
     // ── Pied de page ──
     'pieReservas'      => 'Réservations',

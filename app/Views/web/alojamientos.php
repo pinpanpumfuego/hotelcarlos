@@ -35,8 +35,9 @@ function escenaParaTipoLista(string $nombre): string
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                             <h2 class="h4 mb-0"><?= esc($t['nombre']) ?></h2>
                             <span class="precio-desde fs-5">
-                                <?= esc(lang('Web.desde')) ?> $<?= number_format((float) $t['tarifa_base'], 0, ',', '.') ?> COP
+                                <?= esc(lang('Web.desde')) ?> <?= precio((float) $t['tarifa_base']) ?>
                                 <span class="text-muted fs-6">/ <?= esc(lang('Web.porNoche')) ?></span>
+                                <?= precio_aprox((float) $t['tarifa_base']) ?>
                             </span>
                         </div>
                         <p class="text-muted"><?= esc($t['descripcion'] ?? '') ?></p>

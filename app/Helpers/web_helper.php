@@ -63,6 +63,49 @@ if (! function_exists('ruta_actual_web')) {
     }
 }
 
+if (! function_exists('monedas')) {
+    /** La calculadora de monedas de esta petición, creada una sola vez. */
+    function monedas(): \App\Libraries\Monedas
+    {
+        static $m = null;
+
+        return $m ??= new \App\Libraries\Monedas();
+    }
+}
+
+if (! function_exists('precio')) {
+    /**
+     * El precio en pesos, que es lo que se cobra.
+     *
+     * Siempre en primer lugar y con «COP» escrito: es la cifra real y la que
+     * aparecerá en el cargo.
+     */
+    function precio(float $pesos): string
+    {
+        return '$' . number_format($pesos, 0, ',', '.') . ' COP';
+    }
+}
+
+if (! function_exists('precio_aprox')) {
+    /**
+     * La conversión orientativa, o cadena vacía si no procede.
+     *
+     * Devuelve el HTML ya montado con la clase `.aprox`, para que ninguna
+     * plantilla se olvide de marcarla como aproximada. Enseñar «95 €» sin más
+     * y luego cobrar en pesos es cómo se ganan las reclamaciones.
+     */
+    function precio_aprox(float $pesos): string
+    {
+        $texto = monedas()->aproximado($pesos);
+
+        if ($texto === null) {
+            return '';
+        }
+
+        return '<span class="aprox">≈ ' . esc($texto) . '</span>';
+    }
+}
+
 if (! function_exists('idiomas_web')) {
     /**
      * Los cuatro idiomas con su dirección para la página actual.

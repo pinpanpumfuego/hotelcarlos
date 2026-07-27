@@ -144,6 +144,33 @@ class Web extends BaseController
         ]);
     }
 
+    /**
+     * Guarda la moneda que eligió el visitante y lo devuelve donde estaba.
+     *
+     * En una cookie y no en la sesión: no hace falta abrir sesión a nadie por
+     * una preferencia de visualización, y así sobrevive a que cierre el
+     * navegador. Un año, que es lo que dura la costumbre de volver a mirar.
+     */
+    public function moneda(string $codigo)
+    {
+        $codigo = strtoupper($codigo);
+
+        if (! isset(\App\Libraries\Monedas::MONEDAS[$codigo])) {
+            $codigo = \App\Libraries\Monedas::ORIGINAL;
+        }
+
+        $volver = $this->request->getGet('volver');
+        // Solo rutas internas: una redirección abierta es un regalo para quien
+        // quiera usar tu dominio como trampolín a una web falsa
+        $destino = (is_string($volver) && $volver !== '' && ! preg_match('#^(https?:)?//#', $volver))
+            ? $volver
+            : '/';
+
+        return redirect()->to(site_url(ltrim($destino, '/')))
+            ->withCookies()
+            ->setCookie('moneda', $codigo, 60 * 60 * 24 * 365);
+    }
+
     public function contacto()
     {
         return view('web/contacto', [

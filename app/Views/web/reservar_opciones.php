@@ -68,7 +68,10 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div>
-                                <div class="precio-desde fs-4">$<?= number_format($op['total'], 0, ',', '.') ?> COP</div>
+                                <div class="precio-desde fs-4">
+                                    <?= precio((float) $op['total']) ?>
+                                    <?= precio_aprox((float) $op['total']) ?>
+                                </div>
                                 <div class="small text-muted">
                                     <?= esc(lang('Web.totalEstancia')) ?> ·
                                     $<?= number_format($op['porNoche'], 0, ',', '.') ?> <?= esc(lang('Web.porNocheMedia')) ?>

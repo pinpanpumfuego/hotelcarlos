@@ -142,6 +142,9 @@ $idiomaHtml = \App\Libraries\Traductor::IDIOMAS[idioma_web()]['html'];
         .tarjeta-tipo:hover { transform: translateY(-5px); box-shadow: 0 12px 32px rgba(31, 77, 54, .16); }
         .tarjeta-tipo .escena { display: block; width: 100%; height: auto; }
         .precio-desde { color: var(--bosque); font-weight: 600; }
+        /* La conversión, siempre secundaria al precio real en pesos: es
+           orientativa y el cargo se hace en COP. */
+        .aprox { display: block; font-size: .78rem; font-weight: 400; color: #8a8375; margin-top: .1rem; }
         .chip {
             display: inline-block; background: #f0ebe0; border-radius: 100px;
             padding: .25rem .8rem; font-size: .82rem; color: #5c5546;
@@ -315,6 +318,32 @@ $idiomaHtml = \App\Libraries\Traductor::IDIOMAS[idioma_web()]['html'];
                         <?php endforeach ?>
                     </ul>
                 </li>
+
+                <?php // Selector de moneda. Solo aparece si hay cambio guardado:
+                      // ofrecer euros sin poder convertirlos sería peor que nada. ?>
+                <?php $mon = monedas(); ?>
+                <?php if ($mon->hayConversion()): ?>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                           aria-label="<?= esc(lang('Web.cambiarMoneda')) ?>">
+                            <i class="bi bi-cash-coin me-1"></i><?= esc($mon->actual()) ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <?php foreach ($mon->disponibles() as $m): ?>
+                                <li>
+                                    <a class="dropdown-item <?= $m['activa'] ? 'active' : '' ?>"
+                                       href="<?= site_url('moneda/' . $m['codigo']) ?>?volver=<?= urlencode(ruta_actual_web()) ?>">
+                                        <span class="me-2"><?= $m['bandera'] ?></span><?= esc($m['nombre']) ?>
+                                    </a>
+                                </li>
+                            <?php endforeach ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><span class="dropdown-item-text small text-muted" style="max-width:230px; white-space:normal;">
+                                <?= esc(lang('Web.cobroEnPesos')) ?>
+                            </span></li>
+                        </ul>
+                    </li>
+                <?php endif ?>
 
                 <li class="nav-item ms-md-2">
                     <a class="btn btn-reserva btn-sm px-3 py-2" href="<?= url_web('reservar') ?>">

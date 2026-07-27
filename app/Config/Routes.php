@@ -17,6 +17,8 @@ $paginasPublicas = static function ($routes) {
     $routes->get('experiencias-actividades', 'Web::experiencias');
     $routes->get('restaurante', 'Web::carta');
     $routes->get('contacto', 'Web::contacto');
+    // Preferencia de moneda del visitante (solo cómo se muestra: se cobra en COP)
+    $routes->get('moneda/(:segment)', 'Web::moneda/$1');
 
     // Motor de reservas online
     $routes->get('reservar', 'Reservar::index');

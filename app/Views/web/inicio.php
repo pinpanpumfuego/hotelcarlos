@@ -143,8 +143,9 @@ function escenaParaTipo(string $nombre): string
                                 </span>
                             </div>
                             <p class="precio-desde mb-0 fs-5">
-                                <?= esc(lang('Web.desde')) ?> $<?= number_format((float) $t['tarifa_base'], 0, ',', '.') ?> COP
+                                <?= esc(lang('Web.desde')) ?> <?= precio((float) $t['tarifa_base']) ?>
                                 <span class="text-muted fs-6">/ <?= esc(lang('Web.porNoche')) ?></span>
+                                <?= precio_aprox((float) $t['tarifa_base']) ?>
                             </p>
                         </div>
                     </div>

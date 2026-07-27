@@ -12,6 +12,8 @@ return [
     'reservar'      => 'Buchen',
     'abrirMenu'     => 'Menü öffnen',
     'cambiarIdioma' => 'Sprache wechseln',
+    'cambiarMoneda' => 'Währung wechseln',
+    'cobroEnPesos'  => 'Die Preise sind in kolumbianischen Pesos. Andere Währungen sind Richtwerte: Die Abbuchung erfolgt immer in COP.',
 
     // ── Fußzeile ──
     'pieReservas'      => 'Buchungen',
