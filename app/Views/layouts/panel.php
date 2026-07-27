@@ -335,16 +335,25 @@
 </head>
 <body>
 <?php
-$rol         = session()->get('usuario_rol');
+$rol = session()->get('usuario_rol');
+
+// El nombre del perfil sale de `roles`; si el usuario aún no tiene perfil
+// asignado se cae al rol antiguo, para no dejar la insignia en blanco.
 $rolEtiqueta = \App\Models\UsuarioModel::ROLES[$rol] ?? $rol;
-$puedeVender = in_array($rol, ['gerencia', 'recepcion'], true);
-$activa      = $seccion ?? '';
+if (session()->get('usuario_rol_id') !== null) {
+    $fila = (new \App\Models\RolModel())->find((int) session()->get('usuario_rol_id'));
+    if ($fila !== null) {
+        $rolEtiqueta = $fila['nombre'];
+    }
+}
+
+$activa        = $seccion ?? '';
 $nombreUsuario = (string) session()->get('usuario_nombre');
-$iniciales   = mb_strtoupper(mb_substr($nombreUsuario, 0, 1));
+$iniciales     = mb_strtoupper(mb_substr($nombreUsuario, 0, 1));
 
 // Avisos que se muestran como insignia en el menú
 $porRevisar = 0;
-if ($puedeVender) {
+if (puede('registros.ver')) {
     try { $porRevisar = (new \App\Models\RegistroModel())->pendientesDeRevision(); } catch (\Throwable $e) { $porRevisar = 0; }
 }
 
@@ -355,61 +364,79 @@ if ($puedeVender) {
  */
 $grupos = [];
 
-if ($puedeVender) {
-    $grupos['Recepción'] = ['icono' => 'bi-bell', 'enlaces' => [
-        ['calendario', 'calendario', 'bi-calendar3', 'Calendario', 0],
-        ['reservas', 'reservas', 'bi-calendar-check', 'Reservas', 0],
-        ['huespedes', 'huespedes', 'bi-people', 'Huéspedes', 0],
-        ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada', $porRevisar],
-        ['experiencias', 'experiencias', 'bi-compass', 'Experiencias', 0],
-        ['caja', 'caja', 'bi-cash-coin', 'Caja', 0],
-        ['bonos', 'bonos', 'bi-gift', 'Bonos regalo', 0],
-    ]];
+// Cada enlace se pinta solo si su permiso lo consiente. Lo que no se puede
+// hacer no se enseña: un enlace que rebota parece una avería del sistema,
+// mientras que uno que no está es simplemente trabajo de otra persona.
+$soloPermitidos = static function (array $enlaces): array {
+    return array_values(array_filter(
+        $enlaces,
+        static fn (array $e): bool => puede_alguno((array) $e[5])
+    ));
+};
 
-    $restaurante = [
-        ['pos', 'pos', 'bi-tablet-landscape', 'TPV táctil', 0],
-        ['cocina', 'cocina', 'bi-fire', 'Cocina', 0],
-        ['barra', 'barra', 'bi-cup-straw', 'Barra', 0],
-        ['tpv', 'tpv', 'bi-receipt', 'Comandas', 0],
-    ];
-    // La configuración de la carta vive con el restaurante, pero solo la ve gerencia
-    if ($rol === 'gerencia') {
-        $restaurante[] = ['carta', 'carta', 'bi-journal-text', 'Carta', 0];
-        $restaurante[] = ['modificadores', 'modificadores', 'bi-sliders', 'Modificadores', 0];
-        $restaurante[] = ['insumos', 'insumos', 'bi-box-seam', 'Insumos y costes', 0];
-        $restaurante[] = ['preparaciones', 'preparaciones', 'bi-stack', 'Preparaciones', 0];
-    }
+// [clave, ruta, icono, etiqueta, insignia, permisos que lo abren]
+$recepcion = $soloPermitidos([
+    ['calendario', 'calendario', 'bi-calendar3', 'Calendario', 0, ['calendario.ver', 'calendario.ocupacion']],
+    ['reservas', 'reservas', 'bi-calendar-check', 'Reservas', 0, ['reservas.ver']],
+    ['huespedes', 'huespedes', 'bi-people', 'Huéspedes', 0, ['huespedes.ver']],
+    ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada', $porRevisar, ['registros.ver']],
+    ['experiencias', 'experiencias', 'bi-compass', 'Experiencias', 0, ['experiencias.vender']],
+    ['caja', 'caja', 'bi-cash-coin', 'Caja', 0, ['caja.ver']],
+    ['bonos', 'bonos', 'bi-gift', 'Bonos regalo', 0, ['folio.bono', 'bonos.gestionar']],
+]);
+if ($recepcion !== []) {
+    $grupos['Recepción'] = ['icono' => 'bi-bell', 'enlaces' => $recepcion];
+}
+
+$restaurante = $soloPermitidos([
+    ['pos', 'pos', 'bi-tablet-landscape', 'TPV táctil', 0, ['pos.usar']],
+    ['cocina', 'cocina', 'bi-fire', 'Cocina', 0, ['cocina.ver']],
+    ['barra', 'barra', 'bi-cup-straw', 'Barra', 0, ['barra.ver']],
+    ['tpv', 'tpv', 'bi-receipt', 'Comandas', 0, ['pos.usar']],
+    ['carta', 'carta', 'bi-journal-text', 'Carta', 0, ['carta.gestionar']],
+    ['modificadores', 'modificadores', 'bi-sliders', 'Modificadores', 0, ['carta.gestionar']],
+    ['insumos', 'insumos', 'bi-box-seam', 'Insumos y costes', 0, ['insumos.gestionar']],
+    ['preparaciones', 'preparaciones', 'bi-stack', 'Preparaciones', 0, ['insumos.gestionar']],
+]);
+if ($restaurante !== []) {
     $grupos['Restaurante'] = ['icono' => 'bi-cup-hot', 'enlaces' => $restaurante];
 }
 
-$grupos['Operación'] = ['icono' => 'bi-tools', 'enlaces' => [
-    ['limpieza', 'limpieza', 'bi-bucket', 'Limpieza', 0],
-    ['mantenimiento', 'mantenimiento', 'bi-wrench-adjustable', 'Mantenimiento', 0],
-    ['unidades', 'unidades', 'bi-door-open', 'Cabañas', 0],
-]];
+$operacion = $soloPermitidos([
+    ['limpieza', 'limpieza', 'bi-bucket', 'Limpieza', 0, ['limpieza.ver']],
+    ['mantenimiento', 'mantenimiento', 'bi-wrench-adjustable', 'Mantenimiento', 0, ['mantenimiento.ver']],
+    ['unidades', 'unidades', 'bi-door-open', 'Cabañas', 0, ['unidades.estado', 'unidades.gestionar']],
+]);
+if ($operacion !== []) {
+    $grupos['Operación'] = ['icono' => 'bi-tools', 'enlaces' => $operacion];
+}
 
-if ($rol === 'gerencia') {
-    $grupos['Equipo'] = ['icono' => 'bi-people-fill', 'enlaces' => [
-        ['personal', 'personal', 'bi-person-badge', 'Fichas del personal', 0],
-        ['fichajes', 'fichajes', 'bi-clock-history', 'Control de jornada', 0],
-        ['turnos', 'turnos', 'bi-calendar-week', 'Turnos', 0],
-        ['ausencias', 'ausencias', 'bi-calendar-x', 'Ausencias', 0],
-        ['propinas', 'propinas', 'bi-cash-stack', 'Propinas', 0],
-    ]];
+$equipo = $soloPermitidos([
+    ['personal', 'personal', 'bi-person-badge', 'Fichas del personal', 0, ['personal.ver']],
+    ['fichajes', 'fichajes', 'bi-clock-history', 'Control de jornada', 0, ['fichajes.ver']],
+    ['turnos', 'turnos', 'bi-calendar-week', 'Turnos', 0, ['turnos.ver']],
+    ['ausencias', 'ausencias', 'bi-calendar-x', 'Ausencias', 0, ['ausencias.gestionar']],
+    ['propinas', 'propinas', 'bi-cash-stack', 'Propinas', 0, ['propinas.liquidar']],
+]);
+if ($equipo !== []) {
+    $grupos['Equipo'] = ['icono' => 'bi-people-fill', 'enlaces' => $equipo];
+}
 
-    $grupos['Gerencia'] = ['icono' => 'bi-briefcase', 'enlaces' => [
-        ['reportes', 'reportes', 'bi-graph-up', 'Reportes', 0],
-        ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0],
-        ['tarifas', 'tarifas', 'bi-tags', 'Tarifas', 0],
-        ['canales', 'canales', 'bi-diagram-3', 'Portales y canales', 0],
-        ['traducciones', 'traducciones', 'bi-translate', 'Traducciones', 0],
-        ['cupones', 'cupones', 'bi-ticket-perforated', 'Cupones', 0],
-        ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento', 0],
-        ['servicios', 'servicios', 'bi-stars', 'Servicios', 0],
-        ['inventario-cabanas', 'inventario-cabanas', 'bi-box-seam', 'Enseres de cabañas', 0],
-        ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0],
-        ['administracion', 'administracion', 'bi-gear', 'Administración', 0],
-    ]];
+$gestion = $soloPermitidos([
+    ['reportes', 'reportes', 'bi-graph-up', 'Reportes', 0, ['reportes.ocupacion', 'reportes.ingresos']],
+    ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0, ['facturas.ver']],
+    ['tarifas', 'tarifas', 'bi-tags', 'Tarifas', 0, ['tarifas.ver']],
+    ['canales', 'canales', 'bi-diagram-3', 'Portales y canales', 0, ['canales.gestionar']],
+    ['traducciones', 'traducciones', 'bi-translate', 'Traducciones', 0, ['traducciones.gestionar']],
+    ['cupones', 'cupones', 'bi-ticket-perforated', 'Cupones', 0, ['cupones.gestionar']],
+    ['tipos', 'tipos', 'bi-houses', 'Tipos de alojamiento', 0, ['tipos.gestionar']],
+    ['servicios', 'servicios', 'bi-stars', 'Servicios', 0, ['servicios.gestionar']],
+    ['inventario-cabanas', 'inventario-cabanas', 'bi-box-seam', 'Enseres de cabañas', 0, ['servicios.gestionar']],
+    ['usuarios', 'usuarios', 'bi-person-gear', 'Usuarios', 0, ['usuarios.gestionar']],
+    ['administracion', 'administracion', 'bi-gear', 'Administración', 0, ['administracion.ver']],
+]);
+if ($gestion !== []) {
+    $grupos['Gestión'] = ['icono' => 'bi-briefcase', 'enlaces' => $gestion];
 }
 
 // Grupo que contiene la sección abierta: es el que se muestra desplegado

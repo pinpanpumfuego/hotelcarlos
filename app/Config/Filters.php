@@ -26,7 +26,10 @@ class Filters extends BaseFilters
      */
     public array $aliases = [
         'auth'          => \App\Filters\Autenticacion::class,
+        // `rol` se conserva para no romper nada que aún lo use; las rutas del
+        // panel ya van con `permiso`, que cierra por acción y no por pantalla.
         'rol'           => \App\Filters\Rol::class,
+        'permiso'       => \App\Filters\Permiso::class,
         'tokenjson'     => \App\Filters\TokenJson::class,
         'tpv'           => \App\Filters\Tpv::class,
         'comandero'     => \App\Filters\Comandero::class,

@@ -328,11 +328,11 @@ del §5 antes de empezar el 3.
 |---|---|
 | 1 · Tablas `roles`, `permisos`, `rol_permisos`, `usuarios.rol_id` | ✅ hecho |
 | 2 · Motor de permisos: `Catalogo`, `Permisos`, helper `puede()` | ✅ hecho |
-| 3 · Cambiar el filtro en las 296 rutas | ⬜ pendiente |
-| 4 · Menú y botones según permisos | ⬜ pendiente |
+| 3 · Cambiar el filtro en las rutas | ✅ hecho · 251 rutas con `permiso:`, 0 con `rol:` |
+| 4 · Menú según permisos | ✅ hecho · el layout ya no mira el rol |
 | 5 · Pantalla de perfiles | ⬜ pendiente |
 | 6 · Auditoría de las acciones sensibles | ⬜ pendiente |
-| 7 · Pruebas por perfil | 🟡 25 del motor; faltan las de rutas |
+| 7 · Pruebas por perfil | ✅ 53 de rutas + 25 del motor. 122 en total |
 
 **Los pasos 1 y 2 no cambian el comportamiento de nada.** La columna `rol`
 antigua sigue en su sitio, las 296 rutas siguen usando el filtro `rol:`, y a
@@ -346,3 +346,26 @@ pantallas de siempre respondiendo 200.
 ```bash
 php vendor/bin/phpunit tests/unit/ --no-coverage
 ```
+
+### Comprobado tras el paso 3
+
+- **333 rutas antes, 333 después.** Comparado el inventario de `spark routes`
+  entero: ni una perdida, ni una añadida.
+- **251 rutas con `permiso:`**, 0 con `rol:`.
+- **3 rutas solo con sesión**: `panel`, `perfil` y `perfil/clave`. A propósito:
+  son de cualquiera que entre, y dejar a alguien sin ningún sitio al que ir lo
+  mandaría al login en bucle.
+- **78 sin sesión**: la web pública en cuatro idiomas, el registro por enlace,
+  el iCal, el fichaje y el comandero (esos van por PIN, no por usuario).
+- Ninguna ruta quedó con `permiso:` pero sin `auth`.
+
+### Un fallo que apareció de paso
+
+La migración `2026-08-05-090000_TpvCompartido` **no soporta `migrate:refresh`**:
+su `down()` no deshace lo que hace `up()`, y al reconstruir el esquema desde
+cero se queda a medias. No afecta a producción —allí solo se migra hacia
+adelante— pero impide reconstruir la base de pruebas de un tirón. Queda anotado.
+
+Se quitaron además `tests/database/ExampleDatabaseTest.php` y
+`tests/session/ExampleSessionTest.php`: son los de fábrica de CodeIgniter, no
+prueban nada de este sistema, y su `$seed` forzaba justo ese refresh.
