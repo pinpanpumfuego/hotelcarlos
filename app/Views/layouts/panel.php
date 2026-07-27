@@ -384,6 +384,7 @@ $recepcion = $soloPermitidos([
     ['calendario', 'calendario', 'bi-calendar3', 'Calendario', 0, ['calendario.ver', 'calendario.ocupacion']],
     ['reservas', 'reservas', 'bi-calendar-check', 'Reservas', 0, ['reservas.ver']],
     ['huespedes', 'huespedes', 'bi-people', 'Huéspedes', 0, ['huespedes.ver']],
+    ['comunicaciones', 'comunicaciones', 'bi-envelope-paper', 'Comunicaciones', 0, ['comunicaciones.ver']],
     ['registros', 'registros', 'bi-person-vcard', 'Registros de llegada', $porRevisar, ['registros.ver']],
     ['solicitudes', 'solicitudes', 'bi-hand-index', 'Peticiones de huéspedes', $porAtender, ['limpieza.ver', 'mantenimiento.ver']],
     ['experiencias', 'experiencias', 'bi-compass', 'Experiencias', 0, ['experiencias.vender']],

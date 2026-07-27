@@ -282,6 +282,33 @@ $routes->group('', ['filter' => ['auth', 'permiso:consentimientos.gestionar']], 
 $routes->group('', ['filter' => ['auth', 'permiso:huespedes.fusionar']], static function ($routes) {
     $routes->post('huespedes/fusionar/(:num)', 'Huespedes::fusionar/$1');
 });
+
+// ── Comunicaciones ──────────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:comunicaciones.ver']], static function ($routes) {
+    $routes->get('comunicaciones', 'Comunicaciones::index');
+    $routes->get('comunicaciones/ver/(:num)', 'Comunicaciones::ver/$1');
+    $routes->get('comunicaciones/plantillas', 'Comunicaciones::plantillas');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:comunicaciones.enviar']], static function ($routes) {
+    $routes->post('comunicaciones/procesar', 'Comunicaciones::procesar');
+    $routes->post('comunicaciones/encolar', 'Comunicaciones::encolarHoy');
+    $routes->post('comunicaciones/reintentar/(:num)', 'Comunicaciones::reintentar/$1');
+    $routes->post('comunicaciones/cancelar/(:num)', 'Comunicaciones::cancelar/$1');
+});
+// Cambiar una plantilla cambia lo que se le dice a todo el mundo: va aparte.
+$routes->group('', ['filter' => ['auth', 'permiso:comunicaciones.plantillas']], static function ($routes) {
+    $routes->get('comunicaciones/plantilla/(:num)', 'Comunicaciones::editarPlantilla/$1');
+    $routes->post('comunicaciones/plantilla/(:num)', 'Comunicaciones::guardarPlantilla/$1');
+    $routes->post('comunicaciones/regla/(:num)', 'Comunicaciones::guardarRegla/$1');
+});
+
+// ── Baja de correos ─────────────────────────────────────────────────
+//
+// Públicas y sin sesión a propósito: pedirle una contraseña a alguien que
+// quiere dejar de recibir correos es exactamente poner trabas. El token solo
+// sirve para retirar la finalidad de ese correo; no abre nada más.
+$routes->get('baja/(:segment)', 'Baja::darse/$1');
+$routes->get('px/(:segment)', 'Baja::pixel/$1');
 $routes->group('', ['filter' => ['auth', 'permiso:huespedes.eliminar']], static function ($routes) {
     $routes->post('huespedes/eliminar/(:num)', 'Huespedes::eliminar/$1');
 });

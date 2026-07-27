@@ -234,9 +234,17 @@ class Reservas extends BaseController
             $accesos = new \App\Models\PortalAccesoModel();
             $acceso  = $accesos->asegurar($completa);
 
-            $correo   = new \App\Libraries\Correo();
+            $correo = new \App\Libraries\Correo();
 
-            if ($correo->confirmacionReserva($completa, site_url('registro/' . $registro['token']), $accesos->enlace($acceso))) {
+            // Se encola por el CRM si hay una automatización de confirmación
+            // encendida; si no, se manda el correo de siempre. Así encender la
+            // automatización no duplica el mensaje, y apagarla no deja al
+            // huésped sin confirmación.
+            $encolado = (new \App\Libraries\Automatizaciones())->alConfirmar($id);
+
+            if ($encolado !== null) {
+                $aviso = ' La confirmación quedó en cola y saldrá en unos minutos.';
+            } elseif ($correo->confirmacionReserva($completa, site_url('registro/' . $registro['token']), $accesos->enlace($acceso))) {
                 $aviso = ' Se envió la confirmación por correo a ' . $completa['email'] . ' con su enlace de registro.';
             } elseif (! $correo->configurado()) {
                 $aviso = ' El correo no está configurado todavía: envíale el enlace de registro por WhatsApp desde esta ficha.';

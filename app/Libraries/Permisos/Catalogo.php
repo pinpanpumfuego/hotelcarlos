@@ -82,6 +82,10 @@ final class Catalogo
         'huespedes.sensibles'  => ['modulo' => 'huespedes', 'nombre' => 'Ver alergias y datos de salud', 'sensible' => true],
         'huespedes.fusionar'   => ['modulo' => 'huespedes', 'nombre' => 'Fusionar perfiles duplicados', 'sensible' => true],
         'consentimientos.gestionar' => ['modulo' => 'huespedes', 'nombre' => 'Dar y retirar consentimientos', 'sensible' => true],
+        'comunicaciones.ver'   => ['modulo' => 'huespedes', 'nombre' => 'Ver los mensajes enviados', 'sensible' => false],
+        // Cambiar una plantilla cambia lo que se le dice a todo el mundo.
+        'comunicaciones.plantillas' => ['modulo' => 'huespedes', 'nombre' => 'Editar plantillas y automatizaciones', 'sensible' => true],
+        'comunicaciones.enviar' => ['modulo' => 'huespedes', 'nombre' => 'Mandar mensajes a mano', 'sensible' => false],
 
         // ── Caja ────────────────────────────────────────────────────────
         'caja.ver'        => ['modulo' => 'caja', 'nombre' => 'Ver el turno', 'sensible' => false],
@@ -222,6 +226,7 @@ final class Catalogo
                 'huespedes.ver', 'huespedes.editar',
                 'registros.ver', 'registros.aprobar', 'registros.documentos', 'registros.reporte',
                 'huespedes.sensibles', 'huespedes.fusionar', 'consentimientos.gestionar',
+                'comunicaciones.ver', 'comunicaciones.enviar',
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento',
                 'pos.usar', 'pos.cobrar', 'pos.mover',
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',

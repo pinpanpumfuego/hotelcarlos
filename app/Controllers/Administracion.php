@@ -201,6 +201,16 @@ class Administracion extends BaseController
                     'cuando' => 'Una vez al día, de madrugada',
                     'orden'  => 'php ' . ROOTPATH . 'spark mantenimiento:preventivo',
                 ],
+                [
+                    'que'    => 'Encolar los mensajes automáticos del día',
+                    'cuando' => 'Una vez al día, a primera hora',
+                    'orden'  => 'php ' . ROOTPATH . 'spark comunicaciones:correr',
+                ],
+                [
+                    'que'    => 'Vaciar la cola de mensajes',
+                    'cuando' => 'Cada hora',
+                    'orden'  => 'php ' . ROOTPATH . 'spark comunicaciones:correr --solo-cola',
+                ],
             ],
         ];
     }
