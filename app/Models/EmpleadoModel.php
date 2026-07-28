@@ -17,6 +17,7 @@ class EmpleadoModel extends Model
         'notas', 'activo',
         'pin_hash', 'pin_actualizado', 'ficha_movil', 'foto',
         'tarjeta_uid', 'rol_tpv',
+        'pin_panel', 'pin_bloqueado',
     ];
 
     /** Qué puede hacer cada uno en el TPV. */

@@ -178,10 +178,54 @@ class Fichajes extends BaseController
             return redirect()->to('personal')->with('error', 'El empleado no existe.');
         }
 
-        $this->empleados->update($empleadoId, ['pin_hash' => null, 'pin_actualizado' => null]);
+        // Al quitar el PIN se cae también la entrada al panel: si no, quedaría
+        // un permiso encendido apuntando a una llave que ya no existe, y
+        // volvería a valer solo con darle un PIN nuevo para fichar.
+        $this->empleados->update($empleadoId, [
+            'pin_hash' => null, 'pin_actualizado' => null, 'pin_panel' => 0, 'pin_bloqueado' => null,
+        ]);
 
         return redirect()->to('personal/ver/' . $empleadoId)
             ->with('ok', 'PIN retirado. Esta persona ya no puede fichar hasta que se le dé uno nuevo.');
+    }
+
+    /**
+     * Permite o impide entrar al panel con el PIN.
+     *
+     * Fichar con el PIN y entrar al panel con él no son lo mismo: en el panel
+     * hay dinero y datos de huéspedes. Por eso se concede aparte y de fábrica
+     * está apagado.
+     */
+    public function pinPanel(int $empleadoId)
+    {
+        $empleado = $this->empleados->find($empleadoId);
+
+        if ($empleado === null) {
+            return redirect()->to('personal')->with('error', 'El empleado no existe.');
+        }
+
+        if ($empleado['usuario_id'] === null) {
+            return redirect()->to('personal/ver/' . $empleadoId)
+                ->with('error', 'Primero hay que enlazar esta ficha con un usuario del sistema.');
+        }
+
+        if ($empleado['pin_hash'] === null) {
+            return redirect()->to('personal/ver/' . $empleadoId)
+                ->with('error', 'Esta persona no tiene PIN todavía.');
+        }
+
+        $permitir = (int) ($empleado['pin_panel'] ?? 0) !== 1;
+
+        $this->empleados->update($empleadoId, [
+            'pin_panel'     => $permitir ? 1 : 0,
+            // Encenderlo otra vez limpia el bloqueo por fallos: es una decisión
+            // consciente de alguien con permiso, no un descuido.
+            'pin_bloqueado' => null,
+        ]);
+
+        return redirect()->to('personal/ver/' . $empleadoId)->with('ok', $permitir
+            ? 'Ya puede entrar al panel con su PIN, desde equipos reconocidos.'
+            : 'Ya no puede entrar al panel con su PIN.');
     }
 
     /** Permite o impide que una persona fiche desde su móvil. */

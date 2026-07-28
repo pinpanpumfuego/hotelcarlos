@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\AccesoPin;
 use App\Models\UsuarioModel;
 
 class Login extends BaseController
@@ -12,7 +13,27 @@ class Login extends BaseController
             return redirect()->to('panel');
         }
 
-        return view('login');
+        // La pestaña del PIN solo se enseña donde sirve de algo. En un equipo
+        // sin reconocer sería un formulario que nunca deja pasar, y eso se
+        // interpreta como que el sistema está roto.
+        return view('login', ['equipoReconocido' => (new AccesoPin())->equipoReconocido()]);
+    }
+
+    /** Entrar con correo y PIN de 4 dígitos. */
+    public function pin()
+    {
+        $acceso = new AccesoPin();
+
+        $r = $acceso->comprobar(
+            (string) $this->request->getPost('email'),
+            (string) $this->request->getPost('pin')
+        );
+
+        if (! $r['ok']) {
+            return redirect()->to('login')->withInput()->with('error', $r['motivo']);
+        }
+
+        return $this->abrirSesion($r['usuario'], true);
     }
 
     public function entrar()
@@ -38,7 +59,36 @@ class Login extends BaseController
             $usuarios->update($usuario['id'], ['clave_hash' => password_hash($clave, PASSWORD_DEFAULT)]);
         }
 
-        $usuarios->update($usuario['id'], ['ultimo_acceso' => date('Y-m-d H:i:s')]);
+        // Entrar con la contraseña completa es lo que reconoce este equipo para
+        // el PIN, y lo que le devuelve el PIN a quien lo tenía bloqueado por
+        // fallos. Las dos cosas exigen saber la contraseña, que es el punto.
+        $acceso = new AccesoPin();
+        $acceso->recordarEquipo((int) $usuario['id']);
+        $acceso->desbloquear((int) $usuario['id']);
+
+        return $this->abrirSesion($usuario, false);
+    }
+
+    public function salir()
+    {
+        session()->destroy();
+
+        return redirect()->to('login')->with('ok', 'Sesión cerrada correctamente.');
+    }
+
+    /**
+     * Abre la sesión y manda a cada uno a su sitio.
+     *
+     * `$porPin` se queda apuntado en la sesión porque cambia lo que se puede
+     * hacer sin volver a demostrar quién eres: ver el trabajo del día, sí;
+     * cobrar o abrir el documento de identidad de un huésped, no sin la
+     * contraseña.
+     *
+     * @param array<string, mixed> $usuario
+     */
+    private function abrirSesion(array $usuario, bool $porPin)
+    {
+        (new UsuarioModel())->update($usuario['id'], ['ultimo_acceso' => date('Y-m-d H:i:s')]);
 
         session()->regenerate(true);
         session()->set([
@@ -49,6 +99,7 @@ class Login extends BaseController
             // pasan de `rol:` a `permiso:`; quien no tenga perfil asignado
             // sigue trabajando con la equivalencia de siempre.
             'usuario_rol_id' => $usuario['rol_id'] ?? null,
+            'sesion_pin'     => $porPin,
         ]);
 
         // Quien solo limpia entra directo a su tablero: el panel general no le
@@ -61,12 +112,5 @@ class Login extends BaseController
         session()->remove('url_destino');
 
         return redirect()->to($destino)->with('ok', 'Bienvenido, ' . $usuario['nombre'] . '.');
-    }
-
-    public function salir()
-    {
-        session()->destroy();
-
-        return redirect()->to('login')->with('ok', 'Sesión cerrada correctamente.');
     }
 }

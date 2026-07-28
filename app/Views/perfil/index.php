@@ -43,6 +43,53 @@
                 </form>
             </div>
         </div>
+
+        <?php // Un equipo reconocido lo está un año. Eso es lo que hace cómoda la
+              // entrada con PIN, y también lo que obliga a poder quitarlo el día
+              // que se pierde un móvil. ?>
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-laptop me-2"></i>Equipos donde puedes entrar con PIN
+            </div>
+            <div class="card-body">
+                <?php if (empty($equipos)): ?>
+                    <p class="text-muted mb-0">
+                        Todavía no hay ninguno. Cada vez que entres con tu contraseña en un equipo,
+                        ese equipo queda reconocido durante un año.
+                    </p>
+                <?php else: ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($equipos as $e): ?>
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0 gap-3">
+                                <div>
+                                    <div class="fw-semibold">
+                                        <?= esc($e['nombre'] ?? 'Equipo') ?>
+                                        <?php if ((int) $e['id'] === (int) $equipo_actual): ?>
+                                            <span class="badge text-bg-success ms-1">este</span>
+                                        <?php endif ?>
+                                    </div>
+                                    <div class="small text-muted">
+                                        <?php if ($e['ultimo_uso']): ?>
+                                            Último uso: <?= date('d/m/Y H:i', strtotime($e['ultimo_uso'])) ?> ·
+                                        <?php endif ?>
+                                        Caduca el <?= date('d/m/Y', strtotime($e['expira'])) ?>
+                                    </div>
+                                </div>
+                                <form method="post" action="<?= site_url('perfil/equipo/quitar/' . $e['id']) ?>"
+                                      onsubmit="return confirm('¿Quitar este equipo? Desde ahí habrá que entrar con la contraseña.')">
+                                    <?= csrf_field() ?>
+                                    <button class="btn btn-sm btn-outline-danger">Quitar</button>
+                                </form>
+                            </div>
+                        <?php endforeach ?>
+                    </div>
+                    <div class="form-text mt-3">
+                        Si pierdes un móvil o dejas de usar un equipo, quítalo de aquí. Mientras
+                        siga en la lista, quien lo tenga solo necesita tu correo y tu PIN.
+                    </div>
+                <?php endif ?>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -173,6 +173,41 @@ $coloresA = \App\Models\AusenciaModel::COLORES;
                     </div>
                 </div>
 
+                <?php // Entrar al panel con el PIN es otra cosa que fichar con él, y
+                      // se concede aparte: el panel tiene dinero y datos de huéspedes. ?>
+                <?php if ($empleado['pin_hash'] !== null && $empleado['usuario_id'] !== null): ?>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div>
+                            <div class="fw-semibold">Entrar al panel con el PIN</div>
+                            <div class="form-text mb-0" style="max-width: 34rem;">
+                                Solo funciona desde equipos ya reconocidos, y para cobrar o abrir
+                                documentos de huéspedes se le pedirá igualmente su contraseña.
+                                <?php if ($empleado['pin_bloqueado'] !== null): ?>
+                                    <span class="text-danger d-block mt-1">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        Bloqueado por intentos fallidos el
+                                        <?= date('d/m/Y H:i', strtotime($empleado['pin_bloqueado'])) ?>.
+                                        Se reactiva cuando entre con su contraseña.
+                                    </span>
+                                <?php endif ?>
+                            </div>
+                        </div>
+                        <form method="post" action="<?= site_url('fichajes/pin/panel/' . $empleado['id']) ?>">
+                            <?= csrf_field() ?>
+                            <button class="btn btn-outline-<?= (int) ($empleado['pin_panel'] ?? 0) === 1 ? 'success' : 'secondary' ?>">
+                                <i class="bi <?= (int) ($empleado['pin_panel'] ?? 0) === 1 ? 'bi-check-circle' : 'bi-slash-circle' ?> me-1"></i>
+                                <?= (int) ($empleado['pin_panel'] ?? 0) === 1 ? 'Permitido' : 'No permitido' ?>
+                            </button>
+                        </form>
+                    </div>
+                <?php elseif ($empleado['pin_hash'] !== null): ?>
+                    <div class="form-text mt-3">
+                        Para que pueda entrar al panel con su PIN, antes hay que enlazar esta ficha
+                        con un usuario del sistema.
+                    </div>
+                <?php endif ?>
+
                 <?php if ($empleado['pin_hash'] !== null): ?>
                     <form method="post" action="<?= site_url('fichajes/pin/quitar/' . $empleado['id']) ?>" class="mt-3"
                           onsubmit="return confirm('¿Retirar el PIN? Dejará de poder fichar.');">

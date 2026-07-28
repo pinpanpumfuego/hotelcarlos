@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filters;
 
+use App\Libraries\AccesoPin;
 use App\Libraries\Permisos\Catalogo;
 use App\Models\AuditoriaModel;
 use App\Models\RolModel;
@@ -49,6 +50,24 @@ class Permiso implements FilterInterface
             $this->auditar($request, $exigidos, 'denegado', 403);
 
             return $this->rechazar($request, 'No tienes permiso para hacer eso.');
+        }
+
+        // Tiene el permiso, pero entró con PIN y esto es de lo sensible: se le
+        // pide la contraseña una vez. El permiso no cambia; lo que se comprueba
+        // es que quien está delante sigue siendo su dueño.
+        $acceso = new AccesoPin();
+
+        if ($acceso->pideContrasena($exigidos)) {
+            // En un POST no se puede volver solo: el formulario ya no existe
+            // después de confirmar. Se vuelve a la pantalla de donde salió y se
+            // dice que repita, que es honesto y no pierde nada por el camino.
+            $vuelta = $request instanceof IncomingRequest && $request->getMethod() === 'GET'
+                ? current_url()
+                : ((string) $request->getServer('HTTP_REFERER') ?: site_url('panel'));
+
+            session()->set('url_confirmar', $vuelta);
+
+            return redirect()->to(site_url('confirmar'));
         }
 
         return null;

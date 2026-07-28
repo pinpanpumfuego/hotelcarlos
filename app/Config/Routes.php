@@ -92,6 +92,10 @@ $routes->group('comandero/api', ['filter' => ['tokenjson', 'comandero']], static
 // ── Acceso ──────────────────────────────────────────────────────────
 $routes->get('login', 'Login::index');
 $routes->post('login/entrar', 'Login::entrar');
+// Correo + PIN de 4 dígitos. Solo funciona en equipos ya reconocidos: lo que
+// sostiene cuatro dígitos no es su longitud, es que además haya que estar en
+// una máquina del hotel. Ver App\Libraries\AccesoPin.
+$routes->post('login/pin', 'Login::pin');
 $routes->post('logout', 'Login::salir');
 
 // ── Panel: solo hace falta tener sesión ─────────────────────────────
@@ -107,6 +111,12 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     // Perfil propio: lo tiene cualquiera que entre, sin permiso ninguno
     $routes->get('perfil', 'Perfil::index');
     $routes->post('perfil/clave', 'Perfil::cambiarClave');
+    $routes->post('perfil/equipo/quitar/(:num)', 'Perfil::quitarEquipo/$1');
+
+    // Confirmar la contraseña cuando se entró con PIN y toca algo sensible.
+    // Va sin `permiso:` a propósito: es la pantalla que devuelve el permiso.
+    $routes->get('confirmar', 'Confirmar::index');
+    $routes->post('confirmar/clave', 'Confirmar::clave');
 });
 
 // ── Mantenimiento ───────────────────────────────────────────────────
@@ -773,6 +783,7 @@ $routes->group('', ['filter' => ['auth', 'permiso:fichajes.corregir']], static f
 $routes->group('', ['filter' => ['auth', 'permiso:fichajes.pin']], static function ($routes) {
     $routes->post('fichajes/pin/(:num)', 'Fichajes::pin/$1');
     $routes->post('fichajes/pin/quitar/(:num)', 'Fichajes::quitarPin/$1');
+    $routes->post('fichajes/pin/panel/(:num)', 'Fichajes::pinPanel/$1');
     $routes->post('fichajes/movil/(:num)', 'Fichajes::alternarMovil/$1');
 });
 
