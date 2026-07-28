@@ -516,6 +516,24 @@ $routes->group('', ['filter' => ['auth', 'permiso:pos.anular']], static function
     $routes->post('tpv/comanda/(:num)/anular', 'Tpv::anular/$1');
 });
 
+// ── Cartera ─────────────────────────────────────────────────────────
+$routes->group('', ['filter' => ['auth', 'permiso:cartera.ver']], static function ($routes) {
+    $routes->get('cartera', 'Cartera::index');
+    $routes->get('cartera/ver/(:num)', 'Cartera::ver/$1');
+    $routes->get('cartera/estado/(:num)', 'Cartera::estadoTexto/$1');
+});
+// Subir un cupo es dejar que alguien deba más: es decisión de dinero.
+$routes->group('', ['filter' => ['auth', 'permiso:cartera.gestionar']], static function ($routes) {
+    $routes->post('cartera/guardar', 'Cartera::guardar');
+    $routes->post('cartera/guardar/(:num)', 'Cartera::guardar/$1');
+    $routes->post('cartera/estado/(:num)', 'Cartera::estado/$1');
+    $routes->post('cartera/ajustar/(:num)', 'Cartera::ajustar/$1');
+    $routes->post('cartera/cargar', 'Cartera::cargarReserva');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:cartera.cobrar']], static function ($routes) {
+    $routes->post('cartera/abonar/(:num)', 'Cartera::abonar/$1');
+});
+
 // ── Caja ────────────────────────────────────────────────────────────
 $routes->group('', ['filter' => ['auth', 'permiso:caja.ver']], static function ($routes) {
     $routes->get('caja', 'Caja::index');

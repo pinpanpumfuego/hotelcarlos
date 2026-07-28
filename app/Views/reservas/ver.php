@@ -326,6 +326,39 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
                         </div>
                     </div>
 
+                    <?php // Cargar a una empresa: el folio queda saldado y la
+                          // deuda pasa a la cuenta, con su fecha de vencimiento. ?>
+                    <?php if ($yaEnCartera !== null): ?>
+                        <hr>
+                        <div class="alert alert-light border small mb-0">
+                            <i class="bi bi-briefcase me-1"></i>
+                            Esta reserva se cargó a una cuenta de empresa el
+                            <?= date('d/m/Y', strtotime($yaEnCartera['fecha'])) ?>.
+                            <a href="<?= site_url('cartera/ver/' . $yaEnCartera['cuenta_id']) ?>">Ver la cuenta</a>.
+                        </div>
+                    <?php elseif ($cuentas !== [] && $saldo > 0 && puede('cartera.gestionar')): ?>
+                        <hr>
+                        <h3 class="h6 text-muted mb-2"><i class="bi bi-briefcase me-1"></i>Cargar a una empresa</h3>
+                        <p class="small text-muted">
+                            El folio queda saldado y la deuda pasa a la cuenta de la empresa, con su
+                            plazo de pago. Se comprueba el cupo antes de cargar.
+                        </p>
+                        <form method="post" action="<?= site_url('cartera/cargar') ?>" class="d-flex gap-2 flex-wrap">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="reserva_id" value="<?= $reserva['id'] ?>">
+                            <select name="cuenta_id" class="form-select form-select-sm" required
+                                    style="flex: 2; min-width: 180px;">
+                                <option value="">Elige la cuenta…</option>
+                                <?php foreach ($cuentas as $cta): ?>
+                                    <option value="<?= $cta['id'] ?>"><?= esc($cta['nombre']) ?></option>
+                                <?php endforeach ?>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-arrow-right me-1"></i>Cargar $<?= number_format($saldo, 0, ',', '.') ?>
+                            </button>
+                        </form>
+                    <?php endif ?>
+
                     <?php if ($cobroOnline && $saldo > 0): ?>
                         <?php $enlacePago = site_url('pago/reserva/' . $reserva['codigo'] . '/total'); ?>
                         <hr>

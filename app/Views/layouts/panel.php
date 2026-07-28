@@ -393,6 +393,7 @@ $recepcion = $soloPermitidos([
     ['solicitudes', 'solicitudes', 'bi-hand-index', 'Peticiones de huéspedes', $porAtender, ['limpieza.ver', 'mantenimiento.ver']],
     ['experiencias', 'experiencias', 'bi-compass', 'Experiencias', 0, ['experiencias.vender']],
     ['caja', 'caja', 'bi-cash-coin', 'Caja', 0, ['caja.ver']],
+    ['caja', 'cartera', 'bi-briefcase', 'Cartera', 0, ['cartera.ver']],
     ['bonos', 'bonos', 'bi-gift', 'Bonos regalo', 0, ['folio.bono', 'bonos.gestionar']],
 ]);
 if ($recepcion !== []) {

@@ -208,6 +208,12 @@ class Reservas extends BaseController
             // Sin pasarela configurada, el enlace de cobro no se enseña: mandar
             // al huésped a una pantalla de error es peor que no ofrecerlo.
             'cobroOnline' => (new \App\Libraries\Wompi())->activo(),
+            // Cuentas de empresa a las que se puede cargar esta reserva
+            'cuentas' => puede('cartera.ver')
+                ? (new \App\Models\CuentaCarteraModel())->where('estado', 'activa')->orderBy('nombre')->findAll()
+                : [],
+            'yaEnCartera' => (new \App\Models\CarteraMovimientoModel())
+                ->where('reserva_id', $id)->where('tipo', 'cargo')->first(),
         ]);
     }
 

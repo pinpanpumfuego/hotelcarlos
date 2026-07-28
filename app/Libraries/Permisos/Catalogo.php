@@ -114,6 +114,11 @@ final class Catalogo
         'caja.puntos'     => ['modulo' => 'caja', 'nombre' => 'Configurar los puntos de caja', 'sensible' => true],
         // Cambiar si un medio «afecta caja» descuadra todos los arqueos.
         'medios.gestionar' => ['modulo' => 'caja', 'nombre' => 'Medios de pago', 'sensible' => true],
+        'cartera.ver'      => ['modulo' => 'caja', 'nombre' => 'Ver cuentas de empresa', 'sensible' => false],
+        // Subir un cupo es dejar que alguien deba más. Es una decisión
+        // de dinero, no una de recepción.
+        'cartera.gestionar' => ['modulo' => 'caja', 'nombre' => 'Cuentas, cupos y plazos', 'sensible' => true],
+        'cartera.cobrar'   => ['modulo' => 'caja', 'nombre' => 'Registrar abonos de cartera', 'sensible' => true],
 
         // ── Restaurante ─────────────────────────────────────────────────
         'pos.usar'          => ['modulo' => 'restaurante', 'nombre' => 'Usar el POS', 'sensible' => false],
@@ -252,6 +257,7 @@ final class Catalogo
                 'pqr.ver', 'pqr.gestionar', 'pqr.responder',
                 'cumplimiento.ver',
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento',
+                'cartera.ver',
                 'pos.usar', 'pos.cobrar', 'pos.mover',
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',
                 'mantenimiento.ver', 'mantenimiento.crear', 'mantenimiento.prioridad',
@@ -276,6 +282,7 @@ final class Catalogo
                 'huespedes.ver',
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento', 'caja.arqueo',
                 'caja.retirar',
+                'cartera.ver', 'cartera.gestionar', 'cartera.cobrar',
                 'pos.cobrar',
                 // Quien cobra la propina no la reparte.
                 'propinas.liquidar', 'bonos.gestionar',
