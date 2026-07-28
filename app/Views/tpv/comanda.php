@@ -132,6 +132,16 @@
                                 <option value="<?= $valor ?>"><?= $etiqueta ?></option>
                             <?php endforeach ?>
                         </select>
+                        <?php // El bono y la tarjeta de saldo necesitan su código: sin él
+                              // la comanda se cerraría sin descontarle nada a nadie. ?>
+                        <div id="cobro-codigo" class="mb-3 d-none">
+                            <label class="form-label" id="cobro-codigo-etiqueta">Código</label>
+                            <input type="text" name="codigo" class="form-control text-uppercase"
+                                   autocomplete="off" placeholder="BR-XXXX-XXXX">
+                            <input type="password" name="pin" class="form-control mt-2 d-none" id="cobro-pin"
+                                   inputmode="numeric" maxlength="6" autocomplete="off"
+                                   placeholder="PIN del titular, si lo pide">
+                        </div>
                         <button class="btn btn-success w-100 py-2"><i class="bi bi-cash-coin me-1"></i>Cobrar comanda</button>
                     </form>
 
@@ -174,5 +184,30 @@
         <?php endif ?>
     </div>
 </div>
+
+<script>
+(function () {
+    const select = document.querySelector('select[name="forma_pago"]');
+    const caja   = document.getElementById('cobro-codigo');
+    if (!select || !caja) return;
+
+    const campo = caja.querySelector('input[name="codigo"]');
+    const pin   = document.getElementById('cobro-pin');
+    const eti   = document.getElementById('cobro-codigo-etiqueta');
+
+    function pintar() {
+        const bono    = select.value === 'bono';
+        const tarjeta = select.value === 'tarjeta_saldo';
+        caja.classList.toggle('d-none', !bono && !tarjeta);
+        pin.classList.toggle('d-none', !tarjeta);
+        campo.required = bono || tarjeta;
+        if (bono)    { eti.textContent = 'Código del bono';    campo.placeholder = 'BR-XXXX-XXXX'; }
+        if (tarjeta) { eti.textContent = 'Código de la tarjeta'; campo.placeholder = 'TJ-XXXXXX'; }
+    }
+
+    select.addEventListener('change', pintar);
+    pintar();
+})();
+</script>
 
 <?= $this->endSection() ?>

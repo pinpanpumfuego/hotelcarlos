@@ -190,9 +190,77 @@ class Tpv extends BaseController
             return redirect()->to('tpv/comanda/' . $id)->with('error', 'Para cargar a la cabaña, la comanda debe estar ligada a un huésped alojado.');
         }
 
-        $aviso = '';
+        $aviso   = '';
+        $cobrado = $total;
 
-        if ($forma === 'habitacion') {
+        // El bono y la tarjeta de saldo no son «formas de pago» a secas: hay que
+        // descontarle el dinero a alguien. Si esto no se hiciera, la comanda
+        // quedaría cobrada y el saldo intacto, que es regalar la cuenta.
+        if ($forma === 'bono') {
+            $bonos = new \App\Models\BonoModel();
+            $r     = $bonos->validar((string) $this->request->getPost('codigo'), $total);
+
+            if (! $r['ok']) {
+                return redirect()->to('tpv/comanda/' . $id)->with('error', $r['mensaje']);
+            }
+
+            if ($r['importe'] < $total) {
+                return redirect()->to('tpv/comanda/' . $id)->with(
+                    'error',
+                    'Al bono le faltan $' . number_format($total - $r['importe'], 0, ',', '.')
+                    . '. Esta pantalla cobra la comanda entera de una vez: para partir el cobro, usa el TPV táctil.'
+                );
+            }
+
+            $bonos->consumir($r['bono'], $total, [
+                'comanda_id' => $id,
+                'concepto'   => 'Restaurante · comanda ' . $comanda['numero'],
+            ]);
+
+            $aviso = ' Bono ' . $r['bono']['codigo'] . ' aplicado.';
+        } elseif ($forma === 'tarjeta_saldo') {
+            $motor = new \App\Libraries\Tarjetas();
+            $sim   = $motor->simular((string) $this->request->getPost('codigo'), $total, 'restaurante');
+
+            if (! $sim['ok']) {
+                return redirect()->to('tpv/comanda/' . $id)->with('error', $sim['motivo']);
+            }
+
+            if ($sim['falta'] > 0) {
+                return redirect()->to('tpv/comanda/' . $id)->with(
+                    'error',
+                    'A la tarjeta le faltan $' . number_format($sim['falta'], 0, ',', '.')
+                    . '. Esta pantalla cobra la comanda entera de una vez: para partir el cobro, usa el TPV táctil.'
+                );
+            }
+
+            try {
+                $cobro = $motor->cobrar((string) $this->request->getPost('codigo'), $total, 'restaurante', [
+                    'pin'        => (string) $this->request->getPost('pin'),
+                    'comanda_id' => $id,
+                    'usuario_id' => session()->get('usuario_id'),
+                    'concepto'   => 'Restaurante · comanda ' . $comanda['numero'],
+                ]);
+            } catch (\RuntimeException $e) {
+                return redirect()->to('tpv/comanda/' . $id)->with('error', $e->getMessage());
+            }
+
+            // El descuento baja lo que paga el cliente, pero queda escrito: la
+            // venta valió lo que valía y se ve cuánto se regaló.
+            if ($cobro['descuento'] > 0) {
+                $this->comandas->update($id, [
+                    'descuento'        => round((float) $comanda['descuento'] + $cobro['descuento'], 2),
+                    'motivo_descuento' => 'Tarjeta ' . $sim['tarjeta']['codigo'],
+                ]);
+                // El total de la comanda sigue siendo lo que valió; lo que se
+                // cobró de verdad es menos, y es lo que se dice en pantalla.
+                $cobrado = $cobro['cobrado'];
+                $aviso   = ' Descuento de tarjeta: $' . number_format($cobro['descuento'], 0, ',', '.') . '.';
+            }
+
+            $aviso .= ' Tarjeta ' . $sim['tarjeta']['codigo'] . ': le quedan $'
+                . number_format($cobro['saldo'], 0, ',', '.') . ' de saldo.';
+        } elseif ($forma === 'habitacion') {
             // Va como cargo al folio: el huésped lo paga al hacer el check-out
             (new FolioModel())->insert([
                 'reserva_id' => $comanda['reserva_id'],
@@ -225,7 +293,7 @@ class Tpv extends BaseController
             'cerrada_en' => date('Y-m-d H:i:s'),
         ]);
 
-        return redirect()->to('tpv')->with('ok', 'Comanda ' . $comanda['numero'] . ' cobrada por $' . number_format($total, 0, ',', '.') . ' COP.' . $aviso);
+        return redirect()->to('tpv')->with('ok', 'Comanda ' . $comanda['numero'] . ' cobrada por $' . number_format($cobrado, 0, ',', '.') . ' COP.' . $aviso);
     }
 
     public function anular(int $id)

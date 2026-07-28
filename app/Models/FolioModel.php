@@ -17,6 +17,7 @@ class FolioModel extends Model
         'transferencia' => 'Transferencia',
         'wompi'         => 'Wompi',
         'bono'          => 'Bono regalo',
+        'tarjeta_saldo' => 'Tarjeta de saldo',
         'otro'          => 'Otro',
     ];
 

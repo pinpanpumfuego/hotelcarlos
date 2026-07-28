@@ -301,6 +301,28 @@ $noches        = (new DateTime($reserva['fecha_entrada']))->diff(new DateTime($r
                             </form>
                             <div class="form-text">Paga con el saldo del bono; no es un descuento.</div>
                         </div>
+                        <?php // Tarjeta de saldo: cobra todo lo pendiente de golpe. Si la
+                              // tarjeta tiene descuento, se apunta aparte como descuento
+                              // para que se vea cuánto se está regalando. ?>
+                        <?php if ($saldo > 0 && puede('tarjetas.cobrar')): ?>
+                            <div class="col-md-6">
+                                <h3 class="h6 text-muted mb-3">Tarjeta de saldo</h3>
+                                <form action="<?= site_url('tarjetas/cobrar-folio/' . $reserva['id']) ?>" method="post" class="d-flex gap-2 flex-wrap">
+                                    <?= csrf_field() ?>
+                                    <input type="text" name="codigo" class="form-control text-uppercase" placeholder="TJ-XXXXXX"
+                                           autocomplete="off" required style="flex: 2; min-width: 130px;">
+                                    <input type="password" name="pin" class="form-control" placeholder="PIN"
+                                           inputmode="numeric" maxlength="6" autocomplete="off"
+                                           style="flex: 1; min-width: 70px;">
+                                    <button class="btn btn-outline-primary"><i class="bi bi-credit-card-2-front"></i></button>
+                                </form>
+                                <div class="form-text">
+                                    Cobra hasta $<?= number_format($saldo, 0, ',', '.') ?>. Si no llega, el resto
+                                    se cobra por otro medio. El PIN solo hace falta a partir del importe
+                                    que marque su modalidad.
+                                </div>
+                            </div>
+                        <?php endif ?>
                         <div class="col-md-6">
                             <h3 class="h6 text-muted mb-3">Añadir cargo</h3>
                             <form action="<?= site_url('reservas/folio/cargo/' . $reserva['id']) ?>" method="post" class="d-flex gap-2 flex-wrap">

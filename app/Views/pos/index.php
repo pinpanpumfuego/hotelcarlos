@@ -542,6 +542,19 @@
                    autocomplete="off" style="text-transform:uppercase">
             <p class="ayuda">Se usa el saldo que tenga; si no llega, se cobra el resto con otra forma de pago.</p>
         </div>
+        <!-- Tarjeta de saldo del cliente. El código se puede escanear con el
+             lector o teclear: el QR solo lleva el código, no autoriza nada. -->
+        <div id="cob-tarjeta" style="display:none">
+            <p class="ayuda">Código de la tarjeta</p>
+            <input type="text" class="campo" id="cob-tarjeta-codigo" placeholder="TJ-XXXXXX"
+                   autocomplete="off" style="text-transform:uppercase">
+            <p class="ayuda" style="margin-top:8px">PIN del titular <span style="opacity:.75">(solo si lo pide)</span></p>
+            <input type="password" class="campo" id="cob-tarjeta-pin" inputmode="numeric"
+                   maxlength="6" autocomplete="off">
+            <p class="ayuda">
+                Si la tarjeta tiene descuento se aplica sola y queda apuntado en la comanda.
+            </p>
+        </div>
         <div id="cob-efectivo">
             <p class="ayuda">Efectivo recibido</p>
             <div class="visor" id="cob-visor">0</div>
@@ -1809,7 +1822,9 @@
                 b.classList.add('sel');
                 $('#cob-efectivo').style.display = clave === 'efectivo' ? 'block' : 'none';
                 $('#cob-bono').style.display = clave === 'bono' ? 'block' : 'none';
+                $('#cob-tarjeta').style.display = clave === 'tarjeta_saldo' ? 'block' : 'none';
                 if (clave === 'bono') { setTimeout(() => $('#cob-bono-codigo').focus(), 80); }
+                if (clave === 'tarjeta_saldo') { setTimeout(() => $('#cob-tarjeta-codigo').focus(), 80); }
             };
             cont.appendChild(b);
         });
@@ -1817,6 +1832,9 @@
         $('#cob-efectivo').style.display = 'block';
         $('#cob-bono').style.display = 'none';
         $('#cob-bono-codigo').value = '';
+        $('#cob-tarjeta').style.display = 'none';
+        $('#cob-tarjeta-codigo').value = '';
+        $('#cob-tarjeta-pin').value = '';
         $('#modal-cobro').classList.add('abierta');
     };
 
@@ -1829,6 +1847,11 @@
         if (formaSel === 'bono') {
             cuerpo.codigo = $('#cob-bono-codigo').value.trim().toUpperCase();
             if (!cuerpo.codigo) { avisar('Escribe el código del bono.', true); return; }
+        }
+        if (formaSel === 'tarjeta_saldo') {
+            cuerpo.codigo = $('#cob-tarjeta-codigo').value.trim().toUpperCase();
+            if (!cuerpo.codigo) { avisar('Escanea o escribe el código de la tarjeta.', true); return; }
+            cuerpo.pin = $('#cob-tarjeta-pin').value.trim();
         }
         const datos = await api('/comanda/' + comanda.id + '/cobrar', {
             method: 'POST', body: JSON.stringify(cuerpo),

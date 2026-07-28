@@ -119,6 +119,12 @@ final class Catalogo
         // de dinero, no una de recepción.
         'cartera.gestionar' => ['modulo' => 'caja', 'nombre' => 'Cuentas, cupos y plazos', 'sensible' => true],
         'cartera.cobrar'   => ['modulo' => 'caja', 'nombre' => 'Registrar abonos de cartera', 'sensible' => true],
+        'tarjetas.ver'     => ['modulo' => 'caja', 'nombre' => 'Ver tarjetas de saldo', 'sensible' => false],
+        // Emitir una tarjeta con descuento es crear un precio nuevo.
+        'tarjetas.gestionar' => ['modulo' => 'caja', 'nombre' => 'Emitir tarjetas y modalidades', 'sensible' => true],
+        // Cargar saldo es meter dinero al sistema sin que haya entrado.
+        'tarjetas.cargar'  => ['modulo' => 'caja', 'nombre' => 'Cargar saldo a una tarjeta', 'sensible' => true],
+        'tarjetas.cobrar'  => ['modulo' => 'caja', 'nombre' => 'Cobrar con tarjeta de saldo', 'sensible' => false],
 
         // ── Restaurante ─────────────────────────────────────────────────
         'pos.usar'          => ['modulo' => 'restaurante', 'nombre' => 'Usar el POS', 'sensible' => false],
@@ -258,6 +264,7 @@ final class Catalogo
                 'cumplimiento.ver',
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento',
                 'cartera.ver',
+                'tarjetas.ver', 'tarjetas.cargar', 'tarjetas.cobrar',
                 'pos.usar', 'pos.cobrar', 'pos.mover',
                 'limpieza.ver', 'limpieza.reportar', 'unidades.estado',
                 'mantenimiento.ver', 'mantenimiento.crear', 'mantenimiento.prioridad',
@@ -283,6 +290,7 @@ final class Catalogo
                 'caja.ver', 'caja.abrir', 'caja.cerrar', 'caja.movimiento', 'caja.arqueo',
                 'caja.retirar',
                 'cartera.ver', 'cartera.gestionar', 'cartera.cobrar',
+                'tarjetas.ver', 'tarjetas.gestionar', 'tarjetas.cargar', 'tarjetas.cobrar',
                 'pos.cobrar',
                 // Quien cobra la propina no la reparte.
                 'propinas.liquidar', 'bonos.gestionar',
@@ -304,6 +312,7 @@ final class Catalogo
                 'mantenimiento.crear',
                 // Sin ver las alergias, la cocina puede mandar a alguien al hospital.
                 'huespedes.ver', 'huespedes.sensibles',
+                'tarjetas.ver', 'tarjetas.cobrar',
                 'pqr.ver', 'pqr.gestionar',
                 // El cuadrante lo necesita para organizar el servicio. Las horas
                 // trabajadas son dato laboral y se quedan en gerencia.

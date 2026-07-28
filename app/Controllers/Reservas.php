@@ -201,7 +201,10 @@ class Reservas extends BaseController
             'movimientos' => $folio->movimientosDeReserva($id),
             'saldo'       => $folio->saldo($id),
             // El bono no se elige a mano: se canjea con su código, más abajo
-            'metodos'     => array_diff_key(FolioModel::METODOS, ['bono' => '']),
+            // El bono y la tarjeta de saldo no se eligen a mano: se piden por su
+            // código y descuentan de verdad. Dejarlos en el desplegable sería
+            // poder dar por pagada una cuenta sin que nadie pague nada.
+            'metodos'     => array_diff_key(FolioModel::METODOS, ['bono' => '', 'tarjeta_saldo' => '']),
             'registro'    => (new \App\Models\RegistroModel())->where('reserva_id', $id)->first(),
             'actividades' => (new \App\Models\ExperienciaReservaModel())->deReserva($id),
             'experiencias' => (new \App\Models\ExperienciaModel())->activas(),
@@ -421,7 +424,8 @@ class Reservas extends BaseController
         $valor  = (float) $this->request->getPost('valor');
         $metodo = (string) $this->request->getPost('metodo');
 
-        if ($valor <= 0 || ! array_key_exists($metodo, FolioModel::METODOS) || $metodo === 'bono') {
+        if ($valor <= 0 || ! array_key_exists($metodo, FolioModel::METODOS)
+            || in_array($metodo, ['bono', 'tarjeta_saldo'], true)) {
             return redirect()->to('reservas/ver/' . $id)->with('error', 'Indica un valor mayor que cero y un método de pago.');
         }
 

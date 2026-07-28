@@ -110,6 +110,60 @@ class Pagos extends BaseController
     }
 
     /**
+     * Recargar una tarjeta de saldo desde el móvil.
+     *
+     * Pública y con el código de la tarjeta en la dirección: el peor caso es
+     * que alguien le meta dinero a una tarjeta que no es suya, que no es un
+     * daño. **Y no enseña el saldo ni el titular**: eso sí lo sería.
+     */
+    public function tarjeta(string $codigo)
+    {
+        if (! $this->wompi->activo()) {
+            return $this->fin('Los pagos en línea no están disponibles ahora mismo.');
+        }
+
+        $tarjeta = (new \App\Models\TarjetaModel())->porCodigo($codigo);
+
+        if ($tarjeta === null || $tarjeta['estado'] !== 'activa') {
+            return $this->fin('Esa tarjeta no se puede recargar.');
+        }
+
+        $valor = (float) $this->request->getGet('valor');
+
+        // Tope alto y suelo bajo: sin ellos, una dirección manipulada podría
+        // pedirle a la pasarela un cobro de un peso o de mil millones.
+        if ($valor < 10000 || $valor > 5000000) {
+            return $this->fin('El valor de la recarga tiene que estar entre $10.000 y $5.000.000.');
+        }
+
+        if (service('throttler')->check('tarjeta-' . md5($this->request->getIPAddress()), 10, MINUTE) === false) {
+            return $this->fin('Demasiados intentos. Espera un minuto.');
+        }
+
+        $pago = $this->pagos->abrir('tarjeta', (int) $tarjeta['id'], $valor, [
+            'ambiente'  => $this->wompi->ambiente(),
+            'ip'        => $this->request->getIPAddress(),
+            'expira_en' => date('Y-m-d H:i:s', strtotime('+2 hours')),
+        ]);
+
+        try {
+            $enlace = $this->wompi->enlaceCheckout(
+                $pago['referencia'],
+                $valor,
+                site_url('pago/volver'),
+                [],
+                gmdate('c', strtotime('+2 hours'))
+            );
+        } catch (\Throwable $e) {
+            log_message('error', 'Wompi: no se pudo armar la recarga: {m}', ['m' => $e->getMessage()]);
+
+            return $this->fin('No pudimos preparar la recarga. Escríbenos y lo resolvemos.');
+        }
+
+        return redirect()->to($enlace);
+    }
+
+    /**
      * El huésped vuelve de la pasarela.
      *
      * Aquí no se cree nada de lo que trae: se coge el id y se le pregunta a la
@@ -221,6 +275,20 @@ class Pagos extends BaseController
     /** Mete el cobro donde toque. */
     private function llevarACuenta(array $pago): void
     {
+        // Recarga de una tarjeta de saldo desde el móvil del titular
+        if ($pago['concepto_tipo'] === 'tarjeta') {
+            (new \App\Libraries\Tarjetas())->cargar(
+                (int) $pago['concepto_id'],
+                (float) $pago['valor'],
+                'wompi',
+                $pago['transaccion_id'] ?? null,
+                null,
+                (int) $pago['id']
+            );
+
+            return;
+        }
+
         if ($pago['concepto_tipo'] !== 'reserva') {
             return;
         }

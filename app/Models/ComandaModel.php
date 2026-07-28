@@ -23,6 +23,9 @@ class ComandaModel extends Model
         'wompi'         => 'Wompi',
         'habitacion'    => 'Cargar a la cabaña',
         'bono'          => 'Bono regalo',
+        // `tarjeta` es el datáfono; esto es el monedero del cliente. Se separan
+        // porque el datáfono entra en el arqueo y el saldo ya se cobró antes.
+        'tarjeta_saldo' => 'Tarjeta de saldo',
     ];
 
     /**

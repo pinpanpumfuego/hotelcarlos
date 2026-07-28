@@ -961,6 +961,44 @@ $routes->get('pago/reserva/(:segment)', 'Pagos::reserva/$1');
 // extras incluidos, en vez de quedarse en el anticipo del motor de reservas.
 $routes->get('pago/reserva/(:segment)/total', 'Pagos::reserva/$1/total');
 $routes->get('pago/volver', 'Pagos::volver');
+// Recargar una tarjeta de saldo desde su propio QR. Lo peor que puede hacer un
+// desconocido con este enlace es meterle dinero a una tarjeta que no es suya.
+$routes->get('pago/tarjeta/(:segment)', 'Pagos::tarjeta/$1');
 
 // El aviso de la pasarela es máquina a máquina: sin CSRF y con firma propia.
 $routes->post('pago/aviso', 'Pagos::aviso');
+
+// ── Tarjetas de saldo ───────────────────────────────────────────────
+//
+// La pantalla que ve el titular al escanear su QR. Pública porque el titular no
+// tiene cuenta en el panel, pero **sin PIN no enseña ni el nombre ni el saldo**:
+// un QR se fotografía sin querer y quien pase al lado no tiene por qué saber
+// cuánto lleva encima esa persona.
+$routes->get('tarjeta/(:segment)', 'Tarjeta::ver/$1');
+$routes->post('tarjeta/(:segment)/consultar', 'Tarjeta::consultar/$1');
+
+$routes->group('', ['filter' => ['auth', 'permiso:tarjetas.ver']], static function ($routes) {
+    $routes->get('tarjetas', 'Tarjetas::index');
+    $routes->get('tarjetas/ver/(:num)', 'Tarjetas::ver/$1');
+    $routes->get('tarjetas/qr/(:num)', 'Tarjetas::qr/$1');
+    $routes->get('tarjetas/imprimir/(:num)', 'Tarjetas::imprimir/$1');
+});
+// Emitir una tarjeta, ponerle un descuento propio o congelarla es decisión de
+// dinero: se separa de poder cargarla o cobrarla.
+$routes->group('', ['filter' => ['auth', 'permiso:tarjetas.gestionar']], static function ($routes) {
+    $routes->get('tarjetas/nueva', 'Tarjetas::nueva');
+    $routes->post('tarjetas/emitir', 'Tarjetas::emitir');
+    $routes->post('tarjetas/estado/(:num)', 'Tarjetas::estado/$1');
+    $routes->post('tarjetas/pin/(:num)', 'Tarjetas::pin/$1');
+    $routes->get('tarjetas/tipos', 'Tarjetas::tipos');
+    $routes->post('tarjetas/tipos/guardar', 'Tarjetas::guardarTipo');
+    $routes->post('tarjetas/tipos/guardar/(:num)', 'Tarjetas::guardarTipo/$1');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:tarjetas.cargar']], static function ($routes) {
+    $routes->post('tarjetas/cargar/(:num)', 'Tarjetas::cargar/$1');
+    $routes->post('tarjetas/recarga-mensual', 'Tarjetas::recargaMensual');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:tarjetas.cobrar']], static function ($routes) {
+    $routes->get('tarjetas/simular', 'Tarjetas::simular');
+    $routes->post('tarjetas/cobrar-folio/(:num)', 'Tarjetas::cobrarFolio/$1');
+});

@@ -801,6 +801,44 @@ class Pos extends BaseController
             $importe = $r['importe']; // nunca más de lo que queda en el bono
         }
 
+        // Tarjeta de saldo: se mira antes de cobrar para poder avisar de lo que
+        // va a pasar (descuento, cuánto cubre, si pide PIN) en vez de fallar a
+        // medias. El cobro de verdad se hace más abajo.
+        $tarjeta = null;
+        if ($forma === 'tarjeta_saldo') {
+            $sim = (new \App\Libraries\Tarjetas())->simular(
+                (string) ($datos['codigo'] ?? ''),
+                $importe,
+                'restaurante'
+            );
+
+            if (! $sim['ok']) {
+                return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => $sim['motivo']]);
+            }
+
+            // Si pide PIN y no viene, se le dice al TPV que lo pregunte en vez
+            // de devolver un error seco que el camarero no sabría interpretar.
+            if ($sim['pide_pin'] && trim((string) ($datos['pin'] ?? '')) === '') {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'ok'          => false,
+                    'necesita_pin_tarjeta' => true,
+                    'titular'     => $sim['tarjeta']['titular'],
+                    'error'       => 'Esta tarjeta pide el PIN de su titular para este importe.',
+                ]);
+            }
+
+            // Se guarda el importe entero: el descuento se calcula sobre lo que
+            // vale la cuenta, no sobre lo que alcance el saldo. Si la tarjeta no
+            // llega, el resto se cobra por otro medio.
+            $sim['bruto'] = $importe;
+            $tarjeta      = $sim;
+
+            // Lo que se apunta como pagado es lo que sale de la tarjeta; el
+            // descuento va aparte, para que la venta no quede registrada por
+            // menos de lo que valió.
+            $importe = $sim['cubre'];
+        }
+
         $recibido = null;
         $cambio   = null;
         if ($forma === 'efectivo') {
@@ -829,6 +867,41 @@ class Pos extends BaseController
             ]);
             $restante = round((float) $bono['saldo'] - $importe, 2);
             $avisos[] = 'Bono ' . $bono['codigo'] . ' aplicado. Le quedan $' . number_format($restante, 0, ',', '.') . ' de saldo.';
+        } elseif ($forma === 'tarjeta_saldo' && $tarjeta !== null) {
+            try {
+                $cobro = (new \App\Libraries\Tarjetas())->cobrar(
+                    (string) $datos['codigo'],
+                    $tarjeta['bruto'],
+                    'restaurante',
+                    [
+                        'pin'        => (string) ($datos['pin'] ?? ''),
+                        'comanda_id' => $id,
+                        'usuario_id' => session()->get('usuario_id'),
+                        'concepto'   => 'Restaurante · comanda ' . $comanda['numero'],
+                    ]
+                );
+            } catch (\RuntimeException $e) {
+                return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => $e->getMessage()]);
+            }
+
+            $importe = $cobro['cobrado'];
+
+            // El descuento de la tarjeta baja lo que hay que pagar, pero se
+            // apunta como descuento de la comanda: la venta sigue valiendo lo
+            // que valía y queda escrito cuánto se regaló.
+            if ($cobro['descuento'] > 0) {
+                $motivo = 'Tarjeta ' . $tarjeta['tarjeta']['codigo'];
+                $this->comandas->update($id, [
+                    'descuento'        => round((float) $comanda['descuento'] + $cobro['descuento'], 2),
+                    'motivo_descuento' => $comanda['motivo_descuento']
+                        ? mb_substr($comanda['motivo_descuento'] . ' + ' . $motivo, 0, 150)
+                        : $motivo,
+                ]);
+                $avisos[] = 'Descuento de tarjeta: $' . number_format($cobro['descuento'], 0, ',', '.') . '.';
+            }
+
+            $avisos[] = 'Tarjeta ' . $tarjeta['tarjeta']['codigo'] . ': le quedan $'
+                . number_format($cobro['saldo'], 0, ',', '.') . ' de saldo.';
         } elseif ($forma === 'efectivo') {
             $turno = (new CajaTurnoModel())->abierto();
             if ($turno !== null) {
@@ -918,6 +991,18 @@ class Pos extends BaseController
                 (float) $mov['valor'],
                 'Devuelto al anular la comanda ' . $comanda['numero'],
                 ['comanda_id' => $id]
+            );
+        }
+
+        // Lo mismo con la tarjeta de saldo: el dinero es del titular y una
+        // comanda anulada no puede quedárselo.
+        $motor = new \App\Libraries\Tarjetas();
+        foreach ((new \App\Models\TarjetaMovimientoModel())->where('comanda_id', $id)->where('tipo', 'consumo')->findAll() as $mov) {
+            $motor->devolver(
+                (int) $mov['tarjeta_id'],
+                (float) $mov['valor'],
+                'Devuelto al anular la comanda ' . $comanda['numero'],
+                session()->get('usuario_id')
             );
         }
 
