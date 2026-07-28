@@ -622,5 +622,7 @@ $pintarMenu = static function () use ($grupos, $activa, $grupoActivo, $porRevisa
         pintar();
     })();
 </script>
+
+<?= view("partes/espera") ?>
 </body>
 </html>

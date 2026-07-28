@@ -115,5 +115,7 @@ $aqui = $seccion ?? '';
     <?php endforeach ?>
 </nav>
 
+
+<?= view("partes/espera") ?>
 </body>
 </html>

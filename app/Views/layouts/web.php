@@ -452,5 +452,7 @@ $idiomaHtml = \App\Libraries\Traductor::IDIOMAS[idioma_web()]['html'];
         }, { threshold: 0 }).observe(caja);
     }());
 </script>
+
+<?= view("partes/espera") ?>
 </body>
 </html>

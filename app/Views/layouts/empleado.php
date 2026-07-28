@@ -151,5 +151,7 @@
     });
 </script>
 <?= $this->renderSection('scripts') ?>
+
+<?= view("partes/espera") ?>
 </body>
 </html>

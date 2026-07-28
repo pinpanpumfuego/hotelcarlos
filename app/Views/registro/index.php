@@ -618,5 +618,7 @@ $rechazado = $registro['estado'] === 'rechazado';
     });
 }());
 </script>
+
+<?= view("partes/espera") ?>
 </body>
 </html>

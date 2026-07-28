@@ -433,5 +433,7 @@
     });
 })();
 </script>
+
+<?= view("partes/espera") ?>
 </body>
 </html>

@@ -177,7 +177,21 @@
     const escapar = (t) => String(t == null ? '' : t).replace(/[&<>"']/g,
         (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+    // Solo se avisa de lo que hace una persona. Esta pantalla se refresca sola
+    // cada pocos segundos, y anunciar cada refresco sería una barra parpadeando
+    // toda la noche en la cocina: el aviso dejaría de significar nada.
     async function api(ruta, opciones) {
+        const accion = (opciones || {}).method === 'POST';
+
+        if (accion && window.espera) { window.espera.iniciar(); }
+        try {
+            return await apiCrudo(ruta, opciones);
+        } finally {
+            if (accion && window.espera) { window.espera.terminar(); }
+        }
+    }
+
+    async function apiCrudo(ruta, opciones) {
         const cfg = Object.assign({ headers: {} }, opciones || {});
         cfg.headers['X-Requested-With'] = 'XMLHttpRequest';
         if (cfg.method === 'POST') {
@@ -568,5 +582,7 @@
     setInterval(cargar, 10000);   // la cocina se refresca sola cada 10 segundos
 }());
 </script>
+
+<?= view("partes/espera") ?>
 </body>
 </html>

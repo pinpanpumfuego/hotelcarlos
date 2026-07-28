@@ -120,5 +120,7 @@
     </p>
 </div>
 
+
+<?= view("partes/espera") ?>
 </body>
 </html>

@@ -394,7 +394,18 @@
     // ═══════════════════════════════════════════════════════════════
     //  Red
     // ═══════════════════════════════════════════════════════════════
+    // Aquí importa el doble: el camarero está de pie en la sala y no sabe si
+    // la comanda salió o se quedó en la cola esperando cobertura.
     async function api(ruta, opciones) {
+        if (window.espera) { window.espera.iniciar(); }
+        try {
+            return await apiCrudo(ruta, opciones);
+        } finally {
+            if (window.espera) { window.espera.terminar(); }
+        }
+    }
+
+    async function apiCrudo(ruta, opciones) {
         const cfg = Object.assign({ headers: {} }, opciones || {});
         cfg.headers['X-Requested-With'] = 'XMLHttpRequest';
         cfg.headers['Accept'] = 'application/json';
@@ -1286,5 +1297,7 @@
 })();
 </script>
 
+
+<?= view("partes/espera") ?>
 </body>
 </html>

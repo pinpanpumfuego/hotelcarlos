@@ -727,7 +727,19 @@
         a._t = setTimeout(() => a.classList.remove('ver'), 3800);
     }
 
+    // El TPV no recarga la página, así que nada avisaría de que se está
+    // hablando con el servidor. La barra de arriba lo dice, y solo si tarda:
+    // en un TPV cada toque es una petición y un aviso en cada una sería ruido.
     async function api(ruta, opciones) {
+        if (window.espera) { window.espera.iniciar(); }
+        try {
+            return await apiCrudo(ruta, opciones);
+        } finally {
+            if (window.espera) { window.espera.terminar(); }
+        }
+    }
+
+    async function apiCrudo(ruta, opciones) {
         const cfg = Object.assign({ headers: {} }, opciones || {});
         cfg.headers['X-Requested-With'] = 'XMLHttpRequest';
         if (cfg.body) {
@@ -1942,5 +1954,7 @@
     cargarEstado();
 }());
 </script>
+
+<?= view("partes/espera") ?>
 </body>
 </html>
