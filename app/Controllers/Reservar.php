@@ -354,7 +354,14 @@ class Reservar extends BaseController
             ->first();
 
         if ($completa !== null) {
-            (new \App\Libraries\Correo())->avisoReservaWeb($completa);
+            $correo = new \App\Libraries\Correo();
+
+            // Dos correos distintos, no uno con dos destinatarios: al hotel se
+            // le dice «hay trabajo» y al huésped «llegó tu solicitud». Sin el
+            // segundo, quien acaba de dejar sus datos cierra la pestaña y se
+            // queda sin el código y sin saber si funcionó.
+            $correo->avisoReservaWeb($completa);
+            $correo->solicitudRecibida($completa);
         }
 
         return redirect()->to('reservar/exito/' . $codigo)

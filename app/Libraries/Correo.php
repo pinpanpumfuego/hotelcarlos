@@ -116,6 +116,38 @@ class Correo
     }
 
     /** Aviso interno al hotel cuando entra una reserva por la web. */
+    /**
+     * Acuse a quien acaba de reservar por la web.
+     *
+     * **Va directo y no por la cola de automatizaciones.** Esto no es marketing
+     * ni un recordatorio: es la prueba de que su solicitud llegó. Si esperara a
+     * que corriera la tarea programada, quien acaba de dejar sus datos y su
+     * dinero se quedaría un rato sin saber si funcionó, y esa es justo la media
+     * hora en la que la gente vuelve a enviar el formulario o llama por
+     * teléfono.
+     *
+     * **Y no dice «confirmada» a propósito**: la reserva entra pendiente de que
+     * el hotel la acepte, y prometer una cabaña que quizá no hay es peor que no
+     * escribir.
+     */
+    public function solicitudRecibida(array $reserva): bool
+    {
+        $para = trim((string) ($reserva['email'] ?? ''));
+
+        if ($para === '') {
+            return false;
+        }
+
+        return $this->enviar([
+            'tipo'       => 'solicitud_recibida',
+            'para'       => $para,
+            'asunto'     => 'Hemos recibido tu solicitud · ' . $reserva['codigo'],
+            'vista'      => 'solicitud_recibida',
+            'reserva_id' => $reserva['id'] ?? null,
+            'datos'      => ['reserva' => $reserva],
+        ]);
+    }
+
     public function avisoReservaWeb(array $reserva): bool
     {
         $destino = (string) $this->config->obtener('hotel_email', config('Hotel')->email);

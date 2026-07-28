@@ -12,9 +12,10 @@ class CorreoLogModel extends Model
     protected $useTimestamps = true;
 
     public const TIPOS = [
+        'solicitud_recibida'   => 'Acuse al huésped (solicitud recibida)',
         'confirmacion_reserva' => 'Confirmación de reserva',
         'enlace_registro'      => 'Enlace de registro',
-        'aviso_reserva_web'    => 'Aviso de reserva web',
+        'aviso_reserva_web'    => 'Aviso de reserva web (al hotel)',
         'prueba'               => 'Correo de prueba',
         'general'              => 'General',
     ];
