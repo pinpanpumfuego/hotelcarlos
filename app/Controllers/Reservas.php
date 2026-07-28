@@ -507,7 +507,15 @@ class Reservas extends BaseController
             return redirect()->to('reservas')->with('error', 'Solo se puede cancelar una reserva pendiente o confirmada.');
         }
 
-        $this->reservas->update($id, ['estado' => 'cancelada']);
+        // `cancelada_en` y `cancelada_origen` existían desde hace tres
+        // migraciones y no las escribía nadie: sin ellas, cualquier informe de
+        // cancelaciones sale en cero y no se distingue lo que alguien canceló
+        // a propósito de lo que caducó solo.
+        $this->reservas->update($id, [
+            'estado'           => 'cancelada',
+            'cancelada_en'     => date('Y-m-d H:i:s'),
+            'cancelada_origen' => 'recepcion',
+        ]);
 
         // Si venía de una recomendación, esa recomendación no ha traído a nadie
         (new \App\Libraries\Referidos())->anular($id, 'La reserva se canceló.');

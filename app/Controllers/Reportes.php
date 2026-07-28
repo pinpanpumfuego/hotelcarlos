@@ -27,6 +27,35 @@ class Reportes extends BaseController
         ]);
     }
 
+    /**
+     * El cuadro de mando: ocupación, ADR, RevPAR, canales y pickup.
+     *
+     * Va aparte del informe de siempre porque contesta a otra pregunta. El de
+     * siempre dice qué pasó con el dinero; este dice si el hotel va bien.
+     */
+    public function gerencia()
+    {
+        [$desde, $hasta] = $this->rangoFechas();
+
+        $ind    = new \App\Libraries\Indicadores();
+        $actual = $ind->periodo($desde, $hasta);
+        $antes  = $ind->mismoPeriodoAnterior($desde, $hasta);
+
+        return view('reportes/gerencia', [
+            'titulo'   => 'Cuadro de mando',
+            'seccion'  => 'reportes',
+            'desde'    => $desde,
+            'hasta'    => $hasta,
+            'a'        => $actual,
+            'b'        => $antes,
+            'ind'      => $ind,
+            'canales'  => $ind->porCanal($desde, $hasta),
+            'reservas' => $ind->comportamiento($desde, $hasta),
+            'pickup'   => $ind->pickup(6),
+            'origenes' => \App\Models\HuespedModel::ORIGENES,
+        ]);
+    }
+
     /** Exporta las reservas del periodo en CSV (compatible con Excel). */
     public function csv()
     {

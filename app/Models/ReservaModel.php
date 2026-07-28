@@ -8,7 +8,10 @@ class ReservaModel extends Model
 {
     protected $table         = 'reservas';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['codigo', 'huesped_id', 'unidad_id', 'fecha_entrada', 'fecha_salida', 'adultos', 'ninos', 'estado', 'canal', 'comision', 'referencia_externa', 'total', 'desglose_precio', 'notas'];
+    // `cancelada_en` y `cancelada_origen` faltaban aquí: existían en la tabla
+    // desde hace tres migraciones y CodeIgniter las descartaba en silencio al
+    // guardar, así que ninguna cancelación dejaba rastro de cuándo ni por qué.
+    protected $allowedFields = ['codigo', 'huesped_id', 'unidad_id', 'fecha_entrada', 'fecha_salida', 'adultos', 'ninos', 'estado', 'canal', 'comision', 'referencia_externa', 'total', 'desglose_precio', 'notas', 'expira_en', 'cancelada_en', 'cancelada_origen'];
     protected $useTimestamps = true;
 
     protected $validationRules = [
