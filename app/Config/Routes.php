@@ -562,6 +562,7 @@ $routes->group('', ['filter' => ['auth', 'permiso:propinas.liquidar']], static f
 $routes->group('', ['filter' => ['auth', 'permiso:reportes.ocupacion,reportes.ingresos']], static function ($routes) {
     $routes->get('reportes', 'Reportes::index');
     $routes->get('reportes/gerencia', 'Reportes::gerencia');
+    $routes->get('reportes/operacion', 'Reportes::operacion');
 });
 $routes->group('', ['filter' => ['auth', 'permiso:reportes.exportar']], static function ($routes) {
     $routes->get('reportes/csv', 'Reportes::csv');

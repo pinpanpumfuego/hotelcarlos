@@ -56,6 +56,34 @@ class Reportes extends BaseController
         ]);
     }
 
+    /**
+     * Lo que pasa dentro: huéspedes, restaurante, operación y dinero.
+     *
+     * Separado del cuadro de mando porque contesta a otra pregunta. Aquel dice
+     * si el hotel se está vendiendo bien; este, si se está funcionando bien —
+     * y a menudo van al revés: un mes puede tener récord de ocupación y ser el
+     * peor mes de la cocina.
+     */
+    public function operacion()
+    {
+        [$desde, $hasta] = $this->rangoFechas();
+
+        $op = new \App\Libraries\IndicadoresOperacion();
+
+        return view('reportes/operacion', [
+            'titulo'    => 'Operación e indicadores internos',
+            'seccion'   => 'reportes',
+            'desde'     => $desde,
+            'hasta'     => $hasta,
+            'huespedes' => $op->huespedes($desde, $hasta),
+            'restaurante' => $op->restaurante($desde, $hasta),
+            'cocina'    => $op->consumoCocina($desde, $hasta),
+            'op'        => $op->operacion($desde, $hasta),
+            'finanzas'  => $op->finanzas($desde, $hasta),
+            'ver_dinero' => puede('reportes.ingresos'),
+        ]);
+    }
+
     /** Exporta las reservas del periodo en CSV (compatible con Excel). */
     public function csv()
     {

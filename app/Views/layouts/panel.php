@@ -440,6 +440,7 @@ if ($equipo !== []) {
 
 $gestion = $soloPermitidos([
     ['reportes', 'reportes/gerencia', 'bi-speedometer', 'Cuadro de mando', 0, ['reportes.ocupacion', 'reportes.ingresos']],
+    ['reportes', 'reportes/operacion', 'bi-clipboard-data', 'Operación', 0, ['reportes.ocupacion', 'reportes.ingresos']],
     ['reportes', 'reportes', 'bi-graph-up', 'Informe de caja', 0, ['reportes.ocupacion', 'reportes.ingresos']],
     ['facturas', 'facturas', 'bi-receipt-cutoff', 'Facturación', 0, ['facturas.ver']],
     ['tarifas', 'tarifas', 'bi-tags', 'Tarifas', 0, ['tarifas.ver']],
