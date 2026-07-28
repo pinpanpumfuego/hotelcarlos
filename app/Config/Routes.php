@@ -643,23 +643,38 @@ $routes->group('', ['filter' => ['auth', 'permiso:insumos.gestionar']], static f
 });
 
 // ── Administración ──────────────────────────────────────────────────
+//
+// Cuatro pantallas en vez de una: los once formularios en una sola página no
+// tenían jerarquía y no se encontraba nada. La portada ya no configura, avisa
+// de lo que falta. Los POST mantienen sus direcciones de siempre — cambiarlas
+// no aportaba nada y rompería cualquier cosa que apunte a ellas.
 $routes->group('', ['filter' => ['auth', 'permiso:administracion.ver']], static function ($routes) {
     $routes->get('administracion', 'Administracion::index');
+    $routes->get('administracion/hotel', 'Administracion::hotel');
+    $routes->get('administracion/operacion', 'Administracion::operacion');
+    $routes->get('administracion/sistema', 'Administracion::sistema');
+
     $routes->post('administracion/hotel', 'Administracion::guardarHotel');
     $routes->post('administracion/tpv', 'Administracion::guardarTpv');
     $routes->post('administracion/cambio', 'Administracion::actualizarCambio');
     $routes->post('administracion/portal', 'Administracion::guardarPortal');
     $routes->post('administracion/verde', 'Administracion::guardarVerde');
     $routes->post('administracion/fichaje', 'Administracion::guardarFichaje');
+    // Los plazos de mantenimiento y el coste por hora estaban con las
+    // credenciales de terceros, y no lo son: son ajustes de operación. Ahí
+    // quien podía ver el formulario no podía guardarlo.
+    $routes->post('administracion/mantenimiento', 'Administracion::guardarMantenimiento');
 });
 // Credenciales de terceros: solo gerencia. Quien las tiene puede facturar en
-// nombre del hotel y cobrar con su pasarela.
+// nombre del hotel y cobrar con su pasarela. Ahora la pantalla entera está
+// detrás del permiso, no solo el botón de guardar.
 $routes->group('', ['filter' => ['auth', 'permiso:administracion.integraciones']], static function ($routes) {
+    $routes->get('administracion/cobros', 'Administracion::cobros');
+
     $routes->post('administracion/correo', 'Administracion::guardarCorreo');
     $routes->post('administracion/correo/probar', 'Administracion::probarCorreo');
     $routes->post('administracion/wompi', 'Administracion::guardarWompi');
     $routes->post('administracion/wompi/probar', 'Administracion::probarWompi');
-    $routes->post('administracion/mantenimiento', 'Administracion::guardarMantenimiento');
     $routes->post('administracion/siigo', 'Administracion::guardarSiigo');
     $routes->post('administracion/siigo/probar', 'Administracion::probarSiigo');
 });

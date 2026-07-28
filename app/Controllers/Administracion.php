@@ -14,16 +14,31 @@ class Administracion extends BaseController
         $this->config = new ConfiguracionModel();
     }
 
+    /**
+     * Portada: qué le falta al sistema para estar en marcha.
+     *
+     * Antes esta dirección abría los once formularios de golpe, sin jerarquía:
+     * los textos del portal pesaban lo mismo que las llaves de la pasarela de
+     * pagos. Ahora lo primero que se ve es la lista de lo que falta, y los
+     * ajustes viven cada uno en su pestaña.
+     */
     public function index()
+    {
+        return view('administracion/index', [
+            'titulo'      => 'Administración',
+            'seccion'     => 'administracion',
+            'pendientes'  => (new \App\Libraries\Pendientes())->todos(),
+        ]);
+    }
+
+    /** Lo que ve el público: datos del hotel y textos del portal del huésped. */
+    public function hotel()
     {
         $hotel = config('Hotel');
 
-        return view('administracion/index', [
-            'titulo'  => 'Administración',
+        return view('administracion/hotel', [
+            'titulo'  => 'Administración · El hotel',
             'seccion' => 'administracion',
-
-            // Estado de lo que debe correr solo en el servidor
-            'tareas'  => $this->tareas(),
 
             // Datos del hotel (con los valores por defecto del código como respaldo)
             'hotel' => [
@@ -33,29 +48,6 @@ class Administracion extends BaseController
                 'whatsapp'  => $this->config->obtener('hotel_whatsapp', $hotel->whatsapp),
                 'email'     => $this->config->obtener('hotel_email', $hotel->email),
                 'direccion' => $this->config->obtener('hotel_direccion', $hotel->direccion),
-            ],
-
-            // Correo saliente
-            'correo' => [
-                'host'             => $this->config->obtener('correo_host', ''),
-                'puerto'           => $this->config->obtener('correo_puerto', '587'),
-                'usuario'          => $this->config->obtener('correo_usuario', ''),
-                'cifrado'          => $this->config->obtener('correo_cifrado', 'tls'),
-                'remitente_nombre' => $this->config->obtener('correo_remitente_nombre', $hotel->nombre),
-                'clave_guardada'   => $this->config->existe('correo_clave'),
-            ],
-
-            // TPV compartido
-            'tpv' => [
-                'compartido'      => $this->config->obtener('tpv_compartido', '0') === '1',
-                'bloqueo_seg'     => (int) $this->config->obtener('tpv_bloqueo_seg', '60'),
-                'descuento_libre' => (float) $this->config->obtener('tpv_descuento_libre', '10'),
-                'propina_sugerida' => (float) $this->config->obtener('tpv_propina_sugerida', '10'),
-                'cocina_voz'      => $this->config->obtener('cocina_voz', '1') === '1',
-                'cocina_escucha'  => $this->config->obtener('cocina_escucha', '0') === '1',
-                'sin_rol'         => (new \App\Models\EmpleadoModel())->where('activo', 1)
-                    ->where('rol_tpv', 'ninguno')->countAllResults(),
-                'con_rol'         => (new \App\Models\EmpleadoModel())->delTpv(),
             ],
 
             // Portal del huésped: los textos que lee quien se aloja
@@ -70,31 +62,33 @@ class Administracion extends BaseController
                 'cabanas_minibar' => (new \App\Models\UnidadModel())->where('minibar', 1)->countAllResults(),
                 'productos_minibar' => (new \App\Models\CartaProductoModel())->where('en_minibar', 1)->countAllResults(),
             ],
+        ]);
+    }
 
-            // Gesto verde: una lavada menos a cambio de una consumición
-            'verde' => [
-                'activo'       => $this->config->obtener('verde_activo', '0') === '1',
-                'categoria_id' => (int) $this->config->obtener('verde_categoria_id', '0'),
-                'hora_tope'    => $this->config->obtener('verde_hora_tope', '10:00'),
-                'max_seguidas' => (int) $this->config->obtener('verde_max_seguidas', '3'),
-                'coste_lavada' => (float) $this->config->obtener('verde_coste_lavada', '0'),
-                'texto'        => $this->config->obtener('verde_texto', ''),
-                'categorias'   => (new \App\Models\CartaCategoriaModel())->orderBy('orden')->findAll(),
+    /**
+     * Llaves de terceros.
+     *
+     * En su propia página a propósito: quien las tiene puede facturar en nombre
+     * del hotel y cobrar con su pasarela. Antes vivían mezcladas con los textos
+     * del portal, y el permiso que las protege solo se notaba al guardar.
+     */
+    public function cobros()
+    {
+        $hotel = config('Hotel');
+
+        return view('administracion/cobros', [
+            'titulo'  => 'Administración · Cobros y facturación',
+            'seccion' => 'administracion',
+
+            // Correo saliente
+            'correo' => [
+                'host'             => $this->config->obtener('correo_host', ''),
+                'puerto'           => $this->config->obtener('correo_puerto', '587'),
+                'usuario'          => $this->config->obtener('correo_usuario', ''),
+                'cifrado'          => $this->config->obtener('correo_cifrado', 'tls'),
+                'remitente_nombre' => $this->config->obtener('correo_remitente_nombre', $hotel->nombre),
+                'clave_guardada'   => $this->config->existe('correo_clave'),
             ],
-
-            // Control de jornada
-            'fichaje' => [
-                'terminal' => $this->config->obtener('fichaje_terminal', '1') === '1',
-                'foto'     => $this->config->obtener('fichaje_foto', '1') === '1',
-                'movil'    => $this->config->obtener('fichaje_movil', '1') === '1',
-                'radio'    => (int) $this->config->obtener('fichaje_radio_m', '0'),
-                'latitud'  => $this->config->obtener('hotel_latitud', ''),
-                'longitud' => $this->config->obtener('hotel_longitud', ''),
-            ],
-
-            // Registro de correos enviados
-            'correosLog'   => (new \App\Models\CorreoLogModel())->ultimos(20),
-            'tiposCorreo'  => \App\Models\CorreoLogModel::TIPOS,
 
             // Facturación electrónica con Siigo
             'siigo' => [
@@ -124,6 +118,49 @@ class Administracion extends BaseController
                 'anticipo_pct'        => (int) $this->config->obtener('wompi_anticipo_pct', '0'),
                 'revision'            => (new \App\Libraries\Wompi())->revisarLlaves(),
             ],
+        ]);
+    }
+
+    /** Lo que ajusta quien lleva el día a día. */
+    public function operacion()
+    {
+        return view('administracion/operacion', [
+            'titulo'  => 'Administración · Operación',
+            'seccion' => 'administracion',
+
+            // TPV compartido
+            'tpv' => [
+                'compartido'      => $this->config->obtener('tpv_compartido', '0') === '1',
+                'bloqueo_seg'     => (int) $this->config->obtener('tpv_bloqueo_seg', '60'),
+                'descuento_libre' => (float) $this->config->obtener('tpv_descuento_libre', '10'),
+                'propina_sugerida' => (float) $this->config->obtener('tpv_propina_sugerida', '10'),
+                'cocina_voz'      => $this->config->obtener('cocina_voz', '1') === '1',
+                'cocina_escucha'  => $this->config->obtener('cocina_escucha', '0') === '1',
+                'sin_rol'         => (new \App\Models\EmpleadoModel())->where('activo', 1)
+                    ->where('rol_tpv', 'ninguno')->countAllResults(),
+                'con_rol'         => (new \App\Models\EmpleadoModel())->delTpv(),
+            ],
+
+            // Control de jornada
+            'fichaje' => [
+                'terminal' => $this->config->obtener('fichaje_terminal', '1') === '1',
+                'foto'     => $this->config->obtener('fichaje_foto', '1') === '1',
+                'movil'    => $this->config->obtener('fichaje_movil', '1') === '1',
+                'radio'    => (int) $this->config->obtener('fichaje_radio_m', '0'),
+                'latitud'  => $this->config->obtener('hotel_latitud', ''),
+                'longitud' => $this->config->obtener('hotel_longitud', ''),
+            ],
+
+            // Gesto verde: una lavada menos a cambio de una consumición
+            'verde' => [
+                'activo'       => $this->config->obtener('verde_activo', '0') === '1',
+                'categoria_id' => (int) $this->config->obtener('verde_categoria_id', '0'),
+                'hora_tope'    => $this->config->obtener('verde_hora_tope', '10:00'),
+                'max_seguidas' => (int) $this->config->obtener('verde_max_seguidas', '3'),
+                'coste_lavada' => (float) $this->config->obtener('verde_coste_lavada', '0'),
+                'texto'        => $this->config->obtener('verde_texto', ''),
+                'categorias'   => (new \App\Models\CartaCategoriaModel())->orderBy('orden')->findAll(),
+            ],
 
             // Mantenimiento
             'mantenimiento' => [
@@ -140,11 +177,27 @@ class Administracion extends BaseController
         ]);
     }
 
+    /** Lo que se mira cuando algo va mal. */
+    public function sistema()
+    {
+        return view('administracion/sistema', [
+            'titulo'  => 'Administración · Sistema',
+            'seccion' => 'administracion',
+
+            // Estado de lo que debe correr solo en el servidor
+            'tareas'  => $this->tareas(),
+
+            // Registro de correos enviados
+            'correosLog'  => (new \App\Models\CorreoLogModel())->ultimos(20),
+            'tiposCorreo' => \App\Models\CorreoLogModel::TIPOS,
+        ]);
+    }
+
     public function guardarHotel()
     {
         $nombre = trim((string) $this->request->getPost('nombre'));
         if ($nombre === '') {
-            return redirect()->to('administracion')->with('error', 'El nombre del hotel es obligatorio.');
+            return redirect()->to('administracion/hotel')->with('error', 'El nombre del hotel es obligatorio.');
         }
 
         $this->config->guardarPares([
@@ -156,7 +209,7 @@ class Administracion extends BaseController
             'hotel_direccion' => trim((string) $this->request->getPost('direccion')),
         ]);
 
-        return redirect()->to('administracion')->with('ok', 'Datos del hotel guardados: la web pública y el panel ya los muestran.');
+        return redirect()->to('administracion/hotel')->with('ok', 'Datos del hotel guardados: la web pública y el panel ya los muestran.');
     }
 
     /**
@@ -250,7 +303,7 @@ class Administracion extends BaseController
             // envolverla en otro ob_start()
             $salida = (string) command('cambio:actualizar');
         } catch (\Throwable $e) {
-            return redirect()->to('administracion#tareas')
+            return redirect()->to('administracion/sistema#tareas')
                 ->with('error', 'No se pudo actualizar: ' . $e->getMessage());
         }
 
@@ -261,7 +314,7 @@ class Administracion extends BaseController
         $fallo = str_contains($salida, 'No se pudo consultar')
             || (new \App\Models\TipoCambioModel())->vigentes() === [];
 
-        return redirect()->to('administracion#tareas')->with(
+        return redirect()->to('administracion/sistema#tareas')->with(
             $fallo ? 'error' : 'ok',
             $fallo
                 ? 'No se pudo traer el cambio. Lo más probable es que este servidor no tenga salida a internet. ' . $salida
@@ -281,7 +334,7 @@ class Administracion extends BaseController
             'cocina_escucha'      => $this->request->getPost('cocina_escucha') !== null ? '1' : '0',
         ]);
 
-        return redirect()->to('administracion#tpv')->with('ok', 'Ajustes del TPV guardados.');
+        return redirect()->to('administracion/operacion#tpv')->with('ok', 'Ajustes del TPV guardados.');
     }
 
     /**
@@ -306,7 +359,7 @@ class Administracion extends BaseController
             'portal_minibar'               => $this->request->getPost('minibar') !== null ? '1' : '0',
         ]);
 
-        return redirect()->to('administracion#portal')->with('ok', 'Textos del portal del huésped guardados.');
+        return redirect()->to('administracion/hotel#portal')->with('ok', 'Textos del portal del huésped guardados.');
     }
 
     /**
@@ -323,7 +376,7 @@ class Administracion extends BaseController
         $activo    = $this->request->getPost('activo') !== null;
 
         if ($activo && $categoria <= 0) {
-            return redirect()->to('administracion#verde')
+            return redirect()->to('administracion/operacion#verde')
                 ->with('error', 'Para encenderlo hay que decir de qué categoría de la carta puede elegir el huésped.');
         }
 
@@ -339,7 +392,7 @@ class Administracion extends BaseController
             'verde_texto'        => mb_substr(trim((string) $this->request->getPost('texto')), 0, 400),
         ]);
 
-        return redirect()->to('administracion#verde')->with('ok', 'Gesto verde guardado.');
+        return redirect()->to('administracion/operacion#verde')->with('ok', 'Gesto verde guardado.');
     }
 
     /** Ajustes del control de jornada. */
@@ -356,7 +409,7 @@ class Administracion extends BaseController
             'hotel_longitud'   => trim((string) $this->request->getPost('longitud')),
         ]);
 
-        return redirect()->to('administracion#fichaje')->with('ok', 'Ajustes de fichaje guardados.');
+        return redirect()->to('administracion/operacion#fichaje')->with('ok', 'Ajustes de fichaje guardados.');
     }
 
     public function guardarCorreo()
@@ -377,19 +430,19 @@ class Administracion extends BaseController
 
         $this->config->guardarPares($pares);
 
-        return redirect()->to('administracion')->with('ok', 'Parámetros de correo guardados.');
+        return redirect()->to('administracion/cobros')->with('ok', 'Parámetros de correo guardados.');
     }
 
     public function probarCorreo()
     {
         $configCorreo = $this->config->configCorreo();
         if ($configCorreo === null) {
-            return redirect()->to('administracion')->with('error', 'Configura primero el servidor de correo.');
+            return redirect()->to('administracion/cobros')->with('error', 'Configura primero el servidor de correo.');
         }
 
         $destino = trim((string) $this->request->getPost('destino'));
         if (! filter_var($destino, FILTER_VALIDATE_EMAIL)) {
-            return redirect()->to('administracion')->with('error', 'Indica un correo de destino válido.');
+            return redirect()->to('administracion/cobros')->with('error', 'Indica un correo de destino válido.');
         }
 
         $email = service('email');
@@ -400,12 +453,12 @@ class Administracion extends BaseController
         $email->setMessage('<p>¡Funciona! Este es un correo de prueba del sistema de gestión de <strong>' . esc(config('Hotel')->nombre) . '</strong>.</p>');
 
         if ($email->send(false)) {
-            return redirect()->to('administracion')->with('ok', 'Correo de prueba enviado a ' . $destino . '. Revisa la bandeja de entrada (y el spam).');
+            return redirect()->to('administracion/cobros')->with('ok', 'Correo de prueba enviado a ' . $destino . '. Revisa la bandeja de entrada (y el spam).');
         }
 
         log_message('error', 'Fallo de correo de prueba: {debug}', ['debug' => $email->printDebugger(['headers'])]);
 
-        return redirect()->to('administracion')->with('error', 'No se pudo enviar. Revisa servidor, puerto, usuario y contraseña. El detalle técnico quedó en el registro de errores.');
+        return redirect()->to('administracion/cobros')->with('error', 'No se pudo enviar. Revisa servidor, puerto, usuario y contraseña. El detalle técnico quedó en el registro de errores.');
     }
 
     /** Credenciales y parámetros de facturación electrónica. */
@@ -435,7 +488,7 @@ class Administracion extends BaseController
 
         $this->config->guardarPares($pares);
 
-        return redirect()->to('administracion')->with('ok', 'Configuración de facturación guardada.');
+        return redirect()->to('administracion/cobros')->with('ok', 'Configuración de facturación guardada.');
     }
 
     /** Comprueba la conexión con Siigo y trae los catálogos para elegir. */
@@ -444,12 +497,12 @@ class Administracion extends BaseController
         $siigo = new \App\Libraries\Siigo();
 
         if (! $siigo->configurado()) {
-            return redirect()->to('administracion')->with('error', 'Faltan las credenciales de Siigo.');
+            return redirect()->to('administracion/cobros')->with('error', 'Faltan las credenciales de Siigo.');
         }
 
         $prueba = $siigo->probar();
         if (! $prueba['ok']) {
-            return redirect()->to('administracion')->with('error', 'No se pudo conectar con Siigo: ' . $prueba['error']);
+            return redirect()->to('administracion/cobros')->with('error', 'No se pudo conectar con Siigo: ' . $prueba['error']);
         }
 
         // Con la conexión viva, se traen los catálogos que hay que configurar
@@ -460,7 +513,7 @@ class Administracion extends BaseController
             'impuestos'  => ($siigo->impuestos()['datos'] ?? []),
         ];
 
-        return redirect()->to('administracion')
+        return redirect()->to('administracion/cobros#siigo')
             ->with('ok', 'Conexión con Siigo correcta. Abajo puedes elegir los parámetros de facturación.')
             ->with('catalogos', $catalogos);
     }
@@ -506,7 +559,7 @@ class Administracion extends BaseController
             $aviso .= ' ' . implode(' ', $fallos);
         }
 
-        return redirect()->to('administracion#wompi')->with(
+        return redirect()->to('administracion/cobros#wompi')->with(
             $fallos === [] ? 'ok' : 'error',
             'Credenciales de Wompi guardadas.' . $aviso
         );
@@ -517,7 +570,7 @@ class Administracion extends BaseController
     {
         $r = (new \App\Libraries\Wompi())->probar();
 
-        return redirect()->to('administracion#wompi')->with($r['ok'] ? 'ok' : 'error', $r['mensaje']);
+        return redirect()->to('administracion/cobros#wompi')->with($r['ok'] ? 'ok' : 'error', $r['mensaje']);
     }
 
     /**
@@ -560,7 +613,7 @@ class Administracion extends BaseController
 
         $this->config->guardarPares($pares);
 
-        return redirect()->to('administracion#mantenimiento')
+        return redirect()->to('administracion/operacion#mantenimiento')
             ->with('ok', 'Ajustes de mantenimiento guardados.' . $aviso);
     }
 }
