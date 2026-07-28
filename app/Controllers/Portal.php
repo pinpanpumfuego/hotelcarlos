@@ -587,6 +587,61 @@ class Portal extends BaseController
         return redirect()->to($this->ruta($token, 'solicitudes'))->with('ok', $mensaje);
     }
 
+    /**
+     * Gesto verde: renunciar al cambio de lencería de esta noche.
+     *
+     * Se pide por la noche que viene, no por la que pasó, y el vale no llega
+     * hasta que quien limpia confirma que efectivamente no cambió nada.
+     */
+    public function verde(string $token)
+    {
+        $ctx = $this->contexto($token);
+
+        if ($ctx === null) {
+            return $this->caducado();
+        }
+
+        $verde   = new \App\Libraries\GestoVerde();
+        $reserva = $ctx['reserva'];
+
+        if (! $verde->activo()) {
+            return redirect()->to($this->ruta($token, ''));
+        }
+
+        $gestos = new \App\Models\GestoVerdeModel();
+
+        return view('portal/verde', $ctx + [
+            'disponible' => $verde->disponible($reserva),
+            'hoy'        => $gestos->deNoche((int) $reserva['id'], date('Y-m-d')),
+            'historial'  => $gestos->deReserva((int) $reserva['id']),
+            'vales'      => $gestos->valesDisponibles((int) $reserva['id']),
+            'texto'      => (new \App\Models\ConfiguracionModel())->obtener('verde_texto', ''),
+            'hora_tope'  => $verde->horaTope(),
+            'estados'    => \App\Models\GestoVerdeModel::ESTADOS,
+        ]);
+    }
+
+    public function pedirVerde(string $token)
+    {
+        $ctx = $this->contexto($token);
+
+        if ($ctx === null) {
+            return $this->caducado();
+        }
+
+        try {
+            (new \App\Libraries\GestoVerde())->pedir((int) $ctx['reserva']['id'], 'portal');
+        } catch (\RuntimeException $e) {
+            return redirect()->to($this->ruta($token, 'verde'))->with('error', $e->getMessage());
+        }
+
+        return redirect()->to($this->ruta($token, 'verde'))->with(
+            'ok',
+            'Hecho. Hoy no tocamos tu ropa de cama ni tus toallas, y cuando el equipo lo confirme '
+            . 'te aparecerá aquí tu invitación.'
+        );
+    }
+
     public function encuesta(string $token)
     {
         $ctx = $this->contexto($token);

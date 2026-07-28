@@ -500,6 +500,82 @@ class Pos extends BaseController
     }
 
     /**
+     * Canjea un gesto verde sobre una línea.
+     *
+     * **No pide PIN de encargado, al revés que una cortesía normal.** Una
+     * cortesía la decide quien atiende, y por eso hace falta que alguien la
+     * autorice; esto ya se lo ganó el huésped renunciando a una lavada, y
+     * housekeeping lo confirmó. Pedir permiso para entregar algo que ya está
+     * concedido solo consigue que no se entregue.
+     */
+    public function canjearVerde(int $lineaId)
+    {
+        $linea = $this->lineas->find($lineaId);
+
+        if ($linea === null) {
+            return $this->response->setStatusCode(404)->setJSON(['ok' => false, 'error' => 'Línea no encontrada.']);
+        }
+
+        $comanda = $this->comandas->find($linea['comanda_id']);
+
+        if ($comanda === null || $comanda['estado'] !== 'abierta') {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => 'La comanda ya está cerrada.']);
+        }
+
+        if ($comanda['reserva_id'] === null) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok' => false, 'error' => 'Esta comanda no está ligada a ninguna reserva.',
+            ]);
+        }
+
+        if ($linea['estado_linea'] !== 'normal') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok' => false, 'error' => 'Esa línea ya está invitada o devuelta.',
+            ]);
+        }
+
+        $verde = new \App\Libraries\GestoVerde();
+
+        // El premio es de una categoría concreta: si no se comprobara, un vale
+        // de refresco pagaría un plato principal.
+        $producto = (new \App\Models\CartaProductoModel())->find($linea['producto_id']);
+
+        if ($producto === null || (int) $producto['categoria_id'] !== $verde->categoriaId()) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok' => false, 'error' => 'El gesto verde no cubre ese producto.',
+            ]);
+        }
+
+        if ((int) $linea['cantidad'] !== 1) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'ok' => false, 'error' => 'Un gesto verde cubre una unidad. Separa la línea.',
+            ]);
+        }
+
+        try {
+            $r = $verde->canjear((int) $comanda['reserva_id'], $lineaId);
+        } catch (\RuntimeException $e) {
+            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => $e->getMessage()]);
+        }
+
+        $this->lineas->update($lineaId, [
+            'estado_linea' => 'cortesia',
+            'motivo_linea' => 'Gesto verde · noche del ' . date('d/m/Y', strtotime($r['vale']['fecha'])),
+        ]);
+
+        $this->comandas->recalcularTotal((int) $comanda['id']);
+
+        return $this->response->setJSON([
+            'ok'        => true,
+            'restantes' => $r['restantes'],
+            'mensaje'   => $r['restantes'] > 0
+                ? 'Invitación aplicada. Le quedan ' . $r['restantes'] . '.'
+                : 'Invitación aplicada. Era la última que tenía.',
+            'comanda'   => $this->comandaDetalle((int) $comanda['id']),
+        ]);
+    }
+
+    /**
      * El mesero confirma que llevó el producto a la mesa.
      * Las bebidas de barra las puede preparar y servir el propio cajero,
      * sin esperar a que alguien las marque en la pantalla de barra.

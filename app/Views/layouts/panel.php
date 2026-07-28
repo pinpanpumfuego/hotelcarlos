@@ -396,6 +396,7 @@ $recepcion = $soloPermitidos([
     ['caja', 'cartera', 'bi-briefcase', 'Cartera', 0, ['cartera.ver']],
     ['bonos', 'bonos', 'bi-gift', 'Bonos regalo', 0, ['folio.bono', 'bonos.gestionar']],
     ['tarjetas', 'tarjetas', 'bi-credit-card-2-front', 'Tarjetas de saldo', 0, ['tarjetas.ver']],
+    ['limpieza', 'verde', 'bi-leaf', 'Gesto verde', 0, ['limpieza.ver', 'limpieza.trabajar']],
 ]);
 if ($recepcion !== []) {
     $grupos['Recepción'] = ['icono' => 'bi-bell', 'enlaces' => $recepcion];

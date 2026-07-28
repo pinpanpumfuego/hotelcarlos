@@ -103,6 +103,13 @@ $motivos = [
                                 <?php if ($t['llega_hoy']): ?>
                                     <span class="badge text-bg-warning ms-1">Llega hoy</span>
                                 <?php endif ?>
+                                <?php // Sin esta marca el programa entero no existe: quien limpia
+                                      // entra y cambia las toallas como cada mañana. ?>
+                                <?php if (! empty($t['sin_lenceria'])): ?>
+                                    <span class="badge text-bg-success ms-1">
+                                        <i class="bi bi-leaf me-1"></i>Sin cambio de lencería
+                                    </span>
+                                <?php endif ?>
                                 <div class="small text-muted">
                                     <?= esc($tipos[$t['tipo']] ?? $t['tipo']) ?>
                                     <?php if (! empty($t['quien'])): ?>· <?= esc($t['quien']) ?><?php endif ?>

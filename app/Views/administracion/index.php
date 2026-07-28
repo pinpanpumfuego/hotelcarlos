@@ -251,6 +251,90 @@
         </div>
     </div>
 
+    <!-- ═══ Gesto verde ═══ -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm" id="verde">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-leaf me-2 text-success"></i>Gesto verde
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">
+                    El huésped renuncia al cambio de toallas y sábanas de una noche, y el hotel le
+                    invita a algo. Se ahorra una lavada entera —agua, energía, detergente y el rato
+                    de una persona— y se paga una consumición.
+                </p>
+
+                <form method="post" action="<?= site_url('administracion/verde') ?>" class="row g-3">
+                    <?= csrf_field() ?>
+
+                    <div class="col-md-6">
+                        <label class="form-label">¿De qué puede elegir?</label>
+                        <select name="categoria_id" class="form-select">
+                            <option value="0">— sin elegir —</option>
+                            <?php foreach ($verde['categorias'] as $c): ?>
+                                <option value="<?= $c['id'] ?>" <?= $verde['categoria_id'] === (int) $c['id'] ? 'selected' : '' ?>>
+                                    <?= esc($c['nombre']) ?>
+                                </option>
+                            <?php endforeach ?>
+                        </select>
+                        <div class="form-text">
+                            Una categoría de la carta. <strong>Que no lleve alcohol</strong>: regalarlo
+                            automáticamente trae problemas propios, y con un menor delante trae uno legal.
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Se pide antes de</label>
+                        <input type="time" name="hora_tope" class="form-control"
+                               value="<?= esc($verde['hora_tope']) ?>">
+                        <div class="form-text">Cuando el equipo empieza a preparar cabañas.</div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Máximo noches seguidas</label>
+                        <input type="number" name="max_seguidas" class="form-control" min="1" max="14"
+                               value="<?= (int) $verde['max_seguidas'] ?>">
+                        <div class="form-text">Después toca ropa limpia. Es higiene, no gasto.</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Lo que cuesta una lavada</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="coste_lavada" class="form-control" min="0" step="any"
+                                   value="<?= esc($verde['coste_lavada']) ?>">
+                        </div>
+                        <div class="form-text">
+                            Agua, energía, detergente y mano de obra. <strong>Este número no lo
+                            inventamos nosotros</strong>: sin él el informe no puede decir si el
+                            programa sale a cuenta, y lo dirá así.
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label">Lo que lee el huésped</label>
+                        <textarea name="texto" class="form-control" rows="2" maxlength="400"><?= esc($verde['texto']) ?></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="activo" id="verde_activo"
+                                   <?= $verde['activo'] ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="verde_activo">
+                                Ofrecerlo en el portal y en recepción
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                        <a href="<?= site_url('verde') ?>" class="btn btn-link">Ver el tablero y el balance</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- ═══ Portal del huésped ═══ -->
     <div class="col-12">
         <div class="card border-0 shadow-sm" id="portal">

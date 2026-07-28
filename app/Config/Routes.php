@@ -495,6 +495,9 @@ $routes->group('pos/api', ['filter' => ['auth', 'tokenjson', 'tpv', 'permiso:pos
     $routes->post('linea/(:num)', 'Pos::linea/$1');
     $routes->post('linea/(:num)/servir', 'Pos::servir/$1');
     $routes->post('linea/(:num)/estado', 'Pos::estadoLinea/$1');
+    // El gesto verde no pasa por el PIN del encargado: ya se lo ganó el
+    // huésped y housekeeping lo confirmó. Ver Pos::canjearVerde().
+    $routes->post('linea/(:num)/verde', 'Pos::canjearVerde/$1');
 });
 $routes->group('pos/api', ['filter' => ['auth', 'tokenjson', 'tpv', 'permiso:pos.mover']], static function ($routes) {
     $routes->post('comanda/(:num)/mover', 'Pos::mover/$1');
@@ -646,6 +649,7 @@ $routes->group('', ['filter' => ['auth', 'permiso:administracion.ver']], static 
     $routes->post('administracion/tpv', 'Administracion::guardarTpv');
     $routes->post('administracion/cambio', 'Administracion::actualizarCambio');
     $routes->post('administracion/portal', 'Administracion::guardarPortal');
+    $routes->post('administracion/verde', 'Administracion::guardarVerde');
     $routes->post('administracion/fichaje', 'Administracion::guardarFichaje');
 });
 // Credenciales de terceros: solo gerencia. Quien las tiene puede facturar en
@@ -875,6 +879,10 @@ $routes->post('estancia/(:segment)/pedido', 'Portal::pedido/$1');
 $routes->get('estancia/(:segment)/comprobante', 'Portal::comprobante/$1');
 
 // ── Minibar del portal (solo si el hotel y la cabaña lo tienen) ─────
+// Gesto verde: el huésped renuncia al cambio de lencería de esta noche.
+$routes->get('estancia/(:segment)/verde', 'Portal::verde/$1');
+$routes->post('estancia/(:segment)/verde', 'Portal::pedirVerde/$1');
+
 $routes->get("estancia/(:segment)/minibar", "Portal::minibar/$1");
 $routes->post("estancia/(:segment)/minibar", "Portal::declararMinibar/$1");
 $routes->post("estancia/(:segment)/minibar/reponer", "Portal::reponerMinibar/$1");
@@ -960,6 +968,20 @@ $routes->group('', ['filter' => ['auth', 'permiso:unidades.gestionar']], static 
     $routes->post('limpieza/checklist/guardar', 'Limpieza::guardarPunto');
     $routes->post('limpieza/checklist/eliminar/(:num)', 'Limpieza::eliminarPunto/$1');
     $routes->post('limpieza/politica', 'Limpieza::politica');
+});
+
+// ── Gesto verde ─────────────────────────────────────────────────────
+//
+// Se apoya en los permisos de limpieza: quien lleva las cabañas es quien sabe
+// si se cambió la ropa, y confirmarlo es parte de esa tarea, no una función
+// aparte que haga falta conceder a nadie.
+$routes->group('', ['filter' => ['auth', 'permiso:limpieza.ver,limpieza.trabajar']], static function ($routes) {
+    $routes->get('verde', 'Verde::index');
+});
+$routes->group('', ['filter' => ['auth', 'permiso:limpieza.trabajar']], static function ($routes) {
+    $routes->post('verde/pedir', 'Verde::pedir');
+    $routes->post('verde/confirmar/(:num)', 'Verde::confirmar/$1');
+    $routes->post('verde/descartar/(:num)', 'Verde::descartar/$1');
 });
 
 // ── Pagos en línea ──────────────────────────────────────────────────

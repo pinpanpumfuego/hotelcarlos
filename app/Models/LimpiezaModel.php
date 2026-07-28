@@ -23,7 +23,7 @@ class LimpiezaModel extends Model
     protected $allowedFields = [
         'unidad_id', 'usuario_id', 'tipo', 'estado', 'prioridad', 'para_hoy',
         'inicio', 'fin', 'notas', 'inspector_id', 'inspeccion_en',
-        'motivo_rechazo', 'reprocesos',
+        'motivo_rechazo', 'reprocesos', 'sin_lenceria',
     ];
     protected $useTimestamps = true;
 

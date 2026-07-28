@@ -71,6 +71,17 @@ class Administracion extends BaseController
                 'productos_minibar' => (new \App\Models\CartaProductoModel())->where('en_minibar', 1)->countAllResults(),
             ],
 
+            // Gesto verde: una lavada menos a cambio de una consumición
+            'verde' => [
+                'activo'       => $this->config->obtener('verde_activo', '0') === '1',
+                'categoria_id' => (int) $this->config->obtener('verde_categoria_id', '0'),
+                'hora_tope'    => $this->config->obtener('verde_hora_tope', '10:00'),
+                'max_seguidas' => (int) $this->config->obtener('verde_max_seguidas', '3'),
+                'coste_lavada' => (float) $this->config->obtener('verde_coste_lavada', '0'),
+                'texto'        => $this->config->obtener('verde_texto', ''),
+                'categorias'   => (new \App\Models\CartaCategoriaModel())->orderBy('orden')->findAll(),
+            ],
+
             // Control de jornada
             'fichaje' => [
                 'terminal' => $this->config->obtener('fichaje_terminal', '1') === '1',
@@ -296,6 +307,39 @@ class Administracion extends BaseController
         ]);
 
         return redirect()->to('administracion#portal')->with('ok', 'Textos del portal del huésped guardados.');
+    }
+
+    /**
+     * Gesto verde: renunciar al cambio de lencería a cambio de una consumición.
+     *
+     * El coste de una lavada no se estima ni se sugiere: el agua, la energía,
+     * el detergente y el rato de quien lava son de este hotel. Sin ese número
+     * el programa funciona igual, pero el informe dice honestamente que no
+     * puede saber si sale a cuenta.
+     */
+    public function guardarVerde()
+    {
+        $categoria = (int) $this->request->getPost('categoria_id');
+        $activo    = $this->request->getPost('activo') !== null;
+
+        if ($activo && $categoria <= 0) {
+            return redirect()->to('administracion#verde')
+                ->with('error', 'Para encenderlo hay que decir de qué categoría de la carta puede elegir el huésped.');
+        }
+
+        $this->config->guardarPares([
+            'verde_activo'       => $activo ? '1' : '0',
+            'verde_categoria_id' => (string) max(0, $categoria),
+            'verde_hora_tope'    => (string) (preg_match('/^\d{2}:\d{2}$/', (string) $this->request->getPost('hora_tope'))
+                ? $this->request->getPost('hora_tope') : '10:00'),
+            // Nunca menos de 1: cero noches seguidas permitidas apagaría el
+            // programa por una vía que nadie encontraría después.
+            'verde_max_seguidas' => (string) max(1, min(14, (int) $this->request->getPost('max_seguidas'))),
+            'verde_coste_lavada' => (string) max(0, (float) $this->request->getPost('coste_lavada')),
+            'verde_texto'        => mb_substr(trim((string) $this->request->getPost('texto')), 0, 400),
+        ]);
+
+        return redirect()->to('administracion#verde')->with('ok', 'Gesto verde guardado.');
     }
 
     /** Ajustes del control de jornada. */
