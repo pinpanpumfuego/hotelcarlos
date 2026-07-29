@@ -49,6 +49,77 @@
     </div>
 
     <div class="col-12">
+        <div class="card border-0 shadow-sm mb-4 <?= $obras['activo'] ? 'border-start border-4 border-warning' : '' ?>" id="obras">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-cone-striped me-2 text-warning"></i>Cartel de «todavía no abrimos»
+                <?php if ($obras['activo']): ?>
+                    <span class="badge text-bg-warning ms-1">La web está tapada</span>
+                <?php endif ?>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">
+                    Tapa la web pública y el motor de reservas. <strong>No toca nada de lo que ya
+                    funciona</strong>: el portal del huésped, los enlaces de registro ya enviados,
+                    el calendario que lee Booking, el fichaje, este panel ni el aviso de la pasarela
+                    de pagos.
+                </p>
+
+                <form method="post" action="<?= site_url('administracion/obras') ?>" class="row g-3">
+                    <?= csrf_field() ?>
+
+                    <div class="col-md-8">
+                        <label class="form-label">Titular</label>
+                        <input type="text" name="titulo" class="form-control" maxlength="120"
+                               value="<?= esc($obras['titulo']) ?>">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Cuándo abrís</label>
+                        <input type="text" name="fecha" class="form-control" maxlength="60"
+                               value="<?= esc($obras['fecha']) ?>" placeholder="Ej.: Abrimos en marzo">
+                        <div class="form-text">Déjalo vacío si aún no hay fecha.</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Texto</label>
+                        <textarea name="texto" class="form-control" rows="3" maxlength="500"><?= esc($obras['texto']) ?></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Clave para poder entrar</label>
+                        <input type="text" name="clave" class="form-control" autocomplete="off"
+                               placeholder="<?= $obras['clave_guardada'] ? 'Puesta — escribe otra para cambiarla' : 'Sin poner' ?>">
+                        <div class="form-text">
+                            En blanco se queda la que hay. Es una cortina para que nadie vea el hotel
+                            a medio configurar, no una cerradura: detrás no hay datos de nadie.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="activo" id="obras_activo"
+                                   <?= $obras['activo'] ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="obras_activo">
+                                Tapar la web pública
+                                <span class="form-text d-block">
+                                    Quítalo el día que abráis y la web vuelve sola.
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+                        <?php if ($obras['activo']): ?>
+                            <a href="<?= site_url('obras/salir') ?>" class="btn btn-link" target="_blank" rel="noopener">
+                                Ver cómo lo ve un visitante
+                            </a>
+                        <?php endif ?>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm" id="portal">
             <div class="card-header bg-white fw-semibold">
                 <i class="bi bi-phone me-2 text-success"></i>Portal del huésped

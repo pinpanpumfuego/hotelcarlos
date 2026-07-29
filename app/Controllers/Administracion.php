@@ -50,6 +50,12 @@ class Administracion extends BaseController
                 'direccion' => $this->config->obtener('hotel_direccion', $hotel->direccion),
             ],
 
+            // Cartel de «todavía no abrimos»
+            'obras' => (new \App\Libraries\Obras())->textos() + [
+                'activo'         => $this->config->obtener('obras_activo', '0') === '1',
+                'clave_guardada' => $this->config->existe('obras_clave'),
+            ],
+
             // Portal del huésped: los textos que lee quien se aloja
             'portal' => [
                 'horarios'        => $this->config->obtener('portal_horarios', ''),
@@ -360,6 +366,39 @@ class Administracion extends BaseController
         ]);
 
         return redirect()->to('administracion/hotel#portal')->with('ok', 'Textos del portal del huésped guardados.');
+    }
+
+    /**
+     * El cartel de «todavía no abrimos».
+     *
+     * La clave se guarda cifrada como cualquier otra, aunque aquí solo tape la
+     * web comercial: dejarla en claro en la base de datos enseña una costumbre
+     * que después se repite donde sí importa.
+     */
+    public function guardarObras()
+    {
+        $this->config->guardarPares([
+            'obras_activo' => $this->request->getPost('activo') !== null ? '1' : '0',
+            'obras_titulo' => mb_substr(trim((string) $this->request->getPost('titulo')), 0, 120)
+                ?: 'Estamos terminando',
+            'obras_texto'  => mb_substr(trim((string) $this->request->getPost('texto')), 0, 500),
+            'obras_fecha'  => mb_substr(trim((string) $this->request->getPost('fecha')), 0, 60),
+        ]);
+
+        $clave = trim((string) $this->request->getPost('clave'));
+
+        // En blanco se deja la que había: si no, guardar cualquier otro cambio
+        // de esta pantalla dejaría la web sin llave y sin que nadie lo notara.
+        if ($clave !== '') {
+            if (mb_strlen($clave) < 4) {
+                return redirect()->to('administracion/hotel#obras')
+                    ->with('error', 'La clave son cuatro caracteres como mínimo.');
+            }
+
+            (new \App\Libraries\Obras())->guardarClave($clave);
+        }
+
+        return redirect()->to('administracion/hotel#obras')->with('ok', 'Cartel de obras guardado.');
     }
 
     /**

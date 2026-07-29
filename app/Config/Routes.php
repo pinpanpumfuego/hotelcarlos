@@ -29,8 +29,19 @@ $paginasPublicas = static function ($routes) {
     $routes->get('reservar/exito/(:segment)', 'Reservar::exito/$1');
 };
 
+// El cartel de «todavía no abrimos» cubre exactamente estas rutas: la web
+// comercial y el motor de reservas. No toca el portal del huésped, los enlaces
+// de registro ya enviados, el calendario que lee Booking, el fichaje, el panel
+// ni el aviso de la pasarela de pagos —un cartel de obras que corta un webhook
+// deja cobros en el aire. Ver App\Filters\Obras.
+
 // Español, en la raíz
-$paginasPublicas($routes);
+$routes->group('', ['filter' => 'obras'], $paginasPublicas);
+
+// La puerta va fuera del filtro, o el propio formulario de la clave quedaría
+// tapado por el cartel.
+$routes->post('obras/entrar', 'ObrasAcceso::entrar');
+$routes->get('obras/salir', 'ObrasAcceso::salir');
 
 // Los demás idiomas, con prefijo literal.
 //
@@ -39,7 +50,7 @@ $paginasPublicas($routes);
 // resto del sistema caían en la portada pública. Con `en`, `fr` y `de` escritos
 // tal cual no hay ambigüedad posible.
 foreach (['en', 'fr', 'de'] as $idiomaWeb) {
-    $routes->group($idiomaWeb, ['filter' => 'idioma:' . $idiomaWeb], $paginasPublicas);
+    $routes->group($idiomaWeb, ['filter' => ['idioma:' . $idiomaWeb, 'obras']], $paginasPublicas);
 }
 
 // ── Registro en línea del huésped (enlace con token, sin cuenta) ────
@@ -658,6 +669,7 @@ $routes->group('', ['filter' => ['auth', 'permiso:administracion.ver']], static 
     $routes->post('administracion/tpv', 'Administracion::guardarTpv');
     $routes->post('administracion/cambio', 'Administracion::actualizarCambio');
     $routes->post('administracion/portal', 'Administracion::guardarPortal');
+    $routes->post('administracion/obras', 'Administracion::guardarObras');
     $routes->post('administracion/verde', 'Administracion::guardarVerde');
     $routes->post('administracion/fichaje', 'Administracion::guardarFichaje');
     // Los plazos de mantenimiento y el coste por hora estaban con las

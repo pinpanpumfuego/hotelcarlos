@@ -34,6 +34,9 @@ class Filters extends BaseFilters
         'tpv'           => \App\Filters\Tpv::class,
         'comandero'     => \App\Filters\Comandero::class,
         'idioma'        => \App\Filters\Idioma::class,
+        // Cartel de «todavía no abrimos» sobre la web pública y el motor de
+        // reservas. Solo donde se engancha: ver el grupo en Routes.php.
+        'obras'         => \App\Filters\Obras::class,
         'csrf'          => CSRF::class,
         'toolbar'       => DebugToolbar::class,
         'honeypot'      => Honeypot::class,
